@@ -1,0 +1,78 @@
+# =====================================================================
+# .gitignore — Gestor Inteligente de Demandas
+# =====================================================================
+
+# Toolchain portátil
+/tools/jdk/
+/tools/maven/
+/tools/wix/wix311/
+/tools/cert/
+/tools/jre-runtime/
+*.pfx
+*.p12
+
+# Builds e artefatos
+**/target/
+/release/
+**/*.class
+**/*.jar
+**/*.exe
+**/*.msi
+**/*.zip
+**/*.neu
+**/*.war
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+nbproject/
+nb-configuration.xml
+
+# Banco local e dados do usuário
+/data/*.db
+/data/*.db-journal
+/data/*.db-wal
+/data/*.db-shm
+/data/backups/*.db
+/data/backups/*.db-journal
+/data/backups/*.db-wal
+/data/backups/*.db-shm
+
+# Logs
+**/*.log
+logs/
+
+# SO
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temp
+*.tmp
+*.bak
+*.swp
+*~
+
+# Cache local
+**/node_modules/
+**/.cache/
+
+# Snapshots de teste
+/tests/db/snapshots/*.db
+
+# Smoke
+/data/tmp/
+cookies.txt
+
+# Smoke leftovers
+/-b
+/-o
+/out2.json
+/cookies.txt
+/mvn-*.log
+/server*.log
+/server*.err
