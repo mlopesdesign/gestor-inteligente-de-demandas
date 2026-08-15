@@ -2,11 +2,11 @@
 ; installer/gestor.nsi - Script NSIS do Gestor Inteligente de Demandas
 ;
 ; Compila com:  makensis.exe /V2 installer\gestor.nsi
-; Saída:        installer\GestorInteligenteDeDemandas-Setup-X.Y.Z.exe
+; SaÃ­da:        installer\GestorInteligenteDeDemandas-Setup-X.Y.Z.exe
 ;
-; Padrão: PADRAO-ML-LOPES-DESIGN.md §2.3 (Salgueiro Setup.exe = 15.3 MB).
-; Diferenças do Salgueiro: a app-image do Neutralino já vem com WebView2 builtin
-; (zero runtime), então o nosso Setup.exe fica na casa dos 3-4 MB.
+; PadrÃ£o: PADRAO-ML-LOPES-DESIGN.md Â§2.3 (Salgueiro Setup.exe = 15.3 MB).
+; DiferenÃ§as do Salgueiro: a app-image do Neutralino jÃ¡ vem com WebView2 builtin
+; (zero runtime), entÃ£o o nosso Setup.exe fica na casa dos 3-4 MB.
 ; ================================================================
 
 Unicode True
@@ -32,7 +32,7 @@ InstallDirRegKey HKLM "${INSTALL_DIR_REG}" "InstallDir"
 ShowInstDetails show
 ShowUninstDetails show
 RequestExecutionLevel admin
-BrandingText "${APP_DISPLAY} · ${APP_PUBLISHER}"
+BrandingText "${APP_DISPLAY} Â· ${APP_PUBLISHER}"
 
 !define MUI_ABORTWARNING
 !define MUI_ICON "${NSISDIR}\Contrib\Graphics\Icons\modern-install.ico"
@@ -40,7 +40,7 @@ BrandingText "${APP_DISPLAY} · ${APP_PUBLISHER}"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_BITMAP "${NSISDIR}\Contrib\Graphics\Header\win.bmp"
 ; IMPORTANTE: com Unicode True, customizar via LangString (depois do MUI_LANGUAGE)
-; NAO via !define MUI_WELCOMEPAGE_TEXT - senao acentos viram 'Ã©' no instalador.
+; NAO via !define MUI_WELCOMEPAGE_TEXT - senao acentos viram 'ÃƒÂ©' no instalador.
 !define MUI_FINISHPAGE_RUN "$INSTDIR\GestorInteligenteDeDemandas.exe"
 !define MUI_FINISHPAGE_RUN_NOTCHECKED
 !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\LEIA-ME.txt"
@@ -61,26 +61,26 @@ BrandingText "${APP_DISPLAY} · ${APP_PUBLISHER}"
 
 ; Customizacoes PT-BR (Unicode-safe: usar LangString, NAO !define)
 LangString MUI_TEXT_WELCOME_INFO_TITLE ${LANG_PORTUGUESEBR} "Bem-vindo ao instalador do ${APP_DISPLAY}"
-LangString MUI_TEXT_WELCOME_INFO_TEXT  ${LANG_PORTUGUESEBR} "Este assistente instalará o ${APP_DISPLAY} ${APP_VERSION} no seu computador.$\r$\n$\r$\n• Funciona offline (banco local SQLite)$\r$\n• Sincronização entre dispositivos$\r$\n• Cobrança contínua inteligente$\r$\n• Sem dependência externa: usa o WebView2 que já vem no Windows 10/11$\r$\n$\r$\nClique em Avançar para continuar."
-LangString MUI_TEXT_FINISH_INFO_TITLE ${LANG_PORTUGUESEBR} "Instalação Concluída"
+LangString MUI_TEXT_WELCOME_INFO_TEXT  ${LANG_PORTUGUESEBR} "Este assistente instalarÃ¡ o ${APP_DISPLAY} ${APP_VERSION} no seu computador.$\r$\n$\r$\nâ€¢ Funciona offline (banco local SQLite)$\r$\nâ€¢ SincronizaÃ§Ã£o entre dispositivos$\r$\nâ€¢ CobranÃ§a contÃ­nua inteligente$\r$\nâ€¢ Sem dependÃªncia externa: usa o WebView2 que jÃ¡ vem no Windows 10/11$\r$\n$\r$\nClique em AvanÃ§ar para continuar."
+LangString MUI_TEXT_FINISH_INFO_TITLE ${LANG_PORTUGUESEBR} "InstalaÃ§Ã£o ConcluÃ­da"
 LangString MUI_TEXT_FINISH_INFO_TEXT  ${LANG_PORTUGUESEBR} "${APP_DISPLAY} foi instalado com sucesso."
 LangString MUI_UNTEXT_WELCOME_INFO_TITLE ${LANG_PORTUGUESEBR} "Bem-vindo ao desinstalador do ${APP_DISPLAY}"
 LangString MUI_UNTEXT_CONFIRM_TITLE ${LANG_PORTUGUESEBR} "Desinstalar ${APP_DISPLAY}"
-LangString MUI_UNTEXT_CONFIRM_SUBTITLE ${LANG_PORTUGUESEBR} "Esta ação removerá o ${APP_DISPLAY} do seu computador."
+LangString MUI_UNTEXT_CONFIRM_SUBTITLE ${LANG_PORTUGUESEBR} "Esta aÃ§Ã£o removerÃ¡ o ${APP_DISPLAY} do seu computador."
 
 Var PreviousInstall
 
 Function .onInit
-    ; Mata instância anterior (PADRÃO §3.5)
+    ; Mata instÃ¢ncia anterior (PADRÃƒO Â§3.5)
     nsExec::ExecToLog 'taskkill /F /IM "GestorInteligenteDeDemandas.exe" /T'
     Sleep 500
 
-    ; Detecta instalação anterior (PADRÃO §11: identidade imutável)
+    ; Detecta instalaÃ§Ã£o anterior (PADRÃƒO Â§11: identidade imutÃ¡vel)
     ReadRegDWORD $PreviousInstall HKLM "${INSTALL_DIR_REG}" "Version"
     ${If} $PreviousInstall != ""
-        DetailPrint "Detectada instalação anterior (versão $PreviousInstall). Atualizando in-place..."
+        DetailPrint "Detectada instalaÃ§Ã£o anterior (versÃ£o $PreviousInstall). Atualizando in-place..."
     ${Else}
-        DetailPrint "Instalação nova."
+        DetailPrint "InstalaÃ§Ã£o nova."
     ${EndIf}
 FunctionEnd
 
@@ -128,7 +128,7 @@ Section "Uninstall"
     Delete "$DESKTOP\${APP_DISPLAY}.lnk"
 
     MessageBox MB_YESNO|MB_ICONQUESTION \
-        "Deseja também apagar os dados locais em %APPDATA%\${APP_DISPLAY}\?$\r$\n$\r$\nSim = apaga tudo (irreversível)$\r$\nNão = mantém dados para reinstalar" \
+        "Deseja tambÃ©m apagar os dados locais em %APPDATA%\${APP_DISPLAY}\?$\r$\n$\r$\nSim = apaga tudo (irreversÃ­vel)$\r$\nNÃ£o = mantÃ©m dados para reinstalar" \
         IDYES yes_delete IDNO no_keep
 
     yes_delete:

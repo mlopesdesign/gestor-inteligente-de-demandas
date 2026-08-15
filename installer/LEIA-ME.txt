@@ -1,0 +1,29 @@
+Gestor Inteligente de Demandas v0.1.0
+=====================================
+
+Obrigado por instalar o Gestor Inteligente de Demandas!
+
+PRIMEIROS PASSOS
+----------------
+1. Execute "Gestor Inteligente de Demandas" pelo Menu Iniciar ou Desktop
+2. Crie sua conta na tela de login (email qualquer + senha opcional)
+3. Use a "Caixa de entrada" para capturar tarefas rapidamente
+4. A tela "Hoje" mostra suas tarefas agrupadas por urgência
+
+ONDE ESTAO SEUS DADOS
+---------------------
+- Banco local:  %APPDATA%\GestorInteligenteDeDemandas\dados\gestor.db
+- Log técnico:  %APPDATA%\GestorInteligenteDeDemandas\logs\
+- Backup manual recomendado antes de qualquer update
+
+ATALHOS
+-------
+- X (fechar): fecha o aplicativo
+- _ (minimizar): minimiza para a barra de tarefas
+- [] (maximizar): alterna entre maximizado e tamanho normal
+
+SUPORTE
+-------
+Marcio Lopes - ML Lopes Design
+Email: mlopesdesign@gmail.com
+Site:  https://mllopes.com.br
