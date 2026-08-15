@@ -1,4 +1,4 @@
-# AGENTS — Gestor Inteligente de Demandas · ML Lopes Design
+# AGENTS — Gestor Inteligente de Demandas
 
 > Arquivo de governança para qualquer agente de IA que tocar neste projeto.
 > Lido integralmente **antes** de qualquer alteração. Vinculante.
@@ -11,17 +11,15 @@ Estes valores **nunca** mudam após o primeiro release.
 
 | Atributo | Valor | Observação |
 |---|---|---|
-| **applicationId** | `app.mllopes.gestor` | Pasta de dados, AppUserModelID, atalhos |
-| **binaryName** | `GestorInteligenteDeDemandas` | Nome do .exe, sem espaços, sem acento |
-| **Pasta de dados** | `%APPDATA%/GestorInteligenteDeDemandas` | Banco, fila, anexos, log |
-| **Banco central (servidor)** | `gestor_central.db` (SQLite + WAL via Xerial JDBC) | Servidor Java |
-| **Banco local (desktop)** | `gestor_local.db` (SQLite via Xerial JDBC) | Cache + fila offline |
-| **applicationId do instalador** | mesmo do app | Pacote, registro Windows |
-| **Slug do repositório** | `gestor-inteligente-de-demandas` | GitHub |
-| **Owner do repositório** | `ml-lopes` | GitHub |
-| **Identidade visual** | ML Lopes Design — premium, dark/light, paleta neutra com 1 cor de marca | Documento separado |
+| `applicationId` | `app.mllopes.gestor` | Pasta de dados, AppUserModelID, atalhos |
+| `binaryName` | `GestorInteligenteDeDemandas` | Nome do `.exe` (Neutralino launcher), sem espaços, sem acento |
+| Pasta de dados | `%APPDATA%\GestorInteligenteDeDemandas\dados\` | Banco, fila, anexos, log |
+| Banco local (cliente) | `gestor.db` (SQLite via sql.js) | Single-user, um dono do dado |
+| `applicationId` do instalador | mesmo do app | Pacote, registro Windows |
+| Slug do repositório | `gestor-inteligente-de-demandas` | GitHub |
+| Owner do repositório | `ml-lopes` | GitHub |
 
-> Mudou qualquer um destes → quebra atualização, banco e atalhos. Conferir antes de cada release.
+> Mudou qualquer um destes → quebra atualização, banco, atalhos e link da AppUserModelID. Conferir antes de cada release.
 
 ---
 
@@ -31,82 +29,66 @@ Quando houver divergência, vale o documento de **maior precedência**.
 
 | # | Documento | Precedência | Lido em |
 |---|---|---|---|
-| 1 | `docs/00-DIAGNOSTICO-ARQUITETURA-PLANO.md` | vinculante (Fase 0) | 2026-08-14 |
-| 2 | `docs/MATRIZ-RASTREABILIDADE.md` | vinculante (requisitos) | 2026-08-14 |
-| 3 | `docs/adr/*.md` | vinculante (decisões) | contínua |
-| 4 | `PROJETO-GESTOR-INTELIGENTE-DE-DEMANDAS.md` | ESPECIFICAÇÃO MESTRA | 2026-08-14 |
-| 5 | `PADRAO-ML-LOPES-DESIGN.md` | FILOSOFIA + REGRAS DE OURO (exceção registrada em ADR 0001) | 2026-08-14 |
+| 1 | `PADRAO-ML-LOPES-DESIGN.md` | vinculante (fonte da verdade sobre stack e processo) | 2026-08-14 |
+| 2 | `PROJETO-GESTOR-INTELIGENTE-DE-DEMANDAS.md` | vinculante (especificação do produto) | 2026-08-14 |
+| 3 | `docs/MATRIZ-RASTREABILIDADE.md` | vinculante (requisitos → implementação → teste) | 2026-08-14 |
+| 4 | `docs/adr/*.md` | vinculante (decisões técnicas) | contínua |
+| 5 | `docs/01-07-*.md` | especificação (domínio, dados, contratos, sync, threat, notificações, instalação) | 2026-08-14 |
+| 6 | `docs/MANUAL-*.md` + `docs/GUIA-RAPIDO.md` | manual do usuário | 2026-08-14 |
 
 **Hierarquia:** um documento de menor número **NUNCA** contradiz um de maior. Em conflito, prevalece o de menor número. Conflitos residuais são registrados em ADR.
 
 ---
 
-## 3. Stack aprovada
-
-> **Linguagem: Java 21 LTS. NÃO é JavaScript. NÃO é TypeScript.**
-> Decisão do proprietário em 14/08/2026 ("Java mesmo, refaz do zero"). Exceção registrada em ADR 0001 revisão 1.
-> Quebra o padrão ML Lopes Design §2.1 (que recomenda JavaScript). Demais pontos do padrão (§3.4 permissão no backend, §4.2 alta frequência, §4.3 gravação atômica, §5 atualização) permanecem vinculantes.
+## 3. Stack aprovada (do PADRÃO §2.2)
 
 | Camada | Tecnologia | Versão | Justificativa |
 |---|---|---|---|
-| **Linguagem** | Java | 21 LTS | Decisão do proprietário |
-| **Build** | Maven | 3.9+ | Padrão em Windows; Pin em CI |
-| **UI desktop** | JavaFX | 21 (OpenJFX ou Liberica JDK Full) | Toolkit oficial; FXML + CSS; WebView baseado em WebKit |
-| **Renderização local** | `javafx.scene.web.WebView` | do JavaFX | Sem dependência de WebView2/Edge |
-| **Banco local** | Xerial SQLite JDBC | 3.50+ | Type 4 driver com nativos embutidos |
-| **Banco central** | Xerial SQLite JDBC + HikariCP | 3.50+ / 5.x | Mesmo engine do cliente; pool para concorrência |
-| **Migrações** | Flyway Community | 10.x | Versionado, suporta SQLite |
-| **Servidor** | Javalin | 6.x ou 7.x | Microframework leve sobre Jetty |
-| **Web** | HTML+CSS+JS puros | — | Servido pelo Javalin |
-| **Autenticação** | argon2-jvm | 2.x | argon2id |
-| **JSON** | Jackson | 2.x | Padrão de mercado |
-| **Validação** | Hibernate Validator (Jakarta) | 8.x | Bean Validation 3.0 |
-| **Logging** | SLF4J + Logback + logstash-encoder | atual | Estruturado, correlation id |
-| **Datas** | `java.time` | nativo | API moderna; fuso por `ZoneId` |
-| **Push em tempo real** | Server-Sent Events (SSE) via Javalin | nativo | Mais simples que WebSocket |
-| **IA** | `com.openai:openai-java` | 4.x | Structured Outputs (`responseFormat`) |
-| **Notificações desktop** | JNA + WinRT `AppNotificationManager` | 5.x | API moderna; fallback AWT |
-| **Empacotamento** | jpackage + WiX | Java 21 / WiX 3.11 | EXE/MSI com JRE embutido |
-| **Atualização** | GitHub Releases + `curl.exe` (via `ProcessBuilder`) | — | Mesma forma do padrão §5 |
-| **Versionamento** | semver em 6 lugares sincronizados | — | bump automatizado |
+| Linguagem | JavaScript (ES2020+) | — | Padrão §2.1. Módulos nativos, sem compilação |
+| UI | HTML + CSS escritos à mão | — | Padrão §2.5. Sem Tailwind, sem framework |
+| Framework desktop | **Neutralino.js** | 6.3.0 | Padrão §2.2. Empacota como `.exe` do Windows |
+| Renderização | **WebView2** | do Windows 10/11 | Já vem no Windows. Zero runtime embutido |
+| Banco local | **sql.js** (SQLite → JS) | atual | Carrega `.db` na memória, regrava a cada escrita |
+| Extensão nativa | PowerShell | do Windows | Rede local, impressão, instalação |
+| Empacotamento | **NSIS** | 3.x | Gera o `Setup.exe` (~15 MB) |
+| Build/dev | Node.js | 22+ | **SÓ** no ambiente de desenvolvimento |
 
-### 3.1 Versões pinned (NÃO upgrade sem ADR)
+### 3.1 Versões pinned
 
-- Java: **21 LTS**
-- Maven: **3.9+**
-- JavaFX: **21**
-- Xerial SQLite JDBC: **3.50.3+**
-- Javalin: **6.x ou 7.x** (definir e fixar)
-- Flyway: **10.x**
-- HikariCP: **5.x**
-- Jackson: **2.x**
-- Hibernate Validator: **8.x**
-- argon2-jvm: **2.x**
-- JNA: **5.x**
-- openai-java: **4.x**
-- WiX: **3.11** (portável em `tools/wix/`)
+- Neutralino: **6.3.0** (não upgrade sem ADR)
+- WebView2: a do Windows do usuário (runtime do sistema, sem versão fixa)
+- sql.js: última estável do `vendor/`
+- NSIS: **3.10+**
 
-### 3.2 JRE no cliente
+### 3.2 PROIBIDO (do PADRÃO §2.5)
 
-**JRE embutido no instalador** via `jlink` (runtime mínimo) + `jpackage` (instalador). Tamanho esperado: 35-55 MB. Trade-off aceito pela decisão do proprietário.
+- TypeScript
+- React, Vue, Angular, Svelte
+- Electron
+- Webpack, Vite, Rollup, Babel
+- Tailwind ou qualquer CSS com compilador
+- Dependências npm no código do cliente
+- **Java, Javalin, JavaFX, jpackage, Maven** ← erro da sprint 14/08/2026
+- Node.js no cliente (só no dev)
 
 ---
 
-## 4. Princípios inegociáveis (do padrão ML Lopes + projeto)
+## 4. Princípios inegociáveis (do PADRÃO §1, §3, §6, §7, §8)
 
-1. **Regra de negócio em `core/`, função pura, primeiro parâmetro `db`.** Java: `core/TarefaCore.java` com métodos estáticos que recebem `DataSource` (ou `Connection`) como primeiro parâmetro.
-2. **Permissão no backend, nunca só na tela.**
-3. **IA nunca é dependência das funções essenciais.** Caiu a API, o app continua.
-4. **Offline é o normal.** A fila local existe por padrão; sync é otimização.
-5. **Cobrança é contínua** até decisão explícita (concluir, adiar c/ motivo, bloquear, cancelar c/ motivo).
-6. **Sem perda silenciosa de dados.** Conflito visível; sobrescrita nunca silenciosa.
-7. **Nenhum segredo no cliente.** Chave de IA no servidor, jamais no JAR distribuído. Verificado por `grep` no build.
-8. **LGPD observado.** Exportar e apagar dados próprios é função de primeira classe.
-9. **Testar o caminho mínimo**, não só o completo.
-10. **Testar a migração sobre banco no formato antigo.**
-11. **Versão bump em todo build.** Inclusive rebuild do mesmo dia. Bump em 6 lugares sincronizados.
-12. **Documentação na mesma entrega.**
-13. **Diagnóstico cita arquivo:linha. Nunca suposição.**
+1. **Software leve, sem runtime.** Zero dependência instalada na máquina do cliente.
+2. **Regra de negócio em `src/js/backend/core/`, função pura, primeiro parâmetro `db`.** Sem DOM, sem `window`, sem Neutralino dentro do core.
+3. **Uma porta única `api(canal, payload)`** entre tela e regra. A tela não sabe se está rodando no app ou num terminal em rede.
+4. **Permissão no backend, nunca só na tela.** `servidor.js:processar` consulta `PERM_ROTA` antes de chamar a regra.
+5. **Offline é o normal.** Sql.js carrega o `.db` na memória, tudo funciona sem rede. Sync é otimização, não dependência.
+6. **Cobrança contínua até decisão explícita** (do PROJETO §9).
+7. **Sem perda silenciosa de dados.** Conflito visível, sobrescrita nunca silenciosa.
+8. **Nenhum segredo no cliente.** Chave de IA no servidor (se houver), jamais no bundle.
+9. **LGPD observado.** Exportar e apagar dados próprios são funções de primeira classe.
+10. **Testar o caminho mínimo, não só o completo.**
+11. **Testar a migração sobre banco no formato antigo.**
+12. **Bump de versão em todo build**, inclusive rebuild do mesmo dia. Bump em todos os lugares sincronizados.
+13. **Documentação na mesma entrega.**
+14. **Diagnóstico cita arquivo:linha. Nunca suposição.**
 
 ---
 
@@ -114,145 +96,138 @@ Quando houver divergência, vale o documento de **maior precedência**.
 
 ```
 E:\Projetos\LOPES FOCUS\
-├── AGENTS.md                       ← este arquivo
-├── PADRAO-ML-LOPES-DESIGN.md       ← não mexer
-├── PROJETO-GESTOR-INTELIGENTE-DE-DEMANDAS.md  ← não mexer
+├── AGENTS.md                                  ← este arquivo
+├── README.md
+├── PADRAO-ML-LOPES-DESIGN.md                  ← normativo (cópia local)
+├── PROJETO-GESTOR-INTELIGENTE-DE-DEMANDAS.md  ← normativo (cópia local)
+├── neutralino.config.json                     ← config do app (id, version, icon)
+├── package.json                               ← SÓ dev (build, testes, GRAPHIFY)
+├── schema.sql                                 ← fonte de verdade do banco (do PADRÃO §11)
+│
+├── src/                                       ← código-fonte entregue
+│   ├── index.html
+│   ├── css/app.css
+│   ├── js/
+│   │   ├── app.js                             ← menu, permissões, api() gateway
+│   │   ├── telas/                             ← uma por área do menu
+│   │   │   ├── hoje.js
+│   │   │   ├── tarefas.js
+│   │   │   ├── projetos.js
+│   │   │   ├── clientes.js
+│   │   │   ├── areas.js
+│   │   │   ├── sincronizacao.js
+│   │   │   ├── configuracoes.js
+│   │   │   └── ...
+│   │   ├── vendor/                            ← libs de terceiros (sem npm no cliente)
+│   │   │   ├── sql-wasm.js
+│   │   │   ├── neutralino.js
+│   │   │   └── neutralino.css
+│   │   └── backend/
+│   │       ├── servidor.js                    ← despacha canal → core/*, aplica PERM_ROTA
+│   │       ├── db.js                          ← wrapper sql.js + migrações
+│   │       ├── ambiente.js                    ← tudo que toca o sistema operacional
+│   │       ├── permissoes.js
+│   │       ├── update.js                      ← auto-update (substitui resources.neu)
+│   │       └── core/                          ← regras de negócio PURAS
+│   │           ├── usuarios.js
+│   │           ├── auth.js
+│   │           ├── tarefas.js
+│   │           ├── cobrancas.js
+│   │           ├── recorrencias.js
+│   │           ├── sync.js
+│   │           ├── ia.js
+│   │           └── ...
+│   └── resources/
+│       ├── icons/
+│       └── images/
+│
+├── tests/                                     ← Node contra SQLite real (do PADRÃO §7.4)
+│   ├── test-tarefas.mjs
+│   ├── test-cobrancas.mjs
+│   ├── test-recorrencias.mjs
+│   └── ...
+│
 ├── docs/
-│   ├── 00-DIAGNOSTICO-ARQUITETURA-PLANO.md
-│   ├── MATRIZ-RASTREABILIDADE.md
-│   ├── MANUAL-DO-USUARIO.md
+│   ├── 00-PADRAO-ML-LOPES-DESIGN.md          ← cópia local
+│   ├── 01-MODELO-DOMINIO.md
+│   ├── 02-MODELO-DADOS.md
+│   ├── 03-CONTRATOS-API.md
+│   ├── 04-POLITICA-SYNC.md
+│   ├── 05-THREAT-MODEL.md
+│   ├── 06-ESTRATEGIA-NOTIFICACOES.md
+│   ├── 07-ESTRATEGIA-INSTALACAO.md
 │   ├── GUIA-RAPIDO.md
+│   ├── MANUAL-DO-USUARIO.md
 │   ├── MANUAL-INSTALACAO.md
 │   ├── MANUAL-BACKUP-RECUPERACAO.md
-│   ├── adr/
-│   │   ├── 0001-stack-final.md
-│   │   ├── 0002-sincronizacao-lww-versionado.md
-│   │   ├── 0003-banco-sqlite-ponto-unico.md
-│   │   ├── 0004-ia-gateway-versionado.md
-│   │   ├── 0005-notificacoes-appnotification.md
-│   │   ├── 0006-atualizacao-online.md
-│   │   └── 0007-assinatura-atualizacao.md
-│   ├── 01-MODELO-DOMINIO.md            (Fase 1)
-│   ├── 02-MODELO-DADOS.md              (Fase 1)
-│   ├── 03-CONTRATOS-API.md             (Fase 1)
-│   ├── 04-POLITICA-SYNC.md             (Fase 1)
-│   ├── 05-THREAT-MODEL.md              (Fase 1)
-│   ├── 06-ESTRATEGIA-NOTIFICACOES.md   (Fase 1)
-│   └── 07-ESTRATEGIA-INSTALACAO.md     (Fase 1)
-│   └── manuais/
-│       └── screenshots/
-├── desktop/                        ← app JavaFX (Maven module)
-│   ├── pom.xml
-│   ├── src/main/java/app/mllopes/gestor/
-│   │   ├── App.java
-│   │   ├── core/                   ← regra pura
-│   │   ├── db/                     ← wrapper Xerial SQLite JDBC
-│   │   ├── sync/                   ← fila + version vector
-│   │   ├── notifications/          ← JNA + AWT fallback
-│   │   ├── ui/                     ← controllers JavaFX
-│   │   ├── tray/                   ← SystemTray
-│   │   └── update/                 ← atualizador (curl + SHA-256)
-│   ├── src/main/resources/
-│   │   ├── fxml/                   ← telas
-│   │   ├── css/                    ← tema dark+light
-│   │   ├── icons/                  ← .ico + .png
-│   │   └── app.properties          ← versão
-│   └── src/test/java/...
-├── server/                         ← API central Java (Maven module)
-│   ├── pom.xml
-│   ├── src/main/java/app/mllopes/gestor/api/
-│   │   ├── Server.java             ← Javalin
-│   │   ├── core/                   ← regra de negócio (espelha o desktop)
-│   │   ├── db/                     ← Flyway + HikariCP + Xerial
-│   │   ├── auth/                   ← argon2 + sessões
-│   │   ├── sync/                   ← /api/sync/* + /sse/eventos
-│   │   ├── ai/                     ← gateway OpenAI
-│   │   ├── notifications/          ← adaptadores SMTP/Telegram
-│   │   ├── routes/                 ← handlers por área
-│   │   └── observability/          ← logs + auditoria
-│   ├── src/main/resources/
-│   │   ├── db/migration/           ← Flyway V<n>__<desc>.sql
-│   │   ├── prompts/v1/             ← prompts versionados
-│   │   └── logback.xml
-│   └── src/test/java/...
-├── web/                            ← app web (estático, sem build)
-│   ├── index.html
-│   ├── css/
-│   ├── js/
-│   └── assets/
+│   ├── MATRIZ-RASTREABILIDADE.md
+│   └── adr/
+│
 ├── installer/
-│   ├── wix/                        ← WiX 3.11 portátil
-│   ├── scripts/
-│   │   ├── install-aumid.ps1
-│   │   └── uninstall-aumid.ps1
-│   └── resources/                  ← ícone, license, banner
+│   ├── gestor.nsi                              ← NSIS (gera Setup.exe)
+│   ├── LICENSE.txt
+│   └── resources/
+│       ├── icon.ico
+│       └── icon.png
+│
 ├── tools/
-│   ├── bump-version.mjs
-│   ├── build-desktop.mjs           ← mvn package + jpackage
-│   ├── build-server.mjs            ← mvn package
-│   ├── build-web.mjs               ← copy
-│   ├── build-installer.mjs         ← jpackage (chama mvn antes)
-│   ├── run-tests.mjs
-│   ├── smoke-installer.ps1
-│   ├── gen-graphify.mjs
-│   ├── check-no-openai-on-client.mjs
-│   ├── check-release.mjs
-│   ├── pack-release.mjs
-│   └── wix/                        ← WiX portátil
-├── tests/
-│   ├── shared/                     ← regras de negócio espelhadas
-│   ├── desktop/
-│   ├── server/
-│   └── e2e/
-└── release/                         ← artefatos finais (gitignored)
+│   ├── setup-env.ps1                           ← carrega PATH do Node + Neutralino + NSIS
+│   ├── build.mjs                               ← neu build + empacota
+│   ├── bump-version.mjs                        ← bumpa em 3 lugares sincronizados
+│   ├── run-tests.mjs                           ← roda `node tests/`
+│   ├── graphify.mjs                            ← gera GRAPHIFY.md (mapa técnico)
+│   ├── download-neutralino.mjs                 ← baixa Neutralino SDK portátil
+│   ├── download-nsis.mjs                       ← baixa NSIS portátil
+│   ├── publish-release.ps1                     ← publica via gh CLI
+│   └── smoke-telas-runtime.mjs                 ← smoke runtime de cada tela
+│
+├── .trash-java/                                ← (temporário) lixeira do que era Java
+│
+└── .github/
+    └── workflows/
+        └── ci.yml
 ```
-
-> Nada disso existe ainda. Será criado passo a passo, com build/testes a cada marco.
 
 ---
 
 ## 6. Comandos de uso (referência rápida)
 
 ```powershell
-# Desenvolvimento desktop (com classe Maven)
-cd desktop; mvn compile exec:java
+# Setup ambiente (carrega Node + Neutralino + NSIS no PATH)
+. .\tools\setup-env.ps1
 
-# Build desktop (gera JAR + jpackage)
-node tools/build-desktop.mjs
-
-# Subir servidor (dev)
-cd server; mvn spring-boot:run  # ou mvn exec:java, conforme config
-
-# Rodar todos os testes
+# Rodar testes Node contra SQLite real
 node tools/run-tests.mjs
 
-# Empacotar release
-node tools/pack-release.mjs
+# Build Neutralino (gera resources.neu + binário)
+node tools/build.mjs
+
+# Bump de versão (3 lugares: neutralino.config.json + src/js/app.js + src/js/backend/ambiente.js)
+node tools/bump-version.mjs 0.1.0
+
+# Gerar GRAPHIFY.md (mapa técnico)
+node tools/graphify.mjs
+
+# Publicar release (Setup.exe + resources.neu no GitHub)
+powershell -File tools\publish-release.ps1 v0.1.0 "Título" "Notas markdown"
 ```
 
 ---
 
 ## 7. Histórico de decisões
 
-Ver `docs/adr/`. Cada decisão permanente (escolha de stack, algoritmo de sync, biblioteca, breaking change) ganha um ADR.
+ADRs em `docs/adr/`. Cada decisão permanente (escolha de stack, algoritmo de sync, biblioteca, breaking change) ganha um ADR.
 
 ADRs já registrados:
-- `0001-stack-final.md` — Stack final (Java 21 LTS + JavaFX 21 + Javalin + Xerial SQLite JDBC + jpackage + WiX 3.11 + openai-java + JNA + AppNotificationManager). **Revisão 1**: decisão do proprietário por Java.
-- `0002-sincronizacao-lww-versionado.md` — Sincronização LWW + version vector + ULID tiebreaker. Implementação Java.
-- `0003-banco-sqlite-ponto-unico.md` — Banco SQLite (Xerial JDBC 3.50+ + WAL + HikariCP no servidor / Xerial JDBC local no desktop). Flyway 10.
-- `0004-ia-gateway-versionado.md` — Gateway de IA isolado no servidor com `openai-java`, prompts versionados, structured outputs.
-- `0005-notificacoes-appnotification.md` — Notificações via JNA + `AppNotificationManager` (WinRT) com fallback AWT.
-- `0006-atualizacao-online.md` — Mesma forma de atualizar online do padrão ML Lopes §5 (GitHub Releases + curl.exe + SHA-256 + version > + backup antes). Implementação Java via `ProcessBuilder`.
-- `0007-assinatura-atualizacao.md` — Política de assinatura digital em 4 camadas (HTTPS, SHA-256, Authenticode, semver); autoassinado no MVP, OV no médio prazo, EV no longo prazo.
+- (a registrar após o refazer do zero, conforme decisões forem tomadas)
 
 ---
 
 ## 8. Histórico de versões (do projeto)
 
-Será mantido em `docs/HISTORICO-VERSOES.md` no formato do padrão ML Lopes — causa raiz + correção + lição, não changelog de marketing.
+Será mantido em `docs/HISTORICO-VERSOES.md` no formato do padrão — causa raiz + correção + lição, não changelog de marketing.
 
 ---
 
 *ML Lopes Design · Marcio · mlopesdesign@gmail.com*
-*Gerado em 14/08/2026 como FASE 0 do projeto Gestor Inteligente de Demandas.*
-*Revisão 1 (mesmo dia): stack migrada para Java por decisão do proprietário.*
+*Gerado em 14/08/2026 — refeito em 14/08/2026 22:25 BRT após reprovação da entrega em Java. Stack agora: JavaScript + Neutralino + sql.js + WebView2 + NSIS.*

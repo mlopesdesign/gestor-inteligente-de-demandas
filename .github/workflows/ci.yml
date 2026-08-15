@@ -8,59 +8,43 @@ on:
 
 jobs:
   test:
-    name: Build + Test
     runs-on: windows-latest
-    timeout-minutes: 20
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup JDK 21 (Temurin)
-        uses: actions/setup-java@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          distribution: temurin
-          java-version: '21'
-          cache: maven
+          node-version: '22'
+          cache: 'npm'
 
-      - name: Setup Maven 3.9
-        run: |
-          $ProgressPreference = 'SilentlyContinue'
-          Invoke-WebRequest -Uri "https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip" -OutFile mvn.zip
-          Expand-Archive mvn.zip -DestinationPath tools/
-          Move-Item tools/apache-maven-3.9.9 tools/maven -Force
-          Remove-Item mvn.zip -Force
-          echo "MAVEN_HOME=$env:GITHUB_WORKSPACE\tools\maven\apache-maven-3.9.9" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Install dev dependencies
+        run: npm install --no-audit --no-fund
 
-      - name: Verify Java + Maven
-        shell: pwsh
-        run: |
-          java -version
-          mvn -version
+      - name: Rodar testes
+        run: npm test
 
-      - name: Build (sem testes)
-        run: mvn -B -ntp clean package -DskipTests
+  build:
+    runs-on: windows-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Tests
-        run: mvn -B -ntp test
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-      - name: Auditoria (sem OpenAI no cliente)
-        run: |
-          $clientFiles = Get-ChildItem -Path desktop -Recurse -Include *.java -ErrorAction SilentlyContinue
-          $matches = $clientFiles | Select-String -Pattern 'com\.openai|openai-java|OPENAI_API_KEY' | Select-Object -First 1
-          if ($matches) { Write-Error "Encontrada referencia a OpenAI no cliente: $($matches.Path)" ; exit 1 }
-          Write-Output "OK: nenhuma referencia a OpenAI no cliente"
+      - name: Build (Neutralino + sql.js)
+        run: node tools/build.mjs
 
-      - name: Upload JAR do servidor
+      - name: Upload artefatos
         uses: actions/upload-artifact@v4
         with:
-          name: server-jar
-          path: server/target/server-0.1.0.jar
-          if-no-files-found: error
-
-      - name: Upload JAR do desktop
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-jar
-          path: desktop/target/desktop-0.1.0.jar
+          name: gestor-inteligente-de-demandas-${{ github.sha }}
+          path: |
+            dist/GestorInteligenteDeDemandas
+            installer/GestorInteligenteDeDemandas-Setup-*.exe
+            release/resources.neu
           if-no-files-found: warn

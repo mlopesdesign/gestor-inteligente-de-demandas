@@ -2,39 +2,40 @@
 # Configura o ambiente de build do Gestor Inteligente de Demandas.
 # Source:  . .\tools\setup-env.ps1
 #
-# Define:
-#   JAVA_HOME -> tools\jdk\jdk-21.0.5+11
-#   MAVEN_HOME -> tools\maven\apache-maven-3.9.9
-#   WIX_HOME (opcional) -> ... se instalado
-#   PATH inclui os binários acima
-#
-# Não instala nada no sistema. Tudo portátil em tools\.
+# Carrega:
+#   - Node.js 22+ (do sistema, ja instalado)
+#   - Neutralino SDK portatil (tools/neutralino/)
+#   - NSIS portatil (tools/nsis-3.10/)
+#   - neu CLI (do npm global, se instalado)
 
 $ErrorActionPreference = 'Stop'
-
 $root = Resolve-Path (Join-Path $PSScriptRoot '..')
-$jdkHome = Join-Path $root 'tools\jdk\jdk-21.0.5+11'
-$mavenHome = Join-Path $root 'tools\maven\apache-maven-3.9.9'
-$wixHome = Join-Path $root 'tools\wix\wix311'
+$tools = Join-Path $root 'tools'
 
-if (-not (Test-Path (Join-Path $jdkHome 'bin\java.exe'))) {
-    throw "JDK nao encontrado em $jdkHome. Baixe e extraia o Temurin 21 LTS x64 em tools\jdk\."
-}
-if (-not (Test-Path (Join-Path $mavenHome 'bin\mvn.cmd'))) {
-    throw "Maven nao encontrado em $mavenHome. Baixe e extraia o Apache Maven 3.9+ em tools\maven\."
-}
-
-$env:JAVA_HOME = $jdkHome
-$env:MAVEN_HOME = $mavenHome
-$env:Path = "$jdkHome\bin;$mavenHome\bin;$env:Path"
-
-if (Test-Path (Join-Path $wixHome 'bin\candle.exe')) {
-    $env:WIX_HOME = $wixHome
-    $env:Path = "$wixHome\bin;$env:Path"
-    Write-Output "WIX_HOME configurado: $wixHome" -ForegroundColor DarkGray
+# Neutralino SDK
+$neuDir = Join-Path $tools 'neutralino'
+if (Test-Path $neuDir) {
+    $env:Path = "$neuDir;$env:Path"
+    Write-Output "[setup-env] Neutralino SDK em: $neuDir" -ForegroundColor Green
+} else {
+    Write-Output "[setup-env] Neutralino SDK nao encontrado. Rode: node tools/download-neutralino.mjs" -ForegroundColor Yellow
 }
 
-Write-Output "JAVA_HOME  = $env:JAVA_HOME" -ForegroundColor Green
-Write-Output "MAVEN_HOME = $env:MAVEN_HOME" -ForegroundColor Green
-& cmd /c "$env:JAVA_HOME\bin\java.exe -version" 2>&1 | ForEach-Object { Write-Output ("  " + $_) }
-& cmd /c "$env:MAVEN_HOME\bin\mvn.cmd -version" 2>&1 | Select-Object -First 4 | ForEach-Object { Write-Output ("  " + $_) }
+# NSIS
+$nsisDir = Join-Path $tools 'nsis-3.10'
+if (Test-Path (Join-Path $nsisDir 'makensis.exe')) {
+    $env:Path = "$nsisDir;$env:Path"
+    Write-Output "[setup-env] NSIS em: $nsisDir" -ForegroundColor Green
+} else {
+    Write-Output "[setup-env] NSIS nao encontrado. Rode: node tools/download-nsis.mjs" -ForegroundColor Yellow
+}
+
+# Mostra versoes
+Write-Output "[setup-env] Node:" -NoNewline
+node --version 2>$null
+Write-Output "[setup-env] neu CLI:" -NoNewline
+$neuVer = (Get-Command neu -ErrorAction SilentlyContinue)
+if ($neuVer) { neu --version } else { Write-Output " nao instalado (npm i -g @neutralinojs/neu)" }
+Write-Output "[setup-env] NSIS:" -NoNewline
+$makensis = Get-Command makensis -ErrorAction SilentlyContinue
+if ($makensis) { & makensis /VERSION 2>$null | Select-Object -First 1 } else { Write-Output " nao encontrado" }

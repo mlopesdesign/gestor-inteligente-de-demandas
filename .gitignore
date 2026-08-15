@@ -1,26 +1,40 @@
 # =====================================================================
-# .gitignore — Gestor Inteligente de Demandas
+# .gitignore — Gestor Inteligente de Demandas (stack: JS+Neutralino)
+# Conforme PADRAO-ML-LOPES-DESIGN.md §7.1
 # =====================================================================
 
-# Toolchain portátil
-/tools/jdk/
-/tools/maven/
-/tools/wix/wix311/
-/tools/cert/
-/tools/jre-runtime/
+# Toolchain portátil (NÃO vai pro repo, é regenerável)
+tools/neutralino/
+tools/nsis-3.10/
+tools/neutralino.zip
+tools/cert/
 *.pfx
 *.p12
 
-# Builds e artefatos
-**/target/
-/release/
-**/*.class
-**/*.jar
-**/*.exe
-**/*.msi
-**/*.zip
-**/*.neu
-**/*.war
+# Build outputs
+src/.tmp/
+dist/
+build/
+*.log
+*.exe
+*.msi
+*.zip
+*.neu
+release/
+
+# Banco local e dados do usuário (LGPD + PII)
+/data/*.db
+/data/*.db-shm
+/data/*.db-wal
+/data/*.bak
+/data/*.old
+/data/*.tmp
+/data/cookies.txt
+/data/sessao_*
+data/backups/
+
+# Lixeira de coisas erradas (entrega reprovada em Java)
+.trash-java/
 
 # IDEs
 .idea/
@@ -30,21 +44,10 @@
 .project
 .settings/
 nbproject/
-nb-configuration.xml
-
-# Banco local e dados do usuário
-/data/*.db
-/data/*.db-journal
-/data/*.db-wal
-/data/*.db-shm
-/data/backups/*.db
-/data/backups/*.db-journal
-/data/backups/*.db-wal
-/data/backups/*.db-shm
 
 # Logs
-**/*.log
 logs/
+*.log
 
 # SO
 .DS_Store
@@ -57,22 +60,18 @@ desktop.ini
 *.swp
 *~
 
-# Cache local
-**/node_modules/
-**/.cache/
+# Node (dev only, NUNCA no cliente)
+node_modules/
+.npm/
+.cache/
 
-# Snapshots de teste
-/tests/db/snapshots/*.db
-
-# Smoke
-/data/tmp/
+# Smoke leftovers de teste
 cookies.txt
+out2.json
+mvn-*.log
+server*.log
+server*.err
 
-# Smoke leftovers
-/-b
-/-o
-/out2.json
-/cookies.txt
-/mvn-*.log
-/server*.log
-/server*.err
+# Build cache do Neutralino
+.neutralino-bin/
+__neutralino_globals.js

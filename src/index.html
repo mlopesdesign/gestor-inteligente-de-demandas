@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor Inteligente de Demandas</title>
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="icon" type="image/png" href="/resources/icons/app.png">
+    <script src="/js/vendor/neutralino.js"></script>
+    <script src="/js/vendor/sql-wasm.js"></script>
+    <script type="module" src="/js/app.js" defer></script>
+</head>
+<body>
+    <!--
+        PADRAO-ML-LOPES-DESIGN.md §3.1: index.html é uma SPA escrita à mão.
+        Nada de React, nada de build. O arquivo deste repo É o arquivo que roda.
+    -->
+    <div id="app">
+        <!-- Tela de carregamento inicial -->
+        <div id="loading-screen" class="loading-screen">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <p>Carregando Gestor...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates de mensagem (substituídos dinamicamente pelo app.js) -->
+    <template id="tpl-toast">
+        <div class="toast"></div>
+    </template>
+</body>
+</html>
