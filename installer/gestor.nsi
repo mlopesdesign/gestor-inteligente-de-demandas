@@ -39,10 +39,8 @@ BrandingText "${APP_DISPLAY} · ${APP_PUBLISHER}"
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_BITMAP "${NSISDIR}\Contrib\Graphics\Header\win.bmp"
-!define MUI_WELCOMEPAGE_TITLE "Bem-vindo ao instalador do ${APP_DISPLAY}"
-!define MUI_WELCOMEPAGE_TEXT "Este assistente instalará o ${APP_DISPLAY} ${APP_VERSION} no seu computador.$\r$\n$\r$\n• Funciona offline (banco local SQLite)$\r$\n• Sincronização entre dispositivos$\r$\n• Cobrança contínua inteligente$\r$\n• Sem dependência externa: usa o WebView2 que já vem no Windows 10/11$\r$\n$\r$\nClique em Avançar para continuar."
-!define MUI_FINISHPAGE_TITLE "Instalação Concluída"
-!define MUI_FINISHPAGE_TEXT "${APP_DISPLAY} foi instalado com sucesso."
+; IMPORTANTE: com Unicode True, customizar via LangString (depois do MUI_LANGUAGE)
+; NAO via !define MUI_WELCOMEPAGE_TEXT - senao acentos viram 'Ã©' no instalador.
 !define MUI_FINISHPAGE_RUN "$INSTDIR\GestorInteligenteDeDemandas.exe"
 !define MUI_FINISHPAGE_RUN_NOTCHECKED
 !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\LEIA-ME.txt"
@@ -60,6 +58,15 @@ BrandingText "${APP_DISPLAY} · ${APP_PUBLISHER}"
 !insertmacro MUI_UNPAGE_FINISH
 
 !insertmacro MUI_LANGUAGE "PortugueseBR"
+
+; Customizacoes PT-BR (Unicode-safe: usar LangString, NAO !define)
+LangString MUI_TEXT_WELCOME_INFO_TITLE ${LANG_PORTUGUESEBR} "Bem-vindo ao instalador do ${APP_DISPLAY}"
+LangString MUI_TEXT_WELCOME_INFO_TEXT  ${LANG_PORTUGUESEBR} "Este assistente instalará o ${APP_DISPLAY} ${APP_VERSION} no seu computador.$\r$\n$\r$\n• Funciona offline (banco local SQLite)$\r$\n• Sincronização entre dispositivos$\r$\n• Cobrança contínua inteligente$\r$\n• Sem dependência externa: usa o WebView2 que já vem no Windows 10/11$\r$\n$\r$\nClique em Avançar para continuar."
+LangString MUI_TEXT_FINISH_INFO_TITLE ${LANG_PORTUGUESEBR} "Instalação Concluída"
+LangString MUI_TEXT_FINISH_INFO_TEXT  ${LANG_PORTUGUESEBR} "${APP_DISPLAY} foi instalado com sucesso."
+LangString MUI_UNTEXT_WELCOME_INFO_TITLE ${LANG_PORTUGUESEBR} "Bem-vindo ao desinstalador do ${APP_DISPLAY}"
+LangString MUI_UNTEXT_CONFIRM_TITLE ${LANG_PORTUGUESEBR} "Desinstalar ${APP_DISPLAY}"
+LangString MUI_UNTEXT_CONFIRM_SUBTITLE ${LANG_PORTUGUESEBR} "Esta ação removerá o ${APP_DISPLAY} do seu computador."
 
 Var PreviousInstall
 

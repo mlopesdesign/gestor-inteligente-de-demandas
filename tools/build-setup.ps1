@@ -14,6 +14,23 @@ if (-not (Test-Path $makensis)) {
     throw "NSIS nao encontrado em $makensis. Rode: python tools/download-nsis.py"
 }
 
+# IMPORTANTE: makensis le o .nsi como ANSI/CP1252. Se estiver em UTF-8, acentos viram 'Ã©'
+# (ex: "Função" aparece como "FunÃ§Ã£o" no instalador). Converter antes de compilar.
+# PT-BR (á é ç ã õ etc) cabe 100% em CP1252, sem perda.
+$nsiPath = Join-Path $installer 'gestor.nsi'
+$nsiBytes = [System.IO.File]::ReadAllBytes($nsiPath)
+# Heuristica: se tem bytes UTF-8 multibyte (>= 0x80 seguidos de >= 0x80), converte
+$temUtf8 = $false
+for ($i = 0; $i -lt $nsiBytes.Length - 1; $i++) {
+    if ($nsiBytes[$i] -ge 0xC0 -and $nsiBytes[$i+1] -ge 0x80) { $temUtf8 = $true; break }
+}
+if ($temUtf8) {
+    Write-Output "[build-setup] gestor.nsi em UTF-8, convertendo para CP1252 antes de makensis..." -ForegroundColor Yellow
+    $texto = [System.Text.Encoding]::UTF8.GetString($nsiBytes)
+    $cp1252 = [System.Text.Encoding]::GetEncoding(1252)
+    [System.IO.File]::WriteAllBytes($nsiPath, $cp1252.GetBytes($texto))
+}
+
 # Garante que LICENSE.txt existe
 if (-not (Test-Path (Join-Path $installer 'LICENSE.txt'))) {
     throw "LICENSE.txt nao existe em $installer"
