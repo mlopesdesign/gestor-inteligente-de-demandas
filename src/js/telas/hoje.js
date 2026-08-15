@@ -1,6 +1,6 @@
-// src/js/telas/hoge.js — tela principal (Hoje)
+// src/js/telas/hoje.js — tela principal (Hoje)
 // Lista tarefas agrupadas por buckets (PROJETO §11.1).
-import { api } from '../app.js';
+// api() é exposto em window.api pelo app.js; não importar (evita ciclo de módulos).
 import { escapeHtml } from '../backend/ambiente.js';
 
 export async function renderHoje() {
@@ -41,7 +41,7 @@ export async function renderHoje() {
   });
 
   // Carrega dados
-  const r = await api('tarefas:listar', { limite: 200 });
+  const r = await window.api('tarefas:listar', { limite: 200 });
   if (!r.ok) {
     document.getElementById('hoje-buckets').innerHTML = '<p class="vazia">Não foi possível carregar tarefas: ' + escapeHtml(JSON.stringify(r.erro)) + '</p>';
     return;

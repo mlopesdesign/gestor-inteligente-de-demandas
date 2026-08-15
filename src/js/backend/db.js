@@ -3,7 +3,9 @@
 //
 // Identidade imutável: %APPDATA%\GestorInteligenteDeDemandas\dados\gestor.db
 
-import initSqlJs from '../vendor/sql-wasm.js';
+// sql-wasm.js é UMD (CommonJS + browser global). Carregado por <script> clássico
+// em index.html, fica em window.initSqlJs. NÃO usar `import` — o módulo é UMD,
+// não ES module, e o import quebra o grafo de módulos do app.
 import { env } from './ambiente.js';
 
 let SQL = null;
@@ -15,6 +17,10 @@ let saveTimer = null;
 // pedimos o .wasm explicitamente.
 async function loadSqlJs() {
   if (SQL) return SQL;
+  if (typeof window.initSqlJs !== 'function') {
+    throw new Error('sql-wasm.js nao foi carregado. index.html precisa ter <script src="/js/vendor/sql-wasm.js"> ANTES de <script type="module" src="/js/app.js">');
+  }
+  const initSqlJs = window.initSqlJs;
   const wasmUrl = (typeof location !== 'undefined' ? location.origin : 'http://localhost') + '/js/vendor/sql-wasm.wasm';
   SQL = await initSqlJs({
     locateFile: () => wasmUrl,
@@ -28,9 +34,9 @@ async function carregarDoDisco() {
   const caminho = env.caminhoBanco();
   if (env.noApp && window.Neutralino?.filesystem) {
     try {
-      const existe = await Neutralino.filesystem.getStats(caminho).catch(() => null);
+      const existe = await window.Neutralino.filesystem.getStats(caminho).catch(() => null);
       if (existe && existe.size > 0) {
-        const data = await Neutralino.filesystem.readFile(caminho);
+        const data = await window.Neutralino.filesystem.readFile(caminho);
         return new Uint8Array(data);
       }
     } catch (e) {
@@ -59,10 +65,10 @@ async function gravarNoDisco(dados) {
   if (env.noApp && window.Neutralino?.filesystem) {
     const tmp = caminho + '.tmp';
     const old = caminho + '.old';
-    try { await Neutralino.filesystem.writeFile(tmp, dados); } catch (e) { console.error('[db] writeFile tmp falhou:', e); throw e; }
-    try { await Neutralino.filesystem.move(caminho, old); } catch (_) { /* pode nao existir ainda */ }
-    try { await Neutralino.filesystem.move(tmp, caminho); } catch (e) { console.error('[db] move tmp->principal falhou:', e); throw e; }
-    try { await Neutralino.filesystem.removeFile(old); } catch (_) {}
+    try { await window.Neutralino.filesystem.writeFile(tmp, dados); } catch (e) { console.error('[db] writeFile tmp falhou:', e); throw e; }
+    try { await window.Neutralino.filesystem.move(caminho, old); } catch (_) { /* pode nao existir ainda */ }
+    try { await window.Neutralino.filesystem.move(tmp, caminho); } catch (e) { console.error('[db] move tmp->principal falhou:', e); throw e; }
+    try { await window.Neutralino.filesystem.removeFile(old); } catch (_) {}
   } else {
     let bin = '';
     for (let i = 0; i < dados.length; i++) bin += String.fromCharCode(dados[i]);
@@ -70,23 +76,21 @@ async function gravarNoDisco(dados) {
   }
 }
 
-// Migra o schema (PADRAO §4.5): o .sql é dividido por ';' (cuidado com
-// ';' dentro de comentario). Cada CREATE é executado e a versão é salva.
+// Migra o schema (PADRAO §4.5). O schema.sql tem CREATE TABLE, CREATE INDEX e
+// CREATE TRIGGER (com BEGIN...END; interno), entao split por ';' nao funciona.
+// O sql.js expoe Database.exec() que aceita o schema INTEIRO em uma so chamada
+// e processa statement-por-statement corretamente.
 let schemaAplicado = false;
 async function migrar() {
   if (schemaAplicado) return;
   const res = await fetch('/schema.sql');
   if (!res.ok) throw new Error('schema.sql nao encontrado no /src/');
   const sql = await res.text();
-  // Split por ';' fora de string. Simplificacao: padrao nao tem string
-  // no schema.sql deste projeto. Se tiver, usar parser proprio.
-  const partes = sql.split(/;\s*\n/).map(s => s.trim()).filter(s => s && !s.startsWith('--'));
-  for (const stmt of partes) {
-    try {
-      dbInstance.exec(stmt);
-    } catch (e) {
-      console.warn('[db] stmt falhou (pode ser duplicado):', stmt.slice(0, 60), e.message);
-    }
+  try {
+    // exec() retorna array de results; se algum statement falhar ele joga
+    dbInstance.exec(sql);
+  } catch (e) {
+    throw new Error('Falha ao aplicar schema: ' + e.message);
   }
   schemaAplicado = true;
 }
@@ -170,10 +174,10 @@ export const db = {
       for (const ext of ['.old', '.tmp']) {
         const alt = env.caminhoBanco() + ext;
         try {
-          const existe = await Neutralino.filesystem.getStats(alt);
+          const existe = await window.Neutralino.filesystem.getStats(alt);
           if (existe && existe.size > 0) {
             console.warn('[db] banco principal faltando, restaurando de', ext);
-            await Neutralino.filesystem.move(alt, env.caminhoBanco());
+            await window.Neutralino.filesystem.move(alt, env.caminhoBanco());
             return true;
           }
         } catch (_) {}

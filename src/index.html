@@ -8,6 +8,26 @@
     <link rel="icon" type="image/png" href="/resources/icons/app.png">
     <script src="/js/vendor/neutralino.js"></script>
     <script src="/js/vendor/sql-wasm.js"></script>
+    <script>
+        // Captura qualquer erro global (incluindo falha de import de modulo) e mostra na tela.
+        // Sem isso, falha de import fica invisivel e o "Carregando Gestor..." trava.
+        function showFatal(titulo, detalhe) {
+            var t = document.getElementById('app') || document.body;
+            t.innerHTML = '<div style="background:#1e1e1e;color:#ff6b6b;padding:24px;font-family:Consolas,monospace;min-height:100vh;white-space:pre-wrap;">'
+                + '<h2 style="color:#ff6b6b;margin-bottom:12px;">' + titulo + '</h2>'
+                + '<pre style="color:#ffaaaa;background:#000;padding:12px;border-radius:4px;overflow:auto;">' + String(detalhe).replace(/</g, '&lt;') + '</pre>'
+                + '<p style="color:#888;margin-top:12px;">Veja tambem %APPDATA%\\GestorInteligenteDeDemandas\\logs\\app-debug.log</p>'
+                + '</div>';
+        }
+        window.addEventListener('error', function(e) {
+            console.error('[fatal]', e.error || e.message);
+            showFatal('Falha no carregamento', (e.error && e.error.stack) || e.message || String(e));
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('[fatal-promise]', e.reason);
+            showFatal('Falha em promise', (e.reason && e.reason.stack) || String(e.reason));
+        });
+    </script>
     <script type="module" src="/js/app.js" defer></script>
 </head>
 <body>

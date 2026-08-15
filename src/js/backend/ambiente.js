@@ -1,7 +1,6 @@
 // src/js/backend/ambiente.js — tudo que toca o sistema operacional
 // Conforme PADRAO-ML-LOPES-DESIGN.md §3.1 (arquitetura).
-
-import initSqlJs from '../vendor/sql-wasm.js';
+// (sql-wasm.js é UMD e fica em window.initSqlJs; não precisa de import aqui.)
 
 export const sessao = {
   autenticado: false,
@@ -12,7 +11,7 @@ export const sessao = {
   dispositivo_id: null,
 };
 
-const NO_APP = typeof window.Neutralino !== 'undefined' && Neutralino?.app?.isNative;
+const NO_APP = typeof window.Neutralino !== 'undefined' && !!window.Neutralino?.app?.isNative;
 const APP_ID = 'app.mllopes.gestor';
 const BINARY = 'GestorInteligenteDeDemandas';
 const APPDATA = '%APPDATA%';
@@ -139,7 +138,7 @@ export async function verificarUpdate() {
     return { ok: false, motivo: 'fora do app' };
   }
   try {
-    const info = await Neutralino.updater.checkForUpdates();
+    const info = await window.Neutralino.updater.checkForUpdates();
     return { ok: true, dados: info };
   } catch (e) {
     return { ok: false, erro: e.message };
@@ -152,9 +151,9 @@ export async function aplicarUpdate() {
     // 1. Backup do banco antes (PADRAO §5.2)
     await db.salvarAgora();
     // 2. Aplica update
-    await Neutralino.updater.applyUpdate();
+    await window.Neutralino.updater.applyUpdate();
     // 3. Reinicia
-    setTimeout(() => Neutralino.app.restart(), 1000);
+    setTimeout(() => window.Neutralino?.app?.restart?.(), 1000);
     return true;
   } catch (e) {
     toast({ tipo: 'erro', titulo: 'Update', corpo: e.message });

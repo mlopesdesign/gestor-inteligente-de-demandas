@@ -75,3 +75,11 @@ server*.err
 # Build cache do Neutralino
 .neutralino-bin/
 __neutralino_globals.js
+# nao versionar prints intermediarios
+docs/app-print-v0.1.1-*.png
+docs/app-print-devtools-*.png
+docs/app-print-1.png
+docs/app-print-2.png
+docs/app-print-3.png
+docs/app-print-v0.1.1-app.png
+docs/app-print-v0.1.1-14-criada-conta.png

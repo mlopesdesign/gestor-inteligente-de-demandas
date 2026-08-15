@@ -1,5 +1,5 @@
 // src/js/telas/inbox.js — Caixa de entrada (PROJETO §10.1)
-import { api } from '../app.js';
+// api() vem de window.api (exportado pelo app.js); não importar (evita ciclo).
 import { escapeHtml, modal, toast } from '../backend/ambiente.js';
 
 export async function renderInbox() {
@@ -40,7 +40,7 @@ export async function renderInbox() {
     e.preventDefault();
     const texto = document.getElementById('inbox-texto').value.trim();
     if (!texto) return;
-    const r = await api('tarefas:criar', { titulo: texto, origem: 'MANUAL' });
+    const r = await window.api('tarefas:criar', { titulo: texto, origem: 'MANUAL' });
     if (r.ok) {
       toast({ tipo: 'sucesso', titulo: 'Capturada', corpo: 'Tarefa criada.' });
       document.getElementById('inbox-texto').value = '';
@@ -50,7 +50,7 @@ export async function renderInbox() {
 
   carregar();
   async function carregar() {
-    const r = await api('tarefas:listar', { status: 'CAIXA_ENTRADA', limite: 20 });
+    const r = await window.api('tarefas:listar', { status: 'CAIXA_ENTRADA', limite: 20 });
     const el = document.getElementById('inbox-lista');
     if (!r.ok) { el.innerHTML = '<p class="vazia">Erro: ' + escapeHtml(JSON.stringify(r.erro)) + '</p>'; return; }
     if (r.dados.length === 0) {
@@ -69,7 +69,7 @@ export async function renderInbox() {
       btn.onclick = async () => {
         const id = btn.dataset.id, v = Number(btn.dataset.v), ac = btn.dataset.acao;
         if (ac === 'concluir') {
-          const r2 = await api('tarefas:concluir', { id, versao: v });
+          const r2 = await window.api('tarefas:concluir', { id, versao: v });
           if (r2.ok) { toast({ tipo: 'sucesso', titulo: 'Concluída' }); carregar(); }
         } else {
           const r2 = await modal({
@@ -91,7 +91,7 @@ export async function renderInbox() {
             ],
           });
           if (r2.acao === 'salvar') {
-            const r3 = await api('tarefas:atualizar', { id, versao: v, ...r2.dados });
+            const r3 = await window.api('tarefas:atualizar', { id, versao: v, ...r2.dados });
             if (r3.ok) { toast({ tipo: 'sucesso', titulo: 'Atualizada' }); carregar(); }
           }
         }

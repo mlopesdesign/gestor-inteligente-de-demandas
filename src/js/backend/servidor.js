@@ -8,6 +8,7 @@ import { podeExecutar, permissoesAdmin } from './permissoes.js';
 import * as authCore from './core/auth.js';
 import * as tarefasCore from './core/tarefas.js';
 import * as areasCore from './core/areas.js';
+import * as cobrancasCore from './core/cobrancas.js';
 import { clientes as clientesCore, projetos as projetosCore, recorrencias as recorrenciasCore, sync as syncCore, ia as iaCore, config as configCore } from './core/stubs.js';
 
 export const servidor = {
