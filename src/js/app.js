@@ -99,16 +99,24 @@ async function bootstrap() {
   document.querySelectorAll('.brand-sub').forEach(el => { el.textContent = 'v' + versao; });
 
   // 3. Tenta restaurar sessão (com timeout: o WebSocket pode nao estar pronto ainda)
+  // Primeiro: checa sessao gravada em localStorage ("Lembrar senha")
+  const lembrar = (() => { try { return JSON.parse(localStorage.getItem('gestor-lembrar-sessao') || 'null'); } catch (_) { return null; } })();
   let sessaoResult;
-  try {
-    sessaoResult = await Promise.race([
-      servidor.processar('sessao:atual', {}),
-      new Promise(res => setTimeout(() => res({ ok: false, erro: 'timeout 3s' }), 3000)),
-    ]);
-    D('[app] sessaoResult=', sessaoResult.ok, JSON.stringify(sessaoResult.dados));
-  } catch (e) {
-    D('[app] ERRO sessao:atual:', e.message, e.stack);
-    sessaoResult = { ok: false };
+  if (lembrar && lembrar.token) {
+    Object.assign(sessao, { autenticado: true, email: lembrar.email, token: lembrar.token });
+    D('[app] restaurou sessao do localStorage:', lembrar.email);
+    sessaoResult = { ok: true, dados: { autenticado: true, ...lembrar } };
+  } else {
+    try {
+      sessaoResult = await Promise.race([
+        servidor.processar('sessao:atual', {}),
+        new Promise(res => setTimeout(() => res({ ok: false, erro: 'timeout 3s' }), 3000)),
+      ]);
+      D('[app] sessaoResult=', sessaoResult.ok, JSON.stringify(sessaoResult.dados));
+    } catch (e) {
+      D('[app] ERRO sessao:atual:', e.message, e.stack);
+      sessaoResult = { ok: false };
+    }
   }
   if (sessaoResult.ok && sessaoResult.dados?.autenticado) {
     Object.assign(sessao, sessaoResult.dados);
@@ -138,16 +146,20 @@ function mostrarErroBootstrap(msg) {
 // ---------------------------------------------------------------------------
 // Roteamento interno (entre telas)
 // ---------------------------------------------------------------------------
+// Telas em construcao usam renderStub(rota) do stubs.js (NÃO renderTarefas/renderProjetos/etc
+// que nao existem - isso causava crash ao clicar no menu).
+const STUB = (rota) => () => import('./telas/stubs.js').then(m => m.renderStub(rota));
+
 const ROTAS = {
   login: { titulo: 'Entrar',        render: renderLogin  },
   hoje:   { titulo: 'Hoje',           render: renderHoje   },
-  tarefas:{ titulo: 'Tarefas',        render: () => import('./telas/tarefas.js').then(m => m.renderTarefas()) },
+  tarefas:{ titulo: 'Tarefas',         render: STUB('tarefas')  },
   inbox:  { titulo: 'Caixa de entrada', render: () => import('./telas/inbox.js').then(m => m.renderInbox()) },
-  projetos:{ titulo: 'Projetos',     render: () => import('./telas/projetos.js').then(m => m.renderProjetos()) },
-  clientes:{ titulo: 'Clientes',     render: () => import('./telas/clientes.js').then(m => m.renderClientes()) },
-  areas:  { titulo: 'Áreas',          render: () => import('./telas/areas.js').then(m => m.renderAreas()) },
-  busca:  { titulo: 'Buscar',         render: () => import('./telas/busca.js').then(m => m.renderBusca()) },
-  config: { titulo: 'Configurações',  render: () => import('./telas/configuracoes.js').then(m => m.renderConfig()) },
+  projetos:{ titulo: 'Projetos',       render: STUB('projetos') },
+  clientes:{ titulo: 'Clientes',       render: STUB('clientes') },
+  areas:  { titulo: 'Áreas',            render: STUB('areas')    },
+  busca:  { titulo: 'Buscar',           render: STUB('busca')    },
+  config: { titulo: 'Configurações',    render: STUB('config')   },
 };
 
 export function irPara(nome) {
@@ -168,47 +180,74 @@ export function irPara(nome) {
 // ---------------------------------------------------------------------------
 // Telas (placeholders enquanto as outras nao existem)
 // ---------------------------------------------------------------------------
+// Constante da chave do localStorage pra "Lembrar senha"
+const LEMBRAR_KEY = 'gestor-lembrar-sessao';
+
 function renderLogin() {
   const app = document.getElementById('app');
   if (!app) return;
+
+  // Pre-preenche email se tiver gravado
+  const salvo = (() => { try { return JSON.parse(localStorage.getItem(LEMBRAR_KEY) || 'null'); } catch (_) { return null; } })();
+
   app.innerHTML = `
     <div style="display:flex; flex-direction:column; height:100vh; align-items:center; justify-content:center; gap:16px; padding:40px;">
       <h1 style="color: var(--cor-marca); font-size:28px;">Gestor Inteligente de Demandas</h1>
       <p style="color: var(--fg-3);">Entre com sua conta ou crie uma nova</p>
       <div id="login-form" style="display:flex; flex-direction:column; gap:8px; min-width:300px;">
-        <input type="email" id="login-email" placeholder="Email">
+        <input type="email" id="login-email" placeholder="Email" value="${salvo?.email ? escapeAttr(salvo.email) : ''}" autocomplete="username">
         <input type="password" id="login-senha" placeholder="Senha (opcional, só dígitos)" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password">
+        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--fg-3);">
+          <input type="checkbox" id="login-lembrar" ${salvo ? 'checked' : ''} style="width:auto;">
+          Lembrar senha (não pedir login da próxima vez)
+        </label>
         <div style="display:flex; gap:8px;">
           <button id="btn-login" class="primary" style="flex:1;">Entrar</button>
           <button id="btn-cadastro" style="flex:1;">Criar conta</button>
         </div>
+        ${salvo ? '<button id="btn-sair-gravado" style="font-size:11px; color:var(--fg-3); background:none; border:none; text-decoration:underline; cursor:pointer;">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
       </div>
-      <div style="color: var(--fg-3); font-size:12px;">${window.Neutralino?.app?.config ? 'v' + (window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version || '0.1.0') : 'app-image'}</div>
+      <div style="color: var(--fg-3); font-size:12px;">v' + (window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version || '0.1.0')</div>
     </div>
   `;
+
+  const lembrarChecked = () => document.getElementById('login-lembrar').checked;
+
+  const onSuccess = (dados) => {
+    Object.assign(sessao, dados);
+    if (lembrarChecked()) {
+      try { localStorage.setItem(LEMBRAR_KEY, JSON.stringify({ email: dados.email, token: dados.token, expira_em: dados.expira_em })); } catch (_) {}
+    } else {
+      try { localStorage.removeItem(LEMBRAR_KEY); } catch (_) {}
+    }
+    irPara('hoje');
+  };
+
   document.getElementById('btn-login').onclick = async () => {
     const email = document.getElementById('login-email').value.trim();
     const senha = document.getElementById('login-senha').value;
-    const r = await api('auth:login', { email, senha });
-    if (r.ok) {
-      Object.assign(sessao, r.dados);
-      irPara('hoje');
-    }
+    const r = await window.api('auth:login', { email, senha });
+    if (r.ok) onSuccess(r.dados);
+    else toast({ tipo: 'erro', titulo: 'Login', corpo: r.erro?.mensagem || 'erro' });
   };
   document.getElementById('btn-cadastro').onclick = async () => {
     const email = document.getElementById('login-email').value.trim();
     const senha = document.getElementById('login-senha').value;
     const nome = email.split('@')[0];
-    const r = await api('auth:cadastro', { email, senha, nome });
-    if (r.ok) {
-      const r2 = await api('auth:login', { email, senha });
-      if (r2.ok) {
-        Object.assign(sessao, r2.dados);
-        irPara('hoje');
-      }
-    }
+    const r = await window.api('auth:cadastro', { email, senha, nome });
+    if (r.ok) onSuccess(r.dados);
+    else toast({ tipo: 'erro', titulo: 'Cadastro', corpo: r.erro?.mensagem || 'erro' });
   };
+  const btnSair = document.getElementById('btn-sair-gravado');
+  if (btnSair) {
+    btnSair.onclick = () => {
+      try { localStorage.removeItem(LEMBRAR_KEY); } catch (_) {}
+      renderLogin();
+    };
+  }
 }
+
+function escapeAttr(s) { return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 
 // ---------------------------------------------------------------------------
 // Boot
