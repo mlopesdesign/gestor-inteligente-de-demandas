@@ -177,7 +177,7 @@ function renderLogin() {
       <p style="color: var(--fg-3);">Entre com sua conta ou crie uma nova</p>
       <div id="login-form" style="display:flex; flex-direction:column; gap:8px; min-width:300px;">
         <input type="email" id="login-email" placeholder="Email">
-        <input type="password" id="login-senha" placeholder="Senha (mín. 8 chars)">
+        <input type="password" id="login-senha" placeholder="Senha (opcional, só dígitos)" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password">
         <div style="display:flex; gap:8px;">
           <button id="btn-login" class="primary" style="flex:1;">Entrar</button>
           <button id="btn-cadastro" style="flex:1;">Criar conta</button>

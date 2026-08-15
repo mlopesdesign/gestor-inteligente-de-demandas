@@ -17,11 +17,13 @@ async function hashSenha(senha) {
 
 export async function cadastro(db, payload, sessao) {
   const { email, senha, nome, dispositivoNome, sistema, appVersao } = payload;
-  if (!email || !senha || !nome) {
-    return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'email, senha e nome são obrigatórios' } };
+  if (!email || !nome) {
+    return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'email e nome são obrigatórios' } };
   }
-  if (senha.length < 8) {
-    return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'senha deve ter pelo menos 8 caracteres' } };
+  // MVP: senha é opcional (pode ser vazia). Se preenchida, só dígitos.
+  // Harden depois p/ argon2id + tamanho maior.
+  if (senha && !/^\d+$/.test(String(senha))) {
+    return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'se informada, senha deve ser só dígitos' } };
   }
   const emailNorm = email.toLowerCase().trim();
   // checa duplicado
