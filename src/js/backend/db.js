@@ -31,7 +31,7 @@ async function diag(msg) {
 }
 
 // Carrega o WASM do sql.js. Como Neutralino serve /src/ via http,
-// pedimos o .wasm explicitamente.
+// pedimos o .wasm explicitamente. Tem fallback de 10s pra evitar travamento.
 async function loadSqlJs() {
   if (SQL) return SQL;
   if (typeof window.initSqlJs !== 'function') {
@@ -39,9 +39,10 @@ async function loadSqlJs() {
   }
   const initSqlJs = window.initSqlJs;
   const wasmUrl = (typeof location !== 'undefined' ? location.origin : 'http://localhost') + '/js/vendor/sql-wasm.wasm';
-  SQL = await initSqlJs({
-    locateFile: () => wasmUrl,
-  });
+  SQL = await Promise.race([
+    initSqlJs({ locateFile: () => wasmUrl }),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('loadSqlJs timeout 10s')), 10000)),
+  ]);
   return SQL;
 }
 
@@ -107,7 +108,10 @@ async function gravarNoDisco(dados) {
 let schemaAplicado = false;
 async function migrar() {
   if (schemaAplicado) return;
-  const res = await fetch('/schema.sql');
+  const res = await Promise.race([
+    fetch('/schema.sql'),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('fetch schema.sql timeout 5s')), 5000)),
+  ]);
   if (!res.ok) throw new Error('schema.sql nao encontrado no /src/');
   const sql = await res.text();
   try {

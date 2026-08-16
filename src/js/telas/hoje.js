@@ -165,8 +165,3 @@ function formatarVenc(d) {
   if (diffH < 24) return 'em ' + diffH + 'h';
   return 'em ' + Math.floor(diffH/24) + 'd';
 }
-
-function menuLateral(ativa) {
-  // (movido pra _chrome.js)
-  return '';
-}

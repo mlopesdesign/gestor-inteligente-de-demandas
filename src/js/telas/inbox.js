@@ -114,6 +114,3 @@ async function carregar() {
     };
   });
 }
-
-// (menuLateral movido pra _chrome.js)
-function menuLateral(ativa) { return ''; }

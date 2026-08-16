@@ -174,6 +174,3 @@ export function modalProjeto(p, cache, onClose) {
     else { alert(r.erro?.mensagem || 'erro'); }
   };
 }
-
-// (menuLateral movido pra _chrome.js)
-function menuLateral(ativa) { return ''; }

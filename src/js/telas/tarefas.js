@@ -212,10 +212,6 @@ export function modalTarefa(tarefa, cache, onClose) {
     else { alert(r.erro?.mensagem || 'erro'); }
   };
 }
-
-// (menuLateral movido pra _chrome.js)
-function menuLateral(ativa) { return ''; }
-
 function menuLateralBind(main) {
   main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
     a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };

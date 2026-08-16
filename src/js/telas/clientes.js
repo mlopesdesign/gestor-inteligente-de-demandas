@@ -109,6 +109,3 @@ export function modalCliente(c, onClose) {
     else { alert(r.erro?.mensagem || 'erro'); }
   };
 }
-
-// (menuLateral movido pra _chrome.js)
-function menuLateral(ativa) { return ''; }

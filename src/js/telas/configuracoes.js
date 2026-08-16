@@ -125,6 +125,3 @@ async function carregar() {
     location.reload();
   };
 }
-
-// (menuLateral movido pra _chrome.js)
-function menuLateral(ativa) { return ''; }

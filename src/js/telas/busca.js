@@ -48,6 +48,3 @@ async function buscar() {
     ${areas.length ? `<div class="card"><h3>🏷 Áreas (${areas.length})</h3><ul class="lista">${areas.map(a => `<li><span class="dot" style="background:${a.cor}"></span> <span class="titulo">${escapeHtml(a.titulo)}</span></li>`).join('')}</ul></div>` : ''}
   `;
 }
-
-// (menuLateral movido pra _chrome.js)
-function menuLateral(ativa) { return ''; }
