@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS tarefas (
   CHECK (duracao_estimada_min IS NULL OR duracao_estimada_min > 0),
   CHECK (status != 'CONCLUIDA' OR concluida_em IS NOT NULL),
   CHECK (status != 'ENTREGUE_AGUARDANDO_CONFIRMACAO' OR entregue_em IS NOT NULL),
-  CHECK (status != 'CANCELADA' OR (motivo_cancelamento IS NOT NULL AND length(trim(motivo_cancelamento)) > 0)),
+  CHECK (status != 'CANCELADA' OR (cancelada_motivo IS NOT NULL AND length(trim(cancelada_motivo)) > 0)),
   CHECK (recorrencia_json IS NULL OR projeto_id IS NULL)
 );
 CREATE INDEX IF NOT EXISTS idx_tarefas_usuario ON tarefas(usuario_id);

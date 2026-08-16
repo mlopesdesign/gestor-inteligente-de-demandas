@@ -27,28 +27,12 @@ function resolverAppdata() {
     _APPDATA_RESOLVIDO = window.__appData;
     return _APPDATA_RESOLVIDO;
   }
-  // 2) Esta no Neutralino? Usa a API nativa.
-  if (NO_APP && window.Neutralino?.os?.getEnv) {
-    // Bloqueante via cache: o app.js resolve e grava em window.__appData antes
-    // de qualquer chamada de banco. Se ainda nao foi resolvido, fallback seguro.
-    try {
-      // Sync nao da, mas a chamada retorna uma Promise. Como ja estamos num
-      // async path (abrir banco), o app.js SEMPRE chama resolverAppdataAsync
-      // antes de db.abrir(). Aqui e' so' rede de seguranca.
-      const v = window.Neutralino.os.getEnv('APPDATA');
-      // Em teoria getEnv retorna Promise — mas se vier resolvido, usa
-      if (typeof v === 'string' && v.length > 0) {
-        _APPDATA_RESOLVIDO = v;
-        return v;
-      }
-    } catch (_) {}
-  }
-  // 3) Fallback: tenta variavel de ambiente (Node, dev)
+  // 2) Fallback: tenta variavel de ambiente (Node, dev)
   if (typeof process !== 'undefined' && process.env && process.env.APPDATA) {
     _APPDATA_RESOLVIDO = process.env.APPDATA;
     return _APPDATA_RESOLVIDO;
   }
-  // 4) Fallback final: valor hardcoded razoavel (dev / browser)
+  // 3) Fallback final: valor hardcoded razoavel (dev / browser)
   _APPDATA_RESOLVIDO = 'C:\\Users\\Public\\AppData\\Roaming';
   return _APPDATA_RESOLVIDO;
 }
@@ -57,7 +41,10 @@ export async function resolverAppdataAsync() {
   if (_APPDATA_RESOLVIDO) return _APPDATA_RESOLVIDO;
   if (NO_APP && window.Neutralino?.os?.getEnv) {
     try {
-      const v = await window.Neutralino.os.getEnv('APPDATA');
+      const v = await Promise.race([
+        window.Neutralino.os.getEnv('APPDATA'),
+        new Promise(res => setTimeout(() => res(null), 5000)),
+      ]);
       if (v && typeof v === 'string' && v.length > 0) {
         _APPDATA_RESOLVIDO = v;
         if (typeof window !== 'undefined') window.__appData = v;

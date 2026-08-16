@@ -13,6 +13,23 @@ let dbInstance = null;
 let dbPath = null;
 let saveTimer = null;
 
+// Diagnostico persistente: tudo que o db faz e' logado em %APPDATA%\GestorInteligenteDeDemandas\logs\db.log
+async function diag(msg) {
+  const linha = '[' + new Date().toISOString() + '] ' + msg + '\n';
+  try { console.log(linha.trim()); } catch (_) {}
+  if (typeof window !== 'undefined' && window.Neutralino?.filesystem) {
+    try {
+      await resolverAppdataAsync();
+      const logDir = env.appdataRoot() + '\\logs';
+      await window.Neutralino.filesystem.createDirectory(logDir).catch(() => {});
+      const logFile = logDir + '\\db.log';
+      let conteudo = '';
+      try { conteudo = await window.Neutralino.filesystem.readFile(logFile); } catch (_) {}
+      await window.Neutralino.filesystem.writeFile(logFile, conteudo + linha);
+    } catch (e) { /* sem log, sem drama */ }
+  }
+}
+
 // Carrega o WASM do sql.js. Como Neutralino serve /src/ via http,
 // pedimos o .wasm explicitamente.
 async function loadSqlJs() {
@@ -106,17 +123,34 @@ async function migrar() {
 export const db = {
   async abrir() {
     if (dbInstance) return dbInstance;
+    await diag('db.abrir() inicio');
     // Garante que APPDATA foi resolvido antes de calcular o caminho
     await resolverAppdataAsync();
     dbPath = env.caminhoBanco();
-    const Sql = await loadSqlJs();
-    const buf = await carregarDoDisco();
-    dbInstance = buf ? new Sql.Database(buf) : new Sql.Database();
-    await migrar();
-    // Semeia dados de demo se o banco está vazio
-    const r = dbInstance.exec("SELECT COUNT(*) as c FROM usuarios");
-    if (!r[0] || r[0].values[0][0] === 0) {
-      semearDemo();
+    await diag('dbPath=' + dbPath);
+    try {
+      const Sql = await loadSqlJs();
+      await diag('loadSqlJs OK');
+      const buf = await carregarDoDisco();
+      await diag('carregarDoDisco: buf=' + (buf ? buf.length + ' bytes' : 'null (banco novo)'));
+      dbInstance = buf ? new Sql.Database(buf) : new Sql.Database();
+      await diag('sql.js Database criado');
+      await migrar();
+      await diag('migrar OK');
+      // Semeia dados de demo se o banco está vazio
+      const r = dbInstance.exec("SELECT COUNT(*) as c FROM usuarios");
+      await diag('SELECT COUNT usuarios: ' + JSON.stringify(r));
+      if (!r[0] || r[0].values[0][0] === 0) {
+        await diag('semeando demo');
+        semearDemo();
+        await diag('demo semeado');
+      }
+      // Forca gravacao inicial
+      await salvarAgora();
+      await diag('salvarAgora OK, dbPath=' + dbPath);
+    } catch (e) {
+      await diag('ERRO db.abrir(): ' + e.message + '\n' + (e.stack || ''));
+      throw e;
     }
     return dbInstance;
   },

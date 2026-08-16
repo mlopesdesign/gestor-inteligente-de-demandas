@@ -29,7 +29,7 @@ function D(...args) {
   if (typeof window.Neutralino !== 'undefined' && window.Neutralino?.filesystem) {
     try {
       const logPath = window.__logPath; // resolvido no boot
-      if (logPath) {
+      if (logPath && logPath !== 'localstorage:__app_log') {
         window.Neutralino.filesystem.readFile(logPath).then((conteudo) => {
           window.Neutralino.filesystem.writeFile(logPath, conteudo + line + '\n');
         }).catch(() => {
@@ -75,14 +75,22 @@ async function bootstrap() {
     D('[app] ERRO resolver APPDATA:', e.message);
   }
 
-  // Resolve o path do log UMA vez.
-  if (!window.__logPath && NO_APP && window.__appData) {
-    try {
-      const logDir = `${window.__appData}\\GestorInteligenteDeDemandas\\logs`;
-      await window.Neutralino.filesystem.createDirectory(logDir).catch(() => {});
-      window.__logPath = `${logDir}\\app-debug.log`;
-    } catch (e) {
-      console.warn('[app] nao conseguiu resolver logPath:', e.message);
+  // Resolve o path do log UMA vez. Tenta no app; se nao der, usa localStorage.
+  if (!window.__logPath) {
+    if (NO_APP && window.__appData) {
+      try {
+        const logDir = `${window.__appData}\\GestorInteligenteDeDemandas\\logs`;
+        await window.Neutralino.filesystem.createDirectory(logDir).catch(() => {});
+        window.__logPath = `${logDir}\\app-debug.log`;
+        D('[app] logPath (Neutralino):', window.__logPath);
+      } catch (e) {
+        D('[app] nao conseguiu resolver logPath no Neutralino:', e.message);
+      }
+    }
+    if (!window.__logPath) {
+      // Fallback dev: log em localStorage (so pra debug)
+      window.__logPath = 'localstorage:__app_log';
+      D('[app] logPath fallback: localStorage');
     }
   }
 
