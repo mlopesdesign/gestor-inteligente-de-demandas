@@ -4,7 +4,7 @@
 
 import { db } from './backend/db.js';
 import { servidor } from './backend/servidor.js';
-import { sessao, navegar, toast, modal } from './backend/ambiente.js';
+import { sessao, navegar, toast, modal, resolverAppdataAsync } from './backend/ambiente.js';
 import { renderHoje } from './telas/hoje.js';
 
 // ---------------------------------------------------------------------------
@@ -64,11 +64,21 @@ export async function api(canal, payload = {}) {
 // Bootstrap
 // ---------------------------------------------------------------------------
 async function bootstrap() {
-  // Resolve o path do log UMA vez: %APPDATA% no JS é literal, precisa expandir.
-  if (!window.__logPath && NO_APP) {
+  // Resolve o APPDATA de verdade (no Windows, %APPDATA% e' literal, precisa
+  // expandir via Neutralino.os.getEnv). E' necessario ANTES do db.abrir()
+  // porque o caminho do banco depende disso. Se passar APPDATA literal pro
+  // Neutralino.filesystem, falha silenciosa e o banco nunca persiste.
+  try {
+    await resolverAppdataAsync();
+    D('[app] APPDATA resolvido:', window.__appData);
+  } catch (e) {
+    D('[app] ERRO resolver APPDATA:', e.message);
+  }
+
+  // Resolve o path do log UMA vez.
+  if (!window.__logPath && NO_APP && window.__appData) {
     try {
-      const appdata = await window.Neutralino.os.getEnv('APPDATA');
-      const logDir = `${appdata}\\GestorInteligenteDeDemandas\\logs`;
+      const logDir = `${window.__appData}\\GestorInteligenteDeDemandas\\logs`;
       await window.Neutralino.filesystem.createDirectory(logDir).catch(() => {});
       window.__logPath = `${logDir}\\app-debug.log`;
     } catch (e) {
@@ -194,7 +204,7 @@ function renderLogin() {
       <p style="color: var(--fg-3);">Entre com sua conta ou crie uma nova</p>
       <div id="login-form" style="display:flex; flex-direction:column; gap:8px; min-width:300px;">
         <input type="email" id="login-email" placeholder="Email" value="${salvo?.email ? escapeAttr(salvo.email) : ''}" autocomplete="username">
-        <input type="password" id="login-senha" placeholder="Senha (opcional, só dígitos)" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password">
+        <input type="password" id="login-senha" placeholder="Senha (opcional - deixe vazio se cadastrou sem)" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password">
         <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--fg-3);">
           <input type="checkbox" id="login-lembrar" ${salvo ? 'checked' : ''} style="width:auto;">
           Lembrar senha (não pedir login da próxima vez)

@@ -15,7 +15,7 @@ SetCompressor /SOLID lzma
 !define APP_NAME "GestorInteligenteDeDemandas"
 !define APP_DISPLAY "Gestor Inteligente de Demandas"
 !define APP_PUBLISHER "ML Lopes Design"
-!define APP_VERSION "0.2.0"
+!define APP_VERSION "0.2.1"
 !define APP_ID "app.mllopes.gestor"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}"
 !define INSTALL_DIR_REG "Software\${APP_ID}"
@@ -40,7 +40,7 @@ BrandingText "${APP_DISPLAY} ? ${APP_PUBLISHER}"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_BITMAP "${NSISDIR}\Contrib\Graphics\Header\win.bmp"
 ; IMPORTANTE: com Unicode True, customizar via LangString (depois do MUI_LANGUAGE)
-; NAO via !define MUI_WELCOMEPAGE_TEXT - senao acentos viram 'é' no instalador.
+; NAO via !define MUI_WELCOMEPAGE_TEXT - senao acentos viram '?' no instalador.
 !define MUI_FINISHPAGE_RUN "$INSTDIR\GestorInteligenteDeDemandas.exe"
 !define MUI_FINISHPAGE_RUN_NOTCHECKED
 !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\LEIA-ME.txt"

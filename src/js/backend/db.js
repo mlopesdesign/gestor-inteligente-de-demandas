@@ -6,7 +6,7 @@
 // sql-wasm.js é UMD (CommonJS + browser global). Carregado por <script> clássico
 // em index.html, fica em window.initSqlJs. NÃO usar `import` — o módulo é UMD,
 // não ES module, e o import quebra o grafo de módulos do app.
-import { env } from './ambiente.js';
+import { env, resolverAppdataAsync } from './ambiente.js';
 
 let SQL = null;
 let dbInstance = null;
@@ -31,9 +31,13 @@ async function loadSqlJs() {
 // Carrega o conteúdo do banco do disco. No Neutralino, isso é via
 // Neutralino.filesystem; no navegador puro, IndexedDB ou localStorage.
 async function carregarDoDisco() {
+  await resolverAppdataAsync();
   const caminho = env.caminhoBanco();
   if (env.noApp && window.Neutralino?.filesystem) {
     try {
+      // Garante que o diretório existe (pode nao ter sido criado antes)
+      const dir = caminho.substring(0, caminho.lastIndexOf('\\'));
+      await window.Neutralino.filesystem.createDirectory(dir).catch(() => {});
       const existe = await window.Neutralino.filesystem.getStats(caminho).catch(() => null);
       if (existe && existe.size > 0) {
         const data = await window.Neutralino.filesystem.readFile(caminho);
@@ -61,8 +65,11 @@ async function carregarDoDisco() {
 //   3. move .tmp -> arquivo principal
 //   4. remove .old (só depois do sucesso)
 async function gravarNoDisco(dados) {
+  await resolverAppdataAsync();
   const caminho = env.caminhoBanco();
   if (env.noApp && window.Neutralino?.filesystem) {
+    const dir = caminho.substring(0, caminho.lastIndexOf('\\'));
+    await window.Neutralino.filesystem.createDirectory(dir).catch(() => {});
     const tmp = caminho + '.tmp';
     const old = caminho + '.old';
     try { await window.Neutralino.filesystem.writeFile(tmp, dados); } catch (e) { console.error('[db] writeFile tmp falhou:', e); throw e; }
@@ -99,6 +106,8 @@ async function migrar() {
 export const db = {
   async abrir() {
     if (dbInstance) return dbInstance;
+    // Garante que APPDATA foi resolvido antes de calcular o caminho
+    await resolverAppdataAsync();
     dbPath = env.caminhoBanco();
     const Sql = await loadSqlJs();
     const buf = await carregarDoDisco();

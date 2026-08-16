@@ -46,8 +46,8 @@ export async function cadastro(db, payload, sessao) {
 
 export async function login(db, payload, sessao) {
   const { email, senha, dispositivoNome, sistema, appVersao } = payload;
-  if (!email || !senha) {
-    return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'credenciais obrigatórias' } };
+  if (!email) {
+    return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'email é obrigatório' } };
   }
   const emailNorm = email.toLowerCase().trim();
   const r = db.exec('SELECT id, nome, senha_hash FROM usuarios WHERE email = ?', [emailNorm]);
@@ -55,7 +55,7 @@ export async function login(db, payload, sessao) {
     return { ok: false, erro: { codigo: 'CREDENCIAIS_INVALIDAS', mensagem: 'credenciais inválidas' } };
   }
   const u = r.dados[0];
-  const senhaHash = await hashSenha(senha);
+  const senhaHash = await hashSenha(senha || '');
   if (senhaHash !== u.senha_hash) {
     return { ok: false, erro: { codigo: 'CREDENCIAIS_INVALIDAS', mensagem: 'credenciais inválidas' } };
   }
