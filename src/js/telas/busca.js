@@ -1,5 +1,6 @@
 // src/js/telas/busca.js — busca global em tarefas, projetos, clientes, areas
 import { escapeHtml } from '../backend/ambiente.js';
+import { topbar, menuLateral } from './_chrome.js';
 
 let _timer = null;
 
@@ -7,12 +8,7 @@ export async function renderBusca() {
   const main = document.getElementById('app');
   if (!main) return;
   main.innerHTML = `
-    <div class="topbar">
-      <span class="brand">Gestor</span>
-      <span class="brand-sub" id="versao-app"></span>
-      <span class="spacer"></span>
-      <span class="status" id="status-topo">busca global</span>
-    </div>
+    ${topbar()}
     <div class="main">
       <aside class="sidebar">${menuLateral('busca')}</aside>
       <main class="conteudo">
@@ -53,13 +49,5 @@ async function buscar() {
   `;
 }
 
-function menuLateral(ativa) {
-  const itens = [
-    ['hoje','Hoje'], ['inbox','Caixa de entrada'], ['tarefas','Tarefas'],
-    ['projetos','Projetos'], ['clientes','Clientes'], ['areas','Áreas'],
-    ['busca','Buscar'], ['config','Configurações'],
-  ];
-  return '<ul class="nav">' + itens.map(([r, t]) =>
-    `<li><a href="#" data-rota="${r}"${r===ativa?' class="ativa"':''}>${t}</a></li>`
-  ).join('') + '</ul>';
-}
+// (menuLateral movido pra _chrome.js)
+function menuLateral(ativa) { return ''; }

@@ -1,5 +1,6 @@
 // src/js/telas/tarefas.js — lista, filtros e CRUD de tarefas
 import { escapeHtml } from '../backend/ambiente.js';
+import { topbar, menuLateral } from './_chrome.js';
 
 let _cache = { areas: [], projetos: [], clientes: [], filtro: {} };
 
@@ -7,12 +8,7 @@ export async function renderTarefas() {
   const main = document.getElementById('app');
   if (!main) return;
   main.innerHTML = `
-    <div class="topbar">
-      <span class="brand">Gestor</span>
-      <span class="brand-sub" id="versao-app"></span>
-      <span class="spacer"></span>
-      <span class="status" id="status-topo">carregando...</span>
-    </div>
+    ${topbar()}
     <div class="main">
       <aside class="sidebar">${menuLateral('tarefas')}</aside>
       <main class="conteudo">
@@ -217,16 +213,8 @@ export function modalTarefa(tarefa, cache, onClose) {
   };
 }
 
-function menuLateral(ativa) {
-  const itens = [
-    ['hoje','Hoje'], ['inbox','Caixa de entrada'], ['tarefas','Tarefas'],
-    ['projetos','Projetos'], ['clientes','Clientes'], ['areas','Áreas'],
-    ['busca','Buscar'], ['config','Configurações'],
-  ];
-  return '<ul class="nav">' + itens.map(([r, t]) =>
-    `<li><a href="#" data-rota="${r}"${r===ativa?' class="ativa"':''}>${t}</a></li>`
-  ).join('') + '</ul>';
-}
+// (menuLateral movido pra _chrome.js)
+function menuLateral(ativa) { return ''; }
 
 function menuLateralBind(main) {
   main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {

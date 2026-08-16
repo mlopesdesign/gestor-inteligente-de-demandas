@@ -1,5 +1,6 @@
 // src/js/telas/inbox.js — Caixa de entrada (captura rapida de tarefas)
 import { escapeHtml, modal, toast } from '../backend/ambiente.js';
+import { topbar, menuLateral } from './_chrome.js';
 
 let _cache = { areas: [], projetos: [], clientes: [] };
 
@@ -7,12 +8,7 @@ export async function renderInbox() {
   const main = document.getElementById('app');
   if (!main) return;
   main.innerHTML = `
-    <div class="topbar">
-      <span class="brand">Gestor</span>
-      <span class="brand-sub" id="versao-app"></span>
-      <span class="spacer"></span>
-      <span class="status" id="status-topo">caixa de entrada</span>
-    </div>
+    ${topbar()}
     <div class="main">
       <aside class="sidebar">${menuLateral('inbox')}</aside>
       <main class="conteudo">
@@ -119,13 +115,5 @@ async function carregar() {
   });
 }
 
-function menuLateral(ativa) {
-  const itens = [
-    ['hoje','Hoje'], ['inbox','Caixa de entrada'], ['tarefas','Tarefas'],
-    ['projetos','Projetos'], ['clientes','Clientes'], ['areas','Áreas'],
-    ['busca','Buscar'], ['config','Configurações'],
-  ];
-  return '<ul class="nav">' + itens.map(([r, t]) =>
-    `<li><a href="#" data-rota="${r}"${r===ativa?' class="ativa"':''}>${t}</a></li>`
-  ).join('') + '</ul>';
-}
+// (menuLateral movido pra _chrome.js)
+function menuLateral(ativa) { return ''; }

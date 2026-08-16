@@ -1,16 +1,12 @@
 // src/js/telas/clientes.js — lista e CRUD de clientes/contatos
 import { escapeHtml } from '../backend/ambiente.js';
+import { topbar, menuLateral } from './_chrome.js';
 
 export async function renderClientes() {
   const main = document.getElementById('app');
   if (!main) return;
   main.innerHTML = `
-    <div class="topbar">
-      <span class="brand">Gestor</span>
-      <span class="brand-sub" id="versao-app"></span>
-      <span class="spacer"></span>
-      <span class="status" id="status-topo">carregando...</span>
-    </div>
+    ${topbar()}
     <div class="main">
       <aside class="sidebar">${menuLateral('clientes')}</aside>
       <main class="conteudo">
@@ -114,13 +110,5 @@ export function modalCliente(c, onClose) {
   };
 }
 
-function menuLateral(ativa) {
-  const itens = [
-    ['hoje','Hoje'], ['inbox','Caixa de entrada'], ['tarefas','Tarefas'],
-    ['projetos','Projetos'], ['clientes','Clientes'], ['areas','Áreas'],
-    ['busca','Buscar'], ['config','Configurações'],
-  ];
-  return '<ul class="nav">' + itens.map(([r, t]) =>
-    `<li><a href="#" data-rota="${r}"${r===ativa?' class="ativa"':''}>${t}</a></li>`
-  ).join('') + '</ul>';
-}
+// (menuLateral movido pra _chrome.js)
+function menuLateral(ativa) { return ''; }

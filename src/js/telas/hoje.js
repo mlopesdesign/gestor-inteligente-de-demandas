@@ -1,5 +1,6 @@
 // src/js/telas/hoje.js — tela principal (Hoje) com buckets de urgencia
 import { escapeHtml, toast } from '../backend/ambiente.js';
+import { topbar, menuLateral } from './_chrome.js';
 
 let _cacheTarefas = [];
 
@@ -7,12 +8,7 @@ export async function renderHoje() {
   const main = document.getElementById('app');
   if (!main) return;
   main.innerHTML = `
-    <div class="topbar">
-      <span class="brand">Gestor</span>
-      <span class="brand-sub" id="versao-app"></span>
-      <span class="spacer"></span>
-      <span class="status" id="status-topo">carregando...</span>
-    </div>
+    ${topbar()}
     <div class="main">
       <aside class="sidebar">${menuLateral('hoje')}</aside>
       <main class="conteudo">
@@ -171,17 +167,6 @@ function formatarVenc(d) {
 }
 
 function menuLateral(ativa) {
-  const itens = [
-    ['hoje',    'Hoje',             '📅'],
-    ['inbox',   'Caixa de entrada', '📥'],
-    ['tarefas', 'Tarefas',          '✅'],
-    ['projetos','Projetos',         '📁'],
-    ['clientes','Clientes',         '👥'],
-    ['areas',   'Áreas',            '🎨'],
-    ['busca',   'Buscar',           '🔍'],
-    ['config',  'Configurações',    '⚙️'],
-  ];
-  return '<ul class="nav">' + itens.map(([r, t, ic]) =>
-    `<li><a href="#" data-rota="${r}"${r===ativa?' class="ativa"':''}><span class="ic">${ic}</span> ${t}</a></li>`
-  ).join('') + '</ul>';
+  // (movido pra _chrome.js)
+  return '';
 }

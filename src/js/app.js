@@ -208,7 +208,8 @@ function renderLogin() {
 
   app.innerHTML = `
     <div style="display:flex; flex-direction:column; height:100vh; align-items:center; justify-content:center; gap:16px; padding:40px;">
-      <h1 style="color: var(--cor-marca); font-size:28px;">Gestor Inteligente de Demandas</h1>
+      <img src="/resources/images/logo.png" alt="mlopes dev" style="width:280px; max-width:80%; margin-bottom:8px;">
+      <h1 style="color: var(--cor-marca); font-size:24px; margin:0;">Gestor Inteligente de Demandas</h1>
       <p style="color: var(--fg-3);">Entre com sua conta ou crie uma nova</p>
       <div id="login-form" style="display:flex; flex-direction:column; gap:8px; min-width:300px;">
         <input type="email" id="login-email" placeholder="Email" value="${salvo?.email ? escapeAttr(salvo.email) : ''}" autocomplete="username">

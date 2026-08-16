@@ -1,5 +1,6 @@
 // src/js/telas/areas.js — lista e CRUD de areas
 import { escapeHtml } from '../backend/ambiente.js';
+import { topbar, menuLateral } from './_chrome.js';
 
 const CORES = ['#f0a000','#03a9f4','#9c27b0','#4caf50','#e91e63','#607d8b','#ff5722','#009688','#673ab7','#795548','#2196f3','#cddc39'];
 
@@ -7,12 +8,7 @@ export async function renderAreas() {
   const main = document.getElementById('app');
   if (!main) return;
   main.innerHTML = `
-    <div class="topbar">
-      <span class="brand">Gestor</span>
-      <span class="brand-sub" id="versao-app"></span>
-      <span class="spacer"></span>
-      <span class="status" id="status-topo">carregando...</span>
-    </div>
+    ${topbar()}
     <div class="main">
       <aside class="sidebar">${menuLateral('areas')}</aside>
       <main class="conteudo">
@@ -109,13 +105,5 @@ export function modalArea(a, onClose) {
   };
 }
 
-function menuLateral(ativa) {
-  const itens = [
-    ['hoje','Hoje'], ['inbox','Caixa de entrada'], ['tarefas','Tarefas'],
-    ['projetos','Projetos'], ['clientes','Clientes'], ['areas','Áreas'],
-    ['busca','Buscar'], ['config','Configurações'],
-  ];
-  return '<ul class="nav">' + itens.map(([r, t]) =>
-    `<li><a href="#" data-rota="${r}"${r===ativa?' class="ativa"':''}>${t}</a></li>`
-  ).join('') + '</ul>';
-}
+// (menuLateral movido pra _chrome.js)
+function menuLateral(ativa) { return ''; }
