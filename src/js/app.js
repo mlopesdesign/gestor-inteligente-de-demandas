@@ -9,8 +9,9 @@ import { renderHoje } from './telas/hoje.js';
 
 // ---------------------------------------------------------------------------
 // Constante NO_APP: estamos rodando dentro do Neutralino (WebView2 local)?
+// FIX v0.2.7: vendor nao define app.isNative, entao confiamos em window.Neutralino
 // ---------------------------------------------------------------------------
-const NO_APP = typeof window.Neutralino !== 'undefined' && !!window.Neutralino?.app?.isNative;
+const NO_APP = typeof window.Neutralino !== 'undefined';
 
 // Logs sempre aparecem no console (que vai pro DevTools quando aberto)
 // E tbem ficam no localStorage pra inspecao posterior
@@ -98,10 +99,13 @@ async function bootstrap() {
   D('[app] Neutralino?', typeof window.Neutralino, window.Neutralino?.app?.isNative);
   D('[app] logPath=', window.__logPath);
 
-  // 1. Abre o banco (sql.js, sql-wasm.wasm)
+  // 1. Abre o banco (sql.js, sql-wasm.wasm) - com timeout de 60s pra debug
   try {
     D('[app] abrindo banco...');
-    await db.abrir();
+    await Promise.race([
+      db.abrir(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('db.abrir() timeout 60s')), 60000)),
+    ]);
     D('[app] banco aberto em', db.caminho);
   } catch (e) {
     D('[app] ERRO abrir banco:', e.message, e.stack);
@@ -111,7 +115,16 @@ async function bootstrap() {
 
   // 2. Carrega identidade.
   // Pega versao direto do NEUTRALINO_GLOBALS (injetado pelo runtime) - evita getConfig() que pode travar o WebSocket.
-  const versao = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version || '0.1.0';
+  // Fallback: le do neutralino.config.json carregado em /neutralino.config.json
+  let versao = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version;
+  if (!versao) {
+    try {
+      // Tenta do localStorage (cache) ou do fetch (caso NEUTRALINO_GLOBALS nao esteja populado)
+      const cached = localStorage.getItem('__app_version');
+      if (cached) versao = cached;
+    } catch (_) {}
+  }
+  if (!versao) versao = '0.2.7';
   const versaoSpan = document.getElementById('versao-app');
   if (versaoSpan) versaoSpan.textContent = 'v' + versao;
   document.querySelectorAll('.brand-sub').forEach(el => { el.textContent = 'v' + versao; });
@@ -141,8 +154,29 @@ async function bootstrap() {
     D('[app] chamando irPara(hoje)');
     irPara('hoje');
   } else {
-    D('[app] chamando irPara(login)');
-    irPara('login');
+    // FIX v0.2.7: se existe o usuario demo no banco e nenhum outro usuario,
+    // faz auto-login com o demo pra nao obrigar o usuario a digitar
+    // (util para primeira instalacao / teste automatico).
+    let autoDemoResult = null;
+    try {
+      const listaUsers = await servidor.processar('sessao:listarUsuarios', {});
+      if (listaUsers.ok && listaUsers.dados && listaUsers.dados.length === 1 && listaUsers.dados[0].email === 'demo@gestor.local') {
+        D('[app] auto-login com demo (unico usuario)');
+        autoDemoResult = await servidor.processar('auth:login', { email: 'demo@gestor.local', senha: '' });
+        if (autoDemoResult.ok) {
+          Object.assign(sessao, autoDemoResult.dados);
+        }
+      }
+    } catch (e) {
+      D('[app] ERRO auto-demo:', e.message);
+    }
+    if (autoDemoResult && autoDemoResult.ok) {
+      D('[app] auto-demo OK, chamando irPara(hoje)');
+      irPara('hoje');
+    } else {
+      D('[app] chamando irPara(login)');
+      irPara('login');
+    }
   }
 
   // 4. Esconde a tela de loading
@@ -154,10 +188,19 @@ function mostrarErroBootstrap(msg) {
   D('[app] mostrarErroBootstrap: ' + msg);
   const tela = document.getElementById('app');
   if (!tela) { D('[app] ERRO: #app nao existe!'); return; }
-  tela.innerHTML = `<div style="padding:40px; color:#f44336; font-family:monospace; background:#1e1e1e; color:#ff6b6b; min-height:100vh;">
+  // Coleta o log de localStorage (mais confiavel que arquivo)
+  let logs = '';
+  try { logs = JSON.parse(localStorage.getItem('__dbg') || '[]').join('\n'); } catch (_) {}
+  let dbLogs = '';
+  try { dbLogs = JSON.parse(localStorage.getItem('__dbg_db') || '[]').join('\n'); } catch (_) {}
+  tela.innerHTML = `<div style="padding:40px; color:#f44336; font-family:monospace; background:#1e1e1e; color:#ff6b6b; min-height:100vh; overflow:auto;">
     <h2 style="color:#ff6b6b;">Falha ao iniciar</h2>
     <pre style="white-space:pre-wrap; color:#ffaaaa;">${String(msg).replace(/</g, '&lt;')}</pre>
-    <p style="color:#888;">Veja o console do WebView2 (Ctrl+Shift+I) ou %APPDATA%\\GestorInteligenteDeDemandas\\logs\\app-debug.log</p>
+    <h3 style="color:#ffaaaa; margin-top:24px;">Log do app.js:</h3>
+    <pre style="white-space:pre-wrap; color:#888; max-height:300px; overflow:auto; font-size:11px;">${logs.replace(/</g, '&lt;')}</pre>
+    <h3 style="color:#ffaaaa; margin-top:24px;">Log do db.js:</h3>
+    <pre style="white-space:pre-wrap; color:#888; max-height:300px; overflow:auto; font-size:11px;">${dbLogs.replace(/</g, '&lt;')}</pre>
+    <p style="color:#888;">Veja tambem %APPDATA%\\GestorInteligenteDeDemandas\\logs\\app-debug.log</p>
   </div>`;
 }
 
@@ -224,7 +267,7 @@ function renderLogin() {
         </div>
         ${salvo ? '<button id="btn-sair-gravado" style="font-size:11px; color:var(--fg-3); background:none; border:none; text-decoration:underline; cursor:pointer;">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
       </div>
-      <div style="color: var(--fg-3); font-size:12px;">v${window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version || '0.1.0'}</div>
+      <div style="color: var(--fg-3); font-size:12px;">v${(window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version) || '0.2.7'}</div>
     </div>
   `;
 
@@ -268,6 +311,131 @@ function renderLogin() {
 function escapeAttr(s) { return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 
 // ---------------------------------------------------------------------------
+// Auto-update via GitHub Releases
+// ---------------------------------------------------------------------------
+// O `update.json` mora no GitHub Pages ou no release:
+// https://mlopesdesign.github.io/gestor-inteligente-de-demandas/update.json
+// Formato: { "version": "0.2.7", "notes": "...", "resourcesURL": "https://.../resources.neu" }
+const UPDATE_URL = 'https://mlopesdesign.github.io/gestor-inteligente-de-demandas/update.json';
+const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6h
+
+function compararVersao(a, b) {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    const x = pa[i] || 0, y = pb[i] || 0;
+    if (x > y) return 1;
+    if (x < y) return -1;
+  }
+  return 0;
+}
+
+export async function verificarAtualizacao({ silencioso = true } = {}) {
+  try {
+    const r = await fetch(UPDATE_URL, { cache: 'no-store' });
+    if (!r.ok) {
+      if (!silencioso) toast({ tipo: 'erro', titulo: 'Atualização', corpo: 'Não consegui verificar (' + r.status + ')' });
+      return null;
+    }
+    const info = await r.json();
+    const atual = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version || '0.0.0';
+    if (!info.version) return null;
+    if (compararVersao(info.version, atual) <= 0) {
+      if (!silencioso) toast({ tipo: 'info', titulo: 'Atualização', corpo: 'Você já está na versão mais recente (' + atual + ')' });
+      return null;
+    }
+    // Nova versao disponivel!
+    return info;
+  } catch (e) {
+    if (!silencioso) toast({ tipo: 'erro', titulo: 'Atualização', corpo: 'Erro: ' + e.message });
+    return null;
+  }
+}
+
+export async function aplicarAtualizacao(info) {
+  if (!info || !info.resourcesURL) return false;
+  try {
+    // 1. Fala pro Neutralino trocar a URL de atualizacao
+    if (window.Neutralino?.updater?.setUpdateUrl) {
+      await withTimeout(window.Neutralino.updater.setUpdateUrl(info.resourcesURL), 2000, 'setUpdateUrl');
+    }
+    // 2. Tenta usar o updater nativo do Neutralino
+    if (window.Neutralino?.updater?.install) {
+      const r = await withTimeout(window.Neutralino.updater.install(), 3000, 'updater.install');
+      if (r && r.success !== false) {
+        toast({ tipo: 'sucesso', titulo: 'Atualização', corpo: 'Baixando... vai reiniciar.' });
+        setTimeout(() => window.Neutralino?.app?.exit?.(), 2000);
+        return true;
+      }
+    }
+    // 3. Fallback: abre o link de download no browser
+    toast({ tipo: 'info', titulo: 'Atualização', corpo: 'Abrindo download da versão ' + info.version });
+    if (window.Neutralino?.os?.open) {
+      await withTimeout(window.Neutralino.os.open(info.resourcesURL), 2000, 'os.open');
+    } else {
+      window.open(info.resourcesURL, '_blank');
+    }
+    return true;
+  } catch (e) {
+    toast({ tipo: 'erro', titulo: 'Atualização', corpo: 'Falhou: ' + e.message });
+    return false;
+  }
+}
+
+// withTimeout local (espelha o do db.js mas sem dependencia)
+function withTimeout(p, ms, label) {
+  return Promise.race([
+    p,
+    new Promise((_, rej) => setTimeout(() => rej(new Error((label || 'op') + ' timeout ' + ms + 'ms')), ms)),
+  ]);
+}
+
+export function mostrarAvisoAtualizacao(info) {
+  // Toast persistente (10s) com botao "Atualizar"
+  const host = document.querySelector('.toast-host') || (() => {
+    const h = document.createElement('div');
+    h.className = 'toast-host';
+    document.body.appendChild(h);
+    return h;
+  })();
+  const tpl = document.getElementById('tpl-toast') || (() => {
+    const t = document.createElement('template');
+    t.id = 'tpl-toast';
+    t.innerHTML = '<div class="toast"></div>';
+    document.body.appendChild(t);
+    return t;
+  })();
+  const el = tpl.content.firstElementChild.cloneNode(true);
+  el.classList.add('info', 'atualizacao');
+  el.innerHTML = `
+    <div class="titulo">Nova versão disponível: v${info.version}</div>
+    <div class="corpo">${(info.notes || '').substring(0, 200)}</div>
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <button class="btn-atualizar" style="flex:1; padding:6px 12px; background:var(--cor-marca); color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:600;">Atualizar agora</button>
+      <button class="btn-depois" style="flex:1; padding:6px 12px; background:transparent; color:var(--fg-3); border:1px solid var(--fg-3); border-radius:4px; cursor:pointer;">Depois</button>
+    </div>
+  `;
+  host.appendChild(el);
+  el.querySelector('.btn-atualizar').onclick = () => {
+    el.remove();
+    aplicarAtualizacao(info);
+  };
+  el.querySelector('.btn-depois').onclick = () => el.remove();
+  // Auto-remove em 30s
+  setTimeout(() => el.remove(), 30000);
+}
+
+// Checagem periodica em background
+let _updateTimer = null;
+function agendarVerificacaoAtualizacao() {
+  if (_updateTimer) clearInterval(_updateTimer);
+  _updateTimer = setInterval(async () => {
+    const info = await verificarAtualizacao({ silencioso: true });
+    if (info) mostrarAvisoAtualizacao(info);
+  }, UPDATE_CHECK_INTERVAL_MS);
+}
+
+// ---------------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------------
 bootstrap().catch(e => {
@@ -275,6 +443,18 @@ bootstrap().catch(e => {
   toast({ tipo: 'erro', titulo: 'Falha', corpo: e.message });
 });
 
+// Checar atualizacao 5s depois do boot (nao atrasar o carregamento)
+setTimeout(async () => {
+  const info = await verificarAtualizacao({ silencioso: true });
+  if (info) {
+    D('[app] nova versao disponivel:', info.version);
+    mostrarAvisoAtualizacao(info);
+  }
+  agendarVerificacaoAtualizacao();
+}, 5000);
+
 // Disponibiliza api() globalmente para facilitar testes no console
 window.api = api;
 window.irPara = irPara;
+window.verificarAtualizacao = verificarAtualizacao;
+window.aplicarAtualizacao = aplicarAtualizacao;

@@ -1,0 +1,39 @@
+﻿{
+    "applicationId": "app.mllopes.gestor",
+    "version": "0.2.6",
+    "defaultMode": "window",
+    "port": 0,
+    "documentRoot": "/src/",
+    "url": "/",
+    "enableServer": true,
+    "enableNativesourcesPath": "/src/",
+        "extensionsPath": "/src/extensions/",
+        "clientLibrary": "/src/js/vendor/neutralino.js",
+        "binaryVersion": "6.3.0.0",
+        "rollupConfig": null
+    }
+}
+{
+    "applicationId": "app.mllopes.gestor",
+    "version": "0.2.6",
+    "defaultMode": "window",
+  /js/vendor/neutralino.js",
+        "binaryVersion": "6.3.0.0",
+        "rollupConfig": null
+    }
+}
+file: neutralino.config.json
+offset: 0, size: 1869
+binary len: 1620226
+expected end: 1869
+--- first 200 bytes ---
+
+--- last 200 bytes ---
+
+--- source first 100 ---
+
+--- source last 100 ---
+
+match first: True
+match last: True
+src size: 1869

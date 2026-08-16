@@ -1,0 +1,42 @@
+﻿Arquivo: dist\GestorInteligenteDeDemandas\resources.neu
+Binary len: 1620229
+
+neutralino.config.json                                        offset=      0  size= 1869  start=0000007b0a202020
+src/css/app.css                                               offset=   1869  size= 9700  start=0a7d0a2f2a203d3d
+src/index.html                                                offset=  11569  size= 2706  start=207d0a3c21444f43
+src/js/app.js                                                 offset=  14275  size=13138  start=6c3e0a2f2f207372
+src/js/backend/ambiente.js                                    offset=  27413  size= 6805  start=613b0a2f2f207372
+src/js/backend/core/areas.js                                  offset=  34218  size= 3128  start=0a7d0a2f2f207372
+src/js/backend/core/auditoria.js                              offset=  37346  size=  690  start=0a7d0a2f2f207372
+src/js/backend/core/auth.js                                   offset=  38036  size= 5785  start=0a7d0a2f2f207372
+src/js/backend/core/busca.js                                  offset=  43821  size= 1517  start=0a7d0a2f2f207372
+src/js/backend/core/clientes.js                               offset=  45338  size= 5038  start=0a7d0a2f2f207372
+src/js/backend/core/cobrancas.js                              offset=  50376  size= 7537  start=0a7d0a2f2f207372
+src/js/backend/core/config.js                                 offset=  57913  size= 5337  start=0a7d0a2f2f207372
+src/js/backend/core/projetos.js                               offset=  63250  size= 5927  start=0a7d0a2f2f207372
+src/js/backend/core/recorrencias.js                           offset=  69177  size= 2548  start=0a7d0a2f2f207372
+src/js/backend/core/stubs.js                                  offset=  71725  size= 1090  start=0a7d0a2f2f207372
+src/js/backend/core/tarefas.js                                offset=  72815  size=11150  start=7d3b0a2f2f207372
+src/js/backend/db.js                                          offset=  83965  size=11610  start=0a7d0a2f2f207372
+src/js/backend/permissoes.js                                  offset=  95575  size= 2438  start=0a7d0a2f2f207372
+src/js/backend/servidor.js                                    offset=  98013  size= 5581  start=0a7d0a2f2f207372
+src/js/backend/ulid.js                                        offset= 103594  size= 1253  start=7d3b0a2f2f207372
+src/js/telas/_chrome.js                                       offset= 104847  size= 1098  start=7d3b0a2f2f207372
+src/js/telas/areas.js                                         offset= 105945  size= 5268  start=0a7d0a2f2f207372
+src/js/telas/busca.js                                         offset= 111213  size= 3233  start=7d0d0a2f2f207372
+src/js/telas/clientes.js                                      offset= 114446  size= 5887  start=7d0d0a2f2f207372
+src/js/telas/configuracoes.js                                 offset= 120333  size= 6948  start=7d0d0a2f2f207372
+src/js/telas/hoje.js                                          offset= 127281  size= 8120  start=7d0d0a2f2f207372
+src/js/telas/inbox.js                                         offset= 135401  size= 6319  start=7d0d0a2f2f207372
+src/js/telas/projetos.js                                      offset= 141720  size= 9834  start=7d0d0a2f2f207372
+src/js/telas/stubs.js                                         offset= 151554  size= 2204  start=7d0d0a2f2f207372
+src/js/telas/tarefas.js                                       offset= 153758  size=12565  start=0a7d0a2f2f207372
+src/js/vendor/neutralino.js                                   offset= 166323  size=15967  start=7d0d0a766172204e
+src/js/vendor/sql-wasm.js                                     offset= 182290  size=49857  start=293b0a0a2f2f2057
+src/js/vendor/sql-wasm.wasm                                   offset= 232147  size=655300  start=0a7d0a0061736d01
+src/resources/icons/app.ico                                   offset= 887447  size=96836  start=5020510000010009
+src/resources/icons/app.png                                   offset= 984283  size=52831  start=426082ffd8ffe000
+src/resources/icons/tray.png                                  offset=1037114  size=59840  start=07ffd9ffd8ffe000
+src/resources/images/logo-icon.png                            offset=1096954  size=52831  start=01ffd9ffd8ffe000
+src/resources/images/logo.png                                 offset=1149785  size=455043  start=07ffd989504e470d
+src/schema.sql                                                offset=1604828  size=15398  start=4260822d2d203d3d

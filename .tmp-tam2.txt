@@ -1,0 +1,11 @@
+﻿python : Traceback (most recent call last):
+No linha:1 caractere:107
++ ... ystem.Text.Encoding]::UTF8; python tools/ver-tamanhos.py 2>&1 | Out-F ...
++                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "E:\Projetos\LOPES FOCUS\tools\ver-tamanhos.py", line 4, in <module>
+    with open(sys.argv[1], 'rb') as f:
+              ~~~~~~~~^^^
+IndexError: list index out of range

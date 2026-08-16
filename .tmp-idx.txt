@@ -1,0 +1,9 @@
+﻿index.html: size=3471 offset=11569
+content len: 3471
+first 100: b' }\n<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" c'
+last 100: b's) -->\n    <template id="tpl-toast">\n        <div class="toast"></div>\n    </template>\n</body>\n</htm'
+src len: 3471
+src first 100: b'<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" cont'
+src last 100: b'-->\n    <template id="tpl-toast">\n        <div class="toast"></div>\n    </template>\n</body>\n</html>\n'
+match first 100: False
+match last 100: False

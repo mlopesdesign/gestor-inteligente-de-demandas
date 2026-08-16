@@ -1,0 +1,111 @@
+﻿
+IgnoreCase LineNumber Line                                                                         Filename    Path    
+---------- ---------- ----                                                                         --------    ----    
+      True          5   TCP    0.0.0.0:80             0.0.0.0:0              LISTENING       9884  InputStream InputStr
+                                                                                                               eam     
+      True          6   TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       1828  InputStream InputStr
+                                                                                                               eam     
+      True          7   TCP    0.0.0.0:443            0.0.0.0:0              LISTENING       9884  InputStream InputStr
+                                                                                                               eam     
+      True          8   TCP    0.0.0.0:445            0.0.0.0:0              LISTENING       4     InputStream InputStr
+                                                                                                               eam     
+      True          9   TCP    0.0.0.0:5040           0.0.0.0:0              LISTENING       2232  InputStream InputStr
+                                                                                                               eam     
+      True         10   TCP    0.0.0.0:5357           0.0.0.0:0              LISTENING       4     InputStream InputStr
+                                                                                                               eam     
+      True         11   TCP    0.0.0.0:7070           0.0.0.0:0              LISTENING       4708  InputStream InputStr
+                                                                                                               eam     
+      True         12   TCP    0.0.0.0:7680           0.0.0.0:0              LISTENING       4108  InputStream InputStr
+                                                                                                               eam     
+      True         13   TCP    0.0.0.0:49664          0.0.0.0:0              LISTENING       1560  InputStream InputStr
+                                                                                                               eam     
+      True         14   TCP    0.0.0.0:49665          0.0.0.0:0              LISTENING       1384  InputStream InputStr
+                                                                                                               eam     
+      True         15   TCP    0.0.0.0:49666          0.0.0.0:0              LISTENING       2152  InputStream InputStr
+                                                                                                               eam     
+      True         16   TCP    0.0.0.0:49667          0.0.0.0:0              LISTENING       3016  InputStream InputStr
+                                                                                                               eam     
+      True         17   TCP    0.0.0.0:49668          0.0.0.0:0              LISTENING       4380  InputStream InputStr
+                                                                                                               eam     
+      True         18   TCP    0.0.0.0:49689          0.0.0.0:0              LISTENING       1464  InputStream InputStr
+                                                                                                               eam     
+      True         19   TCP    0.0.0.0:64036          0.0.0.0:0              LISTENING       14444 InputStream InputStr
+                                                                                                               eam     
+      True         20   TCP    127.0.0.1:5354         0.0.0.0:0              LISTENING       4672  InputStream InputStr
+                                                                                                               eam     
+      True         21   TCP    127.0.0.1:5432         0.0.0.0:0              LISTENING       9884  InputStream InputStr
+                                                                                                               eam     
+      True         22   TCP    127.0.0.1:5939         0.0.0.0:0              LISTENING       5656  InputStream InputStr
+                                                                                                               eam     
+      True         23   TCP    127.0.0.1:6379         0.0.0.0:0              LISTENING       9884  InputStream InputStr
+                                                                                                               eam     
+      True         24   TCP    127.0.0.1:15292        0.0.0.0:0              LISTENING       24656 InputStream InputStr
+                                                                                                               eam     
+      True         25   TCP    127.0.0.1:15393        0.0.0.0:0              LISTENING       24656 InputStream InputStr
+                                                                                                               eam     
+      True         26   TCP    127.0.0.1:16494        0.0.0.0:0              LISTENING       24656 InputStream InputStr
+                                                                                                               eam     
+      True         27   TCP    127.0.0.1:19292        0.0.0.0:0              LISTENING       26032 InputStream InputStr
+                                                                                                               eam     
+      True         30   TCP    127.0.0.1:59806        0.0.0.0:0              LISTENING       37008 InputStream InputStr
+                                                                                                               eam     
+      True         31   TCP    127.0.0.1:59810        0.0.0.0:0              LISTENING       7576  InputStream InputStr
+                                                                                                               eam     
+      True         36   TCP    127.0.0.1:59824        0.0.0.0:0              LISTENING       34204 InputStream InputStr
+                                                                                                               eam     
+      True         39   TCP    127.0.0.1:59826        0.0.0.0:0              LISTENING       34204 InputStream InputStr
+                                                                                                               eam     
+      True         42   TCP    127.0.0.1:59828        0.0.0.0:0              LISTENING       37008 InputStream InputStr
+                                                                                                               eam     
+      True         53   TCP    169.254.141.241:139    0.0.0.0:0              LISTENING       4     InputStream InputStr
+                                                                                                               eam     
+      True         54   TCP    169.254.188.22:139     0.0.0.0:0              LISTENING       4     InputStream InputStr
+                                                                                                               eam     
+      True         55   TCP    169.254.219.24:139     0.0.0.0:0              LISTENING       4     InputStream InputStr
+                                                                                                               eam     
+      True         56   TCP    169.254.230.77:139     0.0.0.0:0              LISTENING       4     InputStream InputStr
+                                                                                                               eam     
+      True         57   TCP    169.254.255.96:139     0.0.0.0:0              LISTENING       4     InputStream InputStr
+                                                                                                               eam     
+      True         58   TCP    172.27.208.1:139       0.0.0.0:0              LISTENING       4     InputStream InputStr
+                                                                                                               eam     
+      True         59   TCP    192.168.15.23:139      0.0.0.0:0              LISTENING       4     InputStream InputStr
+                                                                                                               eam     
+      True         92   TCP    [::]:80                [::]:0                 LISTENING       9884  InputStream InputStr
+                                                                                                               eam     
+      True         93   TCP    [::]:135               [::]:0                 LISTENING       1828  InputStream InputStr
+                                                                                                               eam     
+      True         94   TCP    [::]:443               [::]:0                 LISTENING       9884  InputStream InputStr
+                                                                                                               eam     
+      True         95   TCP    [::]:445               [::]:0                 LISTENING       4     InputStream InputStr
+                                                                                                               eam     
+      True         96   TCP    [::]:5357              [::]:0                 LISTENING       4     InputStream InputStr
+                                                                                                               eam     
+      True         97   TCP    [::]:7070              [::]:0                 LISTENING       4708  InputStream InputStr
+                                                                                                               eam     
+      True         98   TCP    [::]:7680              [::]:0                 LISTENING       4108  InputStream InputStr
+                                                                                                               eam     
+      True         99   TCP    [::]:49664             [::]:0                 LISTENING       1560  InputStream InputStr
+                                                                                                               eam     
+      True        100   TCP    [::]:49665             [::]:0                 LISTENING       1384  InputStream InputStr
+                                                                                                               eam     
+      True        101   TCP    [::]:49666             [::]:0                 LISTENING       2152  InputStream InputStr
+                                                                                                               eam     
+      True        102   TCP    [::]:49667             [::]:0                 LISTENING       3016  InputStream InputStr
+                                                                                                               eam     
+      True        103   TCP    [::]:49668             [::]:0                 LISTENING       4380  InputStream InputStr
+                                                                                                               eam     
+      True        104   TCP    [::]:49689             [::]:0                 LISTENING       1464  InputStream InputStr
+                                                                                                               eam     
+      True        105   TCP    [::1]:80               [::]:0                 LISTENING       19916 InputStream InputStr
+                                                                                                               eam     
+      True        106   TCP    [::1]:443              [::]:0                 LISTENING       19916 InputStream InputStr
+                                                                                                               eam     
+      True        107   TCP    [::1]:7679             [::]:0                 LISTENING       40536 InputStream InputStr
+                                                                                                               eam     
+      True        108   TCP    [::1]:42050            [::]:0                 LISTENING       17620 InputStream InputStr
+                                                                                                               eam     
+      True        109   TCP    [::1]:49669            [::]:0                 LISTENING       4892  InputStream InputStr
+                                                                                                               eam     
+
+

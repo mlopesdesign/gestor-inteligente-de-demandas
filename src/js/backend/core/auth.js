@@ -85,6 +85,11 @@ export async function login(db, payload, sessao) {
   };
 }
 
+export async function listarUsuarios(db, payload, sessao) {
+  const r = db.exec('SELECT id, email, nome FROM usuarios ORDER BY criado_em ASC');
+  return { ok: true, dados: r.ok ? r.dados : [] };
+}
+
 export async function logout(db, payload, sessao) {
   if (!sessao.token) return { ok: true, dados: {} };
   const tokenHash = await hashSenha(sessao.token);

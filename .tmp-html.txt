@@ -1,0 +1,23 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor Inteligente de Demandas</title>
+    <        </div>
+    </div>
+
+    <!-- Templates de mensagem (substituídos dinamicamente pelo app.js) -->
+    <template id="tpl-toast">
+        <div class="toast"></div>
+    </template>
+</body>
+</html>
+size: 2706 <class 'str'>
+offset: 1869 <class 'str'>
+>>> reading from binary[1869:4575]
+=== FIRST 200 ===
+
+=== LAST 200 ===
+
+=== TOTAL LEN: 2706 ===

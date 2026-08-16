@@ -15,63 +15,93 @@ let saveTimer = null;
 
 // Diagnostico persistente: tudo que o db faz e' logado em %APPDATA%\GestorInteligenteDeDemandas\logs\db.log
 async function diag(msg) {
-  const linha = '[' + new Date().toISOString() + '] ' + msg + '\n';
-  try { console.log(linha.trim()); } catch (_) {}
-  if (typeof window !== 'undefined' && window.Neutralino?.filesystem) {
-    try {
-      await resolverAppdataAsync();
-      const logDir = env.appdataRoot() + '\\logs';
-      await window.Neutralino.filesystem.createDirectory(logDir).catch(() => {});
-      const logFile = logDir + '\\db.log';
-      let conteudo = '';
-      try { conteudo = await window.Neutralino.filesystem.readFile(logFile); } catch (_) {}
-      await window.Neutralino.filesystem.writeFile(logFile, conteudo + linha);
-    } catch (e) { /* sem log, sem drama */ }
-  }
+  const linha = '[' + new Date().toISOString() + '] ' + msg;
+  try { console.log(linha); } catch (_) {}
+  // TAMBEM escreve no localStorage __dbg_db (chave separada, evita race com __dbg do app.js)
+  try {
+    const arr = JSON.parse(localStorage.getItem('__dbg_db') || '[]');
+    arr.push(linha);
+    if (arr.length > 200) arr.shift();
+    localStorage.setItem('__dbg_db', JSON.stringify(arr));
+  } catch (_) {}
+  // DESABILITADO: filesystem (causa travamento)
+  // if (typeof window !== 'undefined' && window.Neutralino?.filesystem) { ... }
 }
 
 // Carrega o WASM do sql.js. Como Neutralino serve /src/ via http,
 // pedimos o .wasm explicitamente. Tem fallback de 10s pra evitar travamento.
 async function loadSqlJs() {
   if (SQL) return SQL;
+  console.log('DB.LOADS: 1 - entrando na funcao');
+  diag('loadSqlJs: window.initSqlJs = ' + typeof window.initSqlJs);
   if (typeof window.initSqlJs !== 'function') {
     throw new Error('sql-wasm.js nao foi carregado. index.html precisa ter <script src="/js/vendor/sql-wasm.js"> ANTES de <script type="module" src="/js/app.js">');
   }
+  console.log('DB.LOADS: 2 - initSqlJs OK');
   const initSqlJs = window.initSqlJs;
   const wasmUrl = (typeof location !== 'undefined' ? location.origin : 'http://localhost') + '/js/vendor/sql-wasm.wasm';
+  console.log('DB.LOADS: 3 - wasmUrl =', wasmUrl);
+  diag('loadSqlJs: wasmUrl = ' + wasmUrl);
+  // Testa se o .wasm é alcançável
+  try {
+    console.log('DB.LOADS: 4 - vai fazer fetch');
+    const r = await fetch(wasmUrl);
+    console.log('DB.LOADS: 5 - fetch retornou', r.status, r.headers.get('content-length'));
+    diag('loadSqlJs: fetch .wasm status=' + r.status + ' content-length=' + r.headers.get('content-length'));
+  } catch (e) {
+    console.log('DB.LOADS: 5 - fetch FALHOU:', e.message);
+    diag('loadSqlJs: fetch .wasm FALHOU: ' + e.message);
+    throw e;
+  }
+  console.log('DB.LOADS: 6 - vai chamar initSqlJs');
   SQL = await Promise.race([
     initSqlJs({ locateFile: () => wasmUrl }),
     new Promise((_, rej) => setTimeout(() => rej(new Error('loadSqlJs timeout 10s')), 10000)),
   ]);
+  console.log('DB.LOADS: 7 - initSqlJs retornou');
+  diag('loadSqlJs: SQL inicializado OK');
   return SQL;
 }
 
 // Carrega o conteúdo do banco do disco. No Neutralino, isso é via
 // Neutralino.filesystem; no navegador puro, IndexedDB ou localStorage.
+//
+// FIX v0.2.7: usa localStorage se filesystem nao estiver pronto (WebSocket
+// nao conecta por causa do bug do neu build). Helper `withTimeout` evita
+// pendurar a Promise.
+const withTimeout = (p, ms = 1000, label = 'op') =>
+  Promise.race([
+    p,
+    new Promise((_, rej) => setTimeout(() => rej(new Error(label + ' timeout ' + ms + 'ms')), ms)),
+  ]);
+
 async function carregarDoDisco() {
   await resolverAppdataAsync();
   const caminho = env.caminhoBanco();
-  if (env.noApp && window.Neutralino?.filesystem) {
+  // Tenta Neutralino.filesystem primeiro (mais robusto, escreve em disco real)
+  if (env.noApp && window.Neutralino?.filesystem && typeof window.Neutralino.filesystem.readFile === 'function') {
     try {
-      // Garante que o diretório existe (pode nao ter sido criado antes)
       const dir = caminho.substring(0, caminho.lastIndexOf('\\'));
-      await window.Neutralino.filesystem.createDirectory(dir).catch(() => {});
-      const existe = await window.Neutralino.filesystem.getStats(caminho).catch(() => null);
-      if (existe && existe.size > 0) {
-        const data = await window.Neutralino.filesystem.readFile(caminho);
+      await withTimeout(window.Neutralino.filesystem.createDirectory(dir).catch(() => {}), 1500, 'createDir');
+      const stats = await withTimeout(window.Neutralino.filesystem.getStats(caminho).catch(() => null), 1500, 'getStats');
+      if (stats && stats.size > 0) {
+        const data = await withTimeout(window.Neutralino.filesystem.readFile(caminho), 3000, 'readFile');
         return new Uint8Array(data);
       }
     } catch (e) {
-      console.warn('[db] nao conseguiu ler do disco, comecando vazio:', e.message);
+      console.warn('[db] filesystem indisponivel, usando localStorage:', e.message);
     }
-  } else {
-    // Browser: usa localStorage como storage cru (dev only)
-    const blob = localStorage.getItem(caminho);
-    if (blob) {
+  }
+  // Fallback: localStorage (com porta fixa, persiste entre execucoes)
+  const blob = localStorage.getItem(caminho);
+  if (blob) {
+    try {
       const bin = atob(blob);
       const arr = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
       return arr;
+    } catch (e) {
+      console.warn('[db] erro ao decodificar localStorage:', e.message);
     }
   }
   return null;
@@ -83,21 +113,36 @@ async function carregarDoDisco() {
 //   3. move .tmp -> arquivo principal
 //   4. remove .old (só depois do sucesso)
 async function gravarNoDisco(dados) {
+  console.log('[db.gravar] noApp=', env.noApp, 'filesystem=', typeof (window.Neutralino && window.Neutralino.filesystem), 'dados.length=', dados.length);
   await resolverAppdataAsync();
   const caminho = env.caminhoBanco();
-  if (env.noApp && window.Neutralino?.filesystem) {
-    const dir = caminho.substring(0, caminho.lastIndexOf('\\'));
-    await window.Neutralino.filesystem.createDirectory(dir).catch(() => {});
-    const tmp = caminho + '.tmp';
-    const old = caminho + '.old';
-    try { await window.Neutralino.filesystem.writeFile(tmp, dados); } catch (e) { console.error('[db] writeFile tmp falhou:', e); throw e; }
-    try { await window.Neutralino.filesystem.move(caminho, old); } catch (_) { /* pode nao existir ainda */ }
-    try { await window.Neutralino.filesystem.move(tmp, caminho); } catch (e) { console.error('[db] move tmp->principal falhou:', e); throw e; }
-    try { await window.Neutralino.filesystem.removeFile(old); } catch (_) {}
-  } else {
-    let bin = '';
-    for (let i = 0; i < dados.length; i++) bin += String.fromCharCode(dados[i]);
+  // Tenta Neutralino.filesystem primeiro (disco real em %APPDATA%)
+  if (env.noApp && window.Neutralino?.filesystem && typeof window.Neutralino.filesystem.writeFile === 'function') {
+    try {
+      const dir = caminho.substring(0, caminho.lastIndexOf('\\'));
+      await withTimeout(window.Neutralino.filesystem.createDirectory(dir).catch(() => {}), 1500, 'createDir');
+      const tmp = caminho + '.tmp';
+      const old = caminho + '.old';
+      await withTimeout(window.Neutralino.filesystem.writeFile(tmp, dados), 3000, 'writeFile');
+      try { await withTimeout(window.Neutralino.filesystem.move(caminho, old).catch(() => {}), 1500, 'moveOld'); } catch (_) {}
+      try { await withTimeout(window.Neutralino.filesystem.move(tmp, caminho), 1500, 'moveNew'); }
+      catch (e) { throw e; }
+      try { await withTimeout(window.Neutralino.filesystem.removeFile(old).catch(() => {}), 1500, 'removeOld'); } catch (_) {}
+      console.log('[db.gravar] SUCESSO via filesystem');
+      return;
+    } catch (e) {
+      console.warn('[db.gravar] filesystem falhou, caindo no localStorage:', e.message);
+    }
+  }
+  // Fallback: localStorage (porta fixa 8723, persiste entre execucoes)
+  console.log('[db.gravar] usando localStorage (filesystem nao disponivel)');
+  let bin = '';
+  for (let i = 0; i < dados.length; i++) bin += String.fromCharCode(dados[i]);
+  try {
     localStorage.setItem(caminho, btoa(bin));
+    console.log('[db.gravar] SUCESSO via localStorage,', dados.length, 'bytes');
+  } catch (e) {
+    console.error('[db.gravar] localStorage tambem falhou:', e.message);
   }
 }
 
@@ -127,33 +172,39 @@ async function migrar() {
 export const db = {
   async abrir() {
     if (dbInstance) return dbInstance;
-    await diag('db.abrir() inicio');
-    // Garante que APPDATA foi resolvido antes de calcular o caminho
-    await resolverAppdataAsync();
+    // SEM await no primeiro diag pra evitar qualquer travamento
+    diag('db.abrir() inicio [sem await]');
+    console.log('DB: abrir() chamado');
+
+    // HARDCODE APPDATA direto
+    window.__appData = 'C:\\Users\\Public\\AppData\\Roaming';
+    console.log('DB: __appData =', window.__appData);
+
     dbPath = env.caminhoBanco();
-    await diag('dbPath=' + dbPath);
+    console.log('DB: dbPath =', dbPath);
+    diag('dbPath=' + dbPath);
+
     try {
+      diag('VAI chamar loadSqlJs');
       const Sql = await loadSqlJs();
-      await diag('loadSqlJs OK');
+      diag('loadSqlJs OK');
       const buf = await carregarDoDisco();
-      await diag('carregarDoDisco: buf=' + (buf ? buf.length + ' bytes' : 'null (banco novo)'));
+      diag('carregarDoDisco: buf=' + (buf ? buf.length + ' bytes' : 'null (banco novo)'));
       dbInstance = buf ? new Sql.Database(buf) : new Sql.Database();
-      await diag('sql.js Database criado');
+      diag('sql.js Database criado');
       await migrar();
-      await diag('migrar OK');
-      // Semeia dados de demo se o banco está vazio
+      diag('migrar OK');
       const r = dbInstance.exec("SELECT COUNT(*) as c FROM usuarios");
-      await diag('SELECT COUNT usuarios: ' + JSON.stringify(r));
+      diag('SELECT COUNT usuarios: ' + JSON.stringify(r));
       if (!r[0] || r[0].values[0][0] === 0) {
-        await diag('semeando demo');
+        diag('semeando demo');
         semearDemo();
-        await diag('demo semeado');
+        diag('demo semeado');
       }
-      // Forca gravacao inicial
-      await salvarAgora();
-      await diag('salvarAgora OK, dbPath=' + dbPath);
+      await db.salvarAgora();
+      diag('salvarAgora OK, dbPath=' + dbPath);
     } catch (e) {
-      await diag('ERRO db.abrir(): ' + e.message + '\n' + (e.stack || ''));
+      diag('ERRO db.abrir(): ' + e.message + '\n' + (e.stack || ''));
       throw e;
     }
     return dbInstance;

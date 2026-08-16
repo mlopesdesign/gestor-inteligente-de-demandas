@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor Inteligente de Demandas</title>
+    <        </div>
+    </div>
+
+    <!-- Templates de mensagem (substituídos dinamicamente pelo app.js) -->
+    <template id="tpl-toast">
+        <div class="toast"></div>
+    </template>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" cont-->
+    <template id="tpl-toast">
+        <div class="toast"></div>
+    </template>
+</body>
+</html>
+file: src/index.html
+offset: 1869, size: 2706
+binary len: 1620226
+expected end: 4575
+--- first 200 bytes ---
+
+--- last 200 bytes ---
+
+--- source first 100 ---
+
+--- source last 100 ---
+
+match first: True
+match last: True
+src size: 2706

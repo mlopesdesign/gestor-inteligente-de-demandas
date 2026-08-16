@@ -1,0 +1,8 @@
+﻿extraido len: 1868
+extraido[200:300]: b',\n    "enableNativeAPI": true,\n    "tokenSecurity": "one-time",\n    "logging": {\n        "enabled": '
+
+src len: 1886
+src[200:300]: b',\n    "enableNativeAPI": true,\n    "tokenSecurity": "one-time",\n    "logging": {\n        "enabled": '
+
+configs iguais: False
+extraido[200:230] == src[200:230]: True

@@ -1,0 +1,19 @@
+﻿l>
+// src/js/app.js — gateway api() e bootstrap da UI
+// Conforme PADRAO-ML-LOPES-DESIGN.md §3.3 (a porta única).
+// A tela não sabe se está rodando no app Neutralino ou num terminal em rede.
+
+i] bootstrap falhou:', e);
+  toast({ tipo: 'erro', titulo: 'Falha', corpo: e.message });
+});
+
+// Disponibiliza api() globalmente para facilitar testes no console
+window.api = api;
+window.irPara = irParsize: 13138 <class 'int'>
+offset: 14275 <class 'str'>
+>>> reading from binary[14275:27413]
+=== FIRST 200 ===
+
+=== LAST 200 ===
+
+=== TOTAL LEN: 13138 ===

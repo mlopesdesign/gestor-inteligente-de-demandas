@@ -1,0 +1,18 @@
+﻿         { "id": "checkUpdate", "text": "Verificar atualizações" },
+                    { "id": "---", "text": "---" },
+                    { "id": "quit", "text": "Sair" }
+                ]
+            }
+        }
+    },
+    "cli": {
+        "binaryName": "GestorInteligenteDeDemandas",
+        "resourcesPath": "/src/",
+        "extensionsPath": "/src/extensions/",
+        "clientLibrary": "/src/js/vendor/neutralino.js",
+        "binaryVersion": "6.3.0.0",
+        "rollupConfig": null
+    }
+}
+Tamanho extraido: 1868
+--- LAST 500 bytes ---

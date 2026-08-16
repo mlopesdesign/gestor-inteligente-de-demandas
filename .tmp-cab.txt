@@ -1,0 +1,4 @@
+﻿size: 1631627
+first 16 bytes hex: 040000008b2700008727000080270000
+first 4 ints: (4, 10123, 10119, 10112)
+JSON start at: 16

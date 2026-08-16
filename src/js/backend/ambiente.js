@@ -11,7 +11,11 @@ export const sessao = {
   dispositivo_id: null,
 };
 
-const NO_APP = typeof window.Neutralino !== 'undefined' && !!window.Neutralino?.app?.isNative;
+// FIX v0.2.7: considera que esta rodando no app sempre que window.Neutralino existe.
+// O vendor nao define app.isNative (vem undefined), entao NO_APP era sempre false,
+// e o db caia no fallback localStorage (que e' por origin - porta muda toda execucao,
+// faz perder tudo entre aberturas).
+const NO_APP = typeof window.Neutralino !== 'undefined';
 const APP_ID = 'app.mllopes.gestor';
 const BINARY = 'GestorInteligenteDeDemandas';
 const DB_FILE = 'gestor.db';

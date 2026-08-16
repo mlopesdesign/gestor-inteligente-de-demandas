@@ -1,0 +1,18 @@
+﻿}
+// src/js/telas/projetos.js — lista e CRUD de projetos
+import { escapeHtml } from '../backend/ambiente.js';
+import { topbar, menuLateral } from './_chrome.js';
+
+let _cache = { areas: [], clieos:atualizar', dados); }
+    else { r = await window.api('projetos:criar', dados); }
+    if (r.ok) { host.remove(); if (onClose) onClose(); }
+    else { alert(r.erro?.mensagem || 'erro'); }
+  };
+size: 9834 <class 'int'>
+offset: 141720 <class 'str'>
+>>> reading from binary[141720:151554]
+=== FIRST 200 ===
+
+=== LAST 200 ===
+
+=== TOTAL LEN: 9834 ===

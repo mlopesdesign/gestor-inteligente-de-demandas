@@ -1,0 +1,16 @@
+﻿
+}
+// src/js/backend/core/stubs.js — apenas placeholders para canais nao implementados nesta sprint
+// (sync, ia, inbox que ficam pra depois)
+
+export const clientes = {}; // redirecionado via servidr padrao no MVP' } }; },
+  parseTarefa(db, p, s) { return { ok: true, dados: { fallback: true, motivo: 'em construcao' } }; },
+  sugerir(db, p, s) { return { ok: true, dados: { fallback: true } }; },
+size: 1090 <class 'int'>
+offset: 71725 <class 'str'>
+>>> reading from binary[71725:72815]
+=== FIRST 200 ===
+
+=== LAST 200 ===
+
+=== TOTAL LEN: 1090 ===

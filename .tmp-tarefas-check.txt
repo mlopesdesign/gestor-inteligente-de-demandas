@@ -1,0 +1,21 @@
+﻿
+}
+// src/js/telas/tarefas.js — lista, filtros e CRUD de tarefas
+import { escapeHtml } from '../backend/ambiente.js';
+import { topbar, menuLateral } from './_chrome.js';
+
+let _cache = { areas: [; }
+  };
+}
+function menuLateralBind(main) {
+  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
+    a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
+  });
+size: 12565 <class 'int'>
+offset: 153758 <class 'str'>
+>>> reading from binary[153758:166323]
+=== FIRST 200 ===
+
+=== LAST 200 ===
+
+=== TOTAL LEN: 12565 ===

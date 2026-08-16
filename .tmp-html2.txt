@@ -1,0 +1,10 @@
+﻿python :   File "<string>", line 5
+No linha:1 caractere:107
++ ... g]::UTF8; $OutputEncoding = [System.Text.Encoding]::UTF8; python -c "
++                                                               ~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (  File "<string>", line 5:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    start = data.find(b'{" files\')
+                      ^
+SyntaxError: unterminated string literal (detected at line 5); perhaps you escaped the end quote?

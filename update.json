@@ -1,0 +1,5 @@
+{
+    "version": "0.2.7",
+    "notes": "v0.2.7 — ícone amarelo novo (paleta do app), bug do neu build contornado (neutralino.js inline), banco persiste entre execuções (porta fixa 8723), auto-update pelo GitHub.",
+    "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.7/resources.neu"
+}

@@ -1,0 +1,3 @@
+﻿Tamanho extraido: 1868
+Tamanho source: 1868
+Sao iguais: True

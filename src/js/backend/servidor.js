@@ -31,6 +31,7 @@ export const servidor = {
         case 'auth:login':      return authCore.login(db, payload, s);
         case 'auth:logout':     return authCore.logout(db, payload, s);
         case 'sessao:atual':    return authCore.sessaoAtual(db, payload, s);
+        case 'sessao:listarUsuarios': return authCore.listarUsuarios(db, payload, s);
 
         // tarefas
         case 'tarefas:listar':             return tarefasCore.listar(db, payload, s);
