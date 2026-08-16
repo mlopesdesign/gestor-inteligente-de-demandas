@@ -15,11 +15,12 @@ SetCompressor /SOLID lzma
 !define APP_NAME "GestorInteligenteDeDemandas"
 !define APP_DISPLAY "Gestor Inteligente de Demandas"
 !define APP_PUBLISHER "ML Lopes Design"
-!define APP_VERSION "0.2.1"
+!define APP_VERSION "0.2.2"
 !define APP_ID "app.mllopes.gestor"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}"
 !define INSTALL_DIR_REG "Software\${APP_ID}"
 !define APPIMAGE_DIR "..\dist\GestorInteligenteDeDemandas"
+!define BUILD_RESOURCES "..\installer\resources"
 !define OUTPUT_EXE "GestorInteligenteDeDemandas-Setup-${APP_VERSION}.exe"
 
 !include "MUI2.nsh"
@@ -35,8 +36,8 @@ RequestExecutionLevel admin
 BrandingText "${APP_DISPLAY} ? ${APP_PUBLISHER}"
 
 !define MUI_ABORTWARNING
-!define MUI_ICON "${NSISDIR}\Contrib\Graphics\Icons\modern-install.ico"
-!define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
+!define MUI_ICON "${BUILD_RESOURCES}\icon.ico"
+!define MUI_UNICON "${BUILD_RESOURCES}\icon.ico"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_BITMAP "${NSISDIR}\Contrib\Graphics\Header\win.bmp"
 ; IMPORTANTE: com Unicode True, customizar via LangString (depois do MUI_LANGUAGE)
@@ -96,9 +97,14 @@ Section "Instalar ${APP_DISPLAY}" SecInstall
     ; Cria atalhos
     DetailPrint "Criando atalhos..."
     CreateDirectory "$SMPROGRAMS\${APP_DISPLAY}"
-    CreateShortcut "$SMPROGRAMS\${APP_DISPLAY}\${APP_DISPLAY}.lnk" "$INSTDIR\GestorInteligenteDeDemandas.exe" "" "$INSTDIR\GestorInteligenteDeDemandas.exe" 0
-    CreateShortcut "$SMPROGRAMS\${APP_DISPLAY} - Desinstalar.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe" 0
-    CreateShortcut "$DESKTOP\${APP_DISPLAY}.lnk" "$INSTDIR\GestorInteligenteDeDemandas.exe" "" "$INSTDIR\GestorInteligenteDeDemandas.exe" 0
+    ; Copia o icone customizado pro diretorio de instalacao
+    SetOutPath "$INSTDIR"
+    File "${BUILD_RESOURCES}\icon.ico"
+
+    ; Atalhos com icone customizado
+    CreateShortcut "$SMPROGRAMS\${APP_DISPLAY}\${APP_DISPLAY}.lnk" "$INSTDIR\GestorInteligenteDeDemandas.exe" "" "$INSTDIR\icon.ico" 0
+    CreateShortcut "$SMPROGRAMS\${APP_DISPLAY} - Desinstalar.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\icon.ico" 0
+    CreateShortcut "$DESKTOP\${APP_DISPLAY}.lnk" "$INSTDIR\GestorInteligenteDeDemandas.exe" "" "$INSTDIR\icon.ico" 0
 
     ; Garante pasta de dados
     SetShellVarContext all
@@ -115,7 +121,7 @@ Section "Instalar ${APP_DISPLAY}" SecInstall
     WriteRegStr HKLM "${UNINST_KEY}" "InstallLocation" "$INSTDIR"
     WriteRegStr HKLM "${UNINST_KEY}" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
     WriteRegStr HKLM "${UNINST_KEY}" "QuietUninstallString" "$\"$INSTDIR\Uninstall.exe$\" /S"
-    WriteRegStr HKLM "${UNINST_KEY}" "DisplayIcon" "$INSTDIR\GestorInteligenteDeDemandas.exe"
+    WriteRegStr HKLM "${UNINST_KEY}" "DisplayIcon" "$INSTDIR\icon.ico"
     WriteRegDWORD HKLM "${UNINST_KEY}" "NoModify" 1
     WriteRegDWORD HKLM "${UNINST_KEY}" "NoRepair" 1
     WriteRegDWORD HKLM "${INSTALL_DIR_REG}" "Version" ${APP_VERSION}

@@ -121,14 +121,24 @@ a:hover { text-decoration: underline; }
 .sidebar .nav { list-style: none; }
 .sidebar .nav li { display: block; }
 .sidebar .nav a {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     padding: 10px 16px;
     color: var(--fg);
     border-left: 3px solid transparent;
     transition: background 0.15s;
 }
+.sidebar .nav a .ic {
+    font-size: 18px;
+    width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+    line-height: 1;
+}
 .sidebar .nav a:hover { background: var(--bg-elev); text-decoration: none; }
 .sidebar .nav a.ativa { background: var(--bg-elev); border-left-color: var(--cor-marca); color: var(--cor-marca); }
+.sidebar .nav a.ativa .ic { filter: none; }
 
 .main { flex: 1; display: flex; overflow: hidden; }
 .conteudo { flex: 1; overflow-y: auto; padding: 16px; }

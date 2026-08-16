@@ -56,7 +56,19 @@ async function getCache() {
 
 async function carregar() {
   const r = await window.api('tarefas:listar', { limite: 200 });
-  if (!r.ok) { document.getElementById('hoje-buckets').innerHTML = '<p class="vazia">Erro: ' + escapeHtml(r.erro?.mensagem || '') + '</p>'; return; }
+  if (!r.ok) {
+    const msg = r.erro?.mensagem || r.erro?.codigo || JSON.stringify(r.erro || {});
+    const codigo = r.erro?.codigo || '?';
+    document.getElementById('hoje-buckets').innerHTML = `
+      <div class="card" style="border-left: 4px solid var(--danger); padding: 16px;">
+        <h3 style="margin:0 0 8px; color: var(--danger);">Erro ao carregar tarefas</h3>
+        <p style="margin:0 0 8px;"><b>Código:</b> ${escapeHtml(codigo)}</p>
+        <p style="margin:0 0 8px; font-family: monospace; background: rgba(0,0,0,0.1); padding: 8px; border-radius: 4px;">${escapeHtml(msg)}</p>
+        <p style="margin:0; color: var(--fg-3); font-size: 12px;">Tente recarregar o app. Se persistir, veja %APPDATA%\\GestorInteligenteDeDemandas\\logs\\app-debug.log</p>
+      </div>`;
+    document.getElementById('status-topo').textContent = 'erro: ' + codigo;
+    return;
+  }
   _cacheTarefas = r.dados;
   document.getElementById('status-topo').textContent = '● ' + r.dados.length + ' tarefas ativas';
   renderBuckets(r.dados);
@@ -160,11 +172,16 @@ function formatarVenc(d) {
 
 function menuLateral(ativa) {
   const itens = [
-    ['hoje','Hoje'], ['inbox','Caixa de entrada'], ['tarefas','Tarefas'],
-    ['projetos','Projetos'], ['clientes','Clientes'], ['areas','Áreas'],
-    ['busca','Buscar'], ['config','Configurações'],
+    ['hoje',    'Hoje',             '📅'],
+    ['inbox',   'Caixa de entrada', '📥'],
+    ['tarefas', 'Tarefas',          '✅'],
+    ['projetos','Projetos',         '📁'],
+    ['clientes','Clientes',         '👥'],
+    ['areas',   'Áreas',            '🎨'],
+    ['busca',   'Buscar',           '🔍'],
+    ['config',  'Configurações',    '⚙️'],
   ];
-  return '<ul class="nav">' + itens.map(([r, t]) =>
-    `<li><a href="#" data-rota="${r}"${r===ativa?' class="ativa"':''}>${t}</a></li>`
+  return '<ul class="nav">' + itens.map(([r, t, ic]) =>
+    `<li><a href="#" data-rota="${r}"${r===ativa?' class="ativa"':''}><span class="ic">${ic}</span> ${t}</a></li>`
   ).join('') + '</ul>';
 }
