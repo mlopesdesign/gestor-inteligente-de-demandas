@@ -146,20 +146,18 @@ function mostrarErroBootstrap(msg) {
 // ---------------------------------------------------------------------------
 // Roteamento interno (entre telas)
 // ---------------------------------------------------------------------------
-// Telas em construcao usam renderStub(rota) do stubs.js (NÃO renderTarefas/renderProjetos/etc
-// que nao existem - isso causava crash ao clicar no menu).
-const STUB = (rota) => () => import('./telas/stubs.js').then(m => m.renderStub(rota));
-
+// Cada rota aponta para o modulo real. Carregamento dinamico (lazy) evita
+// carregar tudo no boot.
 const ROTAS = {
-  login: { titulo: 'Entrar',        render: renderLogin  },
-  hoje:   { titulo: 'Hoje',           render: renderHoje   },
-  tarefas:{ titulo: 'Tarefas',         render: STUB('tarefas')  },
-  inbox:  { titulo: 'Caixa de entrada', render: () => import('./telas/inbox.js').then(m => m.renderInbox()) },
-  projetos:{ titulo: 'Projetos',       render: STUB('projetos') },
-  clientes:{ titulo: 'Clientes',       render: STUB('clientes') },
-  areas:  { titulo: 'Áreas',            render: STUB('areas')    },
-  busca:  { titulo: 'Buscar',           render: STUB('busca')    },
-  config: { titulo: 'Configurações',    render: STUB('config')   },
+  login:    { titulo: 'Entrar',          render: renderLogin },
+  hoje:     { titulo: 'Hoje',            render: () => import('./telas/hoje.js').then(m => m.renderHoje()) },
+  inbox:    { titulo: 'Caixa de entrada', render: () => import('./telas/inbox.js').then(m => m.renderInbox()) },
+  tarefas:  { titulo: 'Tarefas',          render: () => import('./telas/tarefas.js').then(m => m.renderTarefas()) },
+  projetos: { titulo: 'Projetos',         render: () => import('./telas/projetos.js').then(m => m.renderProjetos()) },
+  clientes: { titulo: 'Clientes',         render: () => import('./telas/clientes.js').then(m => m.renderClientes()) },
+  areas:    { titulo: 'Áreas',             render: () => import('./telas/areas.js').then(m => m.renderAreas()) },
+  busca:    { titulo: 'Buscar',            render: () => import('./telas/busca.js').then(m => m.renderBusca()) },
+  config:   { titulo: 'Configurações',     render: () => import('./telas/configuracoes.js').then(m => m.renderConfig()) },
 };
 
 export function irPara(nome) {
@@ -207,9 +205,10 @@ function renderLogin() {
         </div>
         ${salvo ? '<button id="btn-sair-gravado" style="font-size:11px; color:var(--fg-3); background:none; border:none; text-decoration:underline; cursor:pointer;">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
       </div>
-      <div style="color: var(--fg-3); font-size:12px;">v' + (window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version || '0.1.0')</div>
+      <div style="color: var(--fg-3); font-size:12px;">v${window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version || '0.1.0'}</div>
     </div>
   `;
+
 
   const lembrarChecked = () => document.getElementById('login-lembrar').checked;
 

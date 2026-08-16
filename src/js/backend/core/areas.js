@@ -1,52 +1,60 @@
-// src/js/backend/core/areas.js — CRUD de areas
-// Funcoes puras. Recebem db como primeiro parametro (PADRAO §3.2).
-
+// src/js/backend/core/areas.js — CRUD de Areas (Trabalho, Pessoal, etc)
+// Conforme PROJETO §7.2.
 import { UlidFactory } from '../ulid.js';
 import { auditar } from './auditoria.js';
 
 export function listar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
-  const r = db.exec('SELECT * FROM areas WHERE usuario_id = ? ORDER BY ordem, nome', [sessao.usuario_id]);
-  return r.ok ? { ok: true, dados: r.dados } : { ok: false, erro: { codigo: 'INTERNO', mensagem: r.erro } };
+  const r = db.exec(
+    `SELECT a.id, a.nome, a.cor, a.criado_em, a.atualizado_em, a.versao,
+            (SELECT COUNT(*) FROM tarefas t WHERE t.area_id = a.id AND t.status NOT IN ('CONCLUIDA','CANCELADA','ARQUIVADA')) AS tarefas_ativas
+     FROM areas a WHERE a.usuario_id = ? ORDER BY a.nome`,
+    [sessao.usuario_id]
+  );
+  if (!r.ok) return r;
+  return { ok: true, dados: r.dados };
 }
 
 export function criar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
-  if (!payload.nome || !String(payload.nome).trim()) {
-    return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'nome obrigatório' } };
-  }
+  const { nome, cor } = payload;
+  if (!nome || !String(nome).trim()) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'nome obrigatorio' } };
   const id = UlidFactory.next();
   const agora = new Date().toISOString();
   const r = db.exec(
-    'INSERT INTO areas(id, usuario_id, dono_id, nome, cor, ordem, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,?,1)',
-    [id, sessao.usuario_id, sessao.usuario_id, String(payload.nome).trim(), payload.cor || '#888888', payload.ordem || 0, agora, agora]
+    `INSERT INTO areas(id, usuario_id, dono_id, nome, cor, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,1)`,
+    [id, sessao.usuario_id, sessao.usuario_id, String(nome).trim().slice(0,60), cor || '#888888', agora, agora]
   );
-  if (!r.ok) return { ok: false, erro: { codigo: 'INTERNO', mensagem: r.erro } };
-  auditar(db, sessao, 'areas', id, 'criada', null, { nome: payload.nome });
-  return { ok: true, dados: { id } };
+  if (!r.ok) return r;
+  auditar(db, sessao, 'areas', id, 'criada', { nome, cor });
+  return { ok: true, dados: { id, nome, cor, criado_em: agora } };
 }
 
 export function atualizar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
-  if (!payload.id) return { ok: false, erro: { codigo: 'VALIDACAO' } };
-  const cols = ['nome', 'cor', 'ordem'];
-  const sets = []; const vals = [];
-  for (const c of cols) if (c in payload) { sets.push(`${c} = ?`); vals.push(payload[c]); }
-  if (sets.length === 0) return { ok: false, erro: { codigo: 'VALIDACAO' } };
-  sets.push('atualizado_em = ?', 'versao = versao + 1');
-  vals.push(new Date().toISOString(), payload.id, sessao.usuario_id);
-  const r = db.exec(`UPDATE areas SET ${sets.join(', ')} WHERE id = ? AND usuario_id = ?`, vals);
-  if (!r.ok) return { ok: false, erro: { codigo: 'INTERNO', mensagem: r.erro } };
-  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'NAO_ENCONTRADO' } };
-  return { ok: true, dados: { id: payload.id } };
+  const { id, versao, nome, cor } = payload;
+  if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
+  const r = db.exec(
+    `UPDATE areas SET nome=COALESCE(?,nome), cor=COALESCE(?,cor), atualizado_em=?, versao=versao+1 WHERE id=? AND usuario_id=? AND versao=?`,
+    [nome ? String(nome).trim() : null, cor || null, new Date().toISOString(), id, sessao.usuario_id, versao || 0]
+  );
+  if (!r.ok) return r;
+  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'area nao encontrada ou versao desatualizada' } };
+  auditar(db, sessao, 'areas', id, 'atualizada', { nome, cor });
+  return { ok: true, dados: { id } };
 }
 
 export function excluir(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
-  if (!payload.id) return { ok: false, erro: { codigo: 'VALIDACAO' } };
-  const r = db.exec('DELETE FROM areas WHERE id = ? AND usuario_id = ?', [payload.id, sessao.usuario_id]);
-  if (!r.ok) return { ok: false, erro: { codigo: 'INTERNO', mensagem: r.erro } };
-  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'NAO_ENCONTRADO' } };
-  auditar(db, sessao, 'areas', payload.id, 'excluida', null);
-  return { ok: true, dados: {} };
+  const { id } = payload;
+  if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
+  // Bloqueia se ha tarefas vinculadas
+  const uso = db.exec(`SELECT COUNT(*) as c FROM tarefas WHERE area_id = ? AND usuario_id = ?`, [id, sessao.usuario_id]);
+  if (uso.ok && uso.dados[0]?.c > 0) {
+    return { ok: false, erro: { codigo: 'EM_USO', mensagem: 'area possui ' + uso.dados[0].c + ' tarefa(s) vinculada(s). Reatribua antes de excluir.' } };
+  }
+  const r = db.exec(`DELETE FROM areas WHERE id = ? AND usuario_id = ?`, [id, sessao.usuario_id]);
+  if (!r.ok) return r;
+  auditar(db, sessao, 'areas', id, 'excluida', {});
+  return { ok: true, dados: { id } };
 }

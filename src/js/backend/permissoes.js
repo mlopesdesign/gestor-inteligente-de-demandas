@@ -1,7 +1,7 @@
-// src/js/backend/permissoes.js — mapa de permissões por canal
-// Conforme PADRAO-ML-LOPES-DESIGN.md §3.4 (permissão no backend, nunca só na tela).
+// src/js/backend/permissoes.js — mapa de permissoes por canal
+// Conforme PADRAO-ML-LOPES-DESIGN.md §3.4 (permissao no backend, nunca so na tela).
 //
-// MVP: 1 usuário = admin de tudo. Quando entrar multi-usuário, trocar este mapa.
+// MVP: 1 usuario = admin de tudo. Quando entrar multi-usuario, trocar este mapa.
 
 export const PERM_ROTA = {
   // auth
@@ -10,45 +10,65 @@ export const PERM_ROTA = {
   'auth:logout':          'AUTH',
   'sessao:atual':         'AUTH',
 
-  // crud genérico
+  // tarefas
   'tarefas:listar':       'TAREFAS',
   'tarefas:obter':        'TAREFAS',
   'tarefas:criar':        'TAREFAS',
-  'tarefas:atualizar':     'TAREFAS',
-  'tarefas:concluir':      'TAREFAS',
-  'tarefas:cancelar':      'TAREFAS',
+  'tarefas:atualizar':    'TAREFAS',
+  'tarefas:concluir':     'TAREFAS',
+  'tarefas:cancelar':     'TAREFAS',
   'tarefas:adiar':        'TAREFAS',
-  'tarefas:reabrir':       'TAREFAS',
+  'tarefas:reabrir':      'TAREFAS',
+  'tarefas:arquivar':     'TAREFAS',
+  'tarefas:adicionarSubtarefa': 'TAREFAS',
+  'tarefas:toggleSubtarefa':    'TAREFAS',
+
+  // areas
   'areas:listar':         'AREAS',
   'areas:criar':          'AREAS',
   'areas:atualizar':      'AREAS',
   'areas:excluir':        'AREAS',
+
+  // clientes
   'clientes:listar':      'CLIENTES',
+  'clientes:obter':       'CLIENTES',
   'clientes:criar':       'CLIENTES',
   'clientes:atualizar':   'CLIENTES',
-  'clientes:excluir':     'CLIENTES',
+  'clientes:arquivar':    'CLIENTES',
+
+  // projetos
   'projetos:listar':      'PROJETOS',
+  'projetos:obter':       'PROJETOS',
   'projetos:criar':       'PROJETOS',
   'projetos:atualizar':   'PROJETOS',
-  'projetos:excluir':     'PROJETOS',
-  'inbox:listar':         'INBOX',
-  'inbox:processar':      'INBOX',
+  'projetos:arquivar':    'PROJETOS',
+  'projetos:concluir':    'PROJETOS',
+
+  // cobranca / recorrencia
   'cobranca:pendentes':   'COBRANCA',
   'cobranca:tick':        'COBRANCA',
   'cobranca:config':      'COBRANCA',
   'recorrencias:tick':    'COBRANCA',
+
+  // sync
   'sync:push':            'SYNC',
   'sync:pull':            'SYNC',
   'sync:conflitos':       'SYNC',
   'sync:resolver':        'SYNC',
   'sync:status':          'SYNC',
+
+  // ia
   'ia:parse':             'IA',
   'ia:sugerir':           'IA',
   'ia:status':            'IA',
+
+  // config
   'config:obter':         'CONFIG',
   'config:atualizar':     'CONFIG',
   'config:exportar':      'CONFIG',
   'config:apagar':        'CONFIG',
+
+  // busca
   'busca:global':         'BUSCA',
 };
 

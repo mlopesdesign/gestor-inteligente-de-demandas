@@ -1,15 +1,15 @@
 Gestor Inteligente de Demandas v0.1.0
 Copyright (C) 2026 ML Lopes Design
 
-Software proprietário. Todos os direitos reservados.
+Software propriet?rio. Todos os direitos reservados.
 
-Uso pessoal e comercial permitido para o proprietário e seus clientes diretos.
-É proibida a redistribuição não autorizada.
+Uso pessoal e comercial permitido para o propriet?rio e seus clientes diretos.
+? proibida a redistribui??o n?o autorizada.
 
-Para informações sobre licenciamento:
+Para informa??es sobre licenciamento:
   Marcio Lopes
   mlopesdesign@gmail.com
   https://mllopes.com.br
 
-Componentes de terceiros (Neutralino, sql.js, WebView2) são regidos pelas
-suas respectivas licenças open source.
+Componentes de terceiros (Neutralino, sql.js, WebView2) s?o regidos pelas
+suas respectivas licen?as open source.

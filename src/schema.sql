@@ -75,10 +75,13 @@ CREATE TABLE IF NOT EXISTS clientes (
   dono_id         TEXT NOT NULL,
   nome            TEXT NOT NULL,
   organizacao     TEXT,
+  email           TEXT,
+  telefone        TEXT,
   contatos_json   TEXT NOT NULL DEFAULT '{}',
   observacoes     TEXT,
   status          TEXT NOT NULL DEFAULT 'ATIVO'
                   CHECK (status IN ('ATIVO','INATIVO','ARQUIVADO')),
+  arquivado_em    TEXT,
   criado_em       TEXT NOT NULL,
   atualizado_em   TEXT NOT NULL,
   versao          INTEGER NOT NULL DEFAULT 1,
@@ -100,6 +103,9 @@ CREATE TABLE IF NOT EXISTS projetos (
                       CHECK (prioridade IN ('BAIXA','NORMAL','ALTA','URGENTE','CRITICA')),
   inicio_em           TEXT,
   fim_em              TEXT,
+  termino_previsto_em TEXT,
+  termino_real_em     TEXT,
+  arquivado_em        TEXT,
   progresso_calc      REAL NOT NULL DEFAULT 0.0
                       CHECK (progresso_calc >= 0.0 AND progresso_calc <= 1.0),
   participantes_json  TEXT NOT NULL DEFAULT '[]',
@@ -192,10 +198,12 @@ CREATE TABLE IF NOT EXISTS dependencias (
 );
 
 CREATE TABLE IF NOT EXISTS recorrencias_ocorrencias (
+  usuario_id      TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
   tarefa_pai_id   TEXT NOT NULL REFERENCES tarefas(id) ON DELETE CASCADE,
   tarefa_filho_id TEXT NOT NULL UNIQUE REFERENCES tarefas(id) ON DELETE CASCADE,
   data_referencia TEXT NOT NULL
 );
+CREATE INDEX IF NOT EXISTS idx_recorrencias_usuario ON recorrencias_ocorrencias(usuario_id);
 
 -- Lembretes (cobrança) --------------------------------------------------
 

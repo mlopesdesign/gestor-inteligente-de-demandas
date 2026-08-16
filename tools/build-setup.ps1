@@ -2,7 +2,7 @@
 # Pre-requisito: tools/nsis-3.10/ com makensis.exe
 #
 # Uso:  powershell -File tools\build-setup.ps1
-# Saida: installer\GestorInteligenteDeDemandas-Setup-0.1.0.exe
+# Saida: installer\GestorInteligenteDeDemandas-Setup-<versao>.exe (versao do .nsi)
 
 $ErrorActionPreference = 'Stop'
 $root = Resolve-Path (Join-Path $PSScriptRoot '..')
@@ -54,7 +54,10 @@ Write-Output "[build-setup] makensis.exe gestor.nsi" -ForegroundColor Cyan
 & $makensis /V2 "gestor.nsi" 2>&1 | ForEach-Object { Write-Output ("  " + $_) }
 Pop-Location
 
-$setupExe = Join-Path $installer 'GestorInteligenteDeDemandas-Setup-0.1.0.exe'
+# Detecta versao do nsi (APP_VERSION) pra montar o nome do Setup.exe
+$nsiText = Get-Content (Join-Path $installer 'gestor.nsi') -Raw
+$ver = if ($nsiText -match 'APP_VERSION\s+"([0-9]+\.[0-9]+\.[0-9]+)"') { $matches[1] } else { '0.0.0' }
+$setupExe = Join-Path $installer "GestorInteligenteDeDemandas-Setup-$ver.exe"
 if (Test-Path $setupExe) {
     $size = (Get-Item $setupExe).Length
     Write-Output ""

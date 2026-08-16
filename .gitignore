@@ -35,6 +35,7 @@ data/backups/
 
 # Lixeira de coisas erradas (entrega reprovada em Java)
 .trash-java/
+.trash-*/
 
 # IDEs
 .idea/

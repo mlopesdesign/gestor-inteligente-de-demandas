@@ -8,12 +8,12 @@ PRIMEIROS PASSOS
 1. Execute "Gestor Inteligente de Demandas" pelo Menu Iniciar ou Desktop
 2. Crie sua conta na tela de login (email qualquer + senha opcional)
 3. Use a "Caixa de entrada" para capturar tarefas rapidamente
-4. A tela "Hoje" mostra suas tarefas agrupadas por urgÃªncia
+4. A tela "Hoje" mostra suas tarefas agrupadas por urgência
 
 ONDE ESTAO SEUS DADOS
 ---------------------
 - Banco local:  %APPDATA%\GestorInteligenteDeDemandas\dados\gestor.db
-- Log tÃ©cnico:  %APPDATA%\GestorInteligenteDeDemandas\logs\
+- Log técnico:  %APPDATA%\GestorInteligenteDeDemandas\logs\
 - Backup manual recomendado antes de qualquer update
 
 ATALHOS
