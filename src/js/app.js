@@ -1,6 +1,6 @@
-// src/js/app.js — gateway api() e bootstrap da UI
-// Conforme PADRAO-ML-LOPES-DESIGN.md §3.3 (a porta única).
-// A tela não sabe se está rodando no app Neutralino ou num terminal em rede.
+// src/js/app.js â€” gateway api() e bootstrap da UI
+// Conforme PADRAO-ML-LOPES-DESIGN.md Â§3.3 (a porta Ãºnica).
+// A tela nÃ£o sabe se estÃ¡ rodando no app Neutralino ou num terminal em rede.
 
 import { db } from './backend/db.js';
 import { servidor } from './backend/servidor.js';
@@ -42,11 +42,11 @@ function D(...args) {
 }
 
 // ---------------------------------------------------------------------------
-// api() — porta única entre tela e regra (PADRAO §3.3)
+// api() â€” porta Ãºnica entre tela e regra (PADRAO Â§3.3)
 // ---------------------------------------------------------------------------
 export async function api(canal, payload = {}) {
   if (!sessao.token) {
-    // Pega a sessão atual (se o servidor tem)
+    // Pega a sessÃ£o atual (se o servidor tem)
     try {
       const s = await servidor.processar('sessao:atual', {});
       if (s.ok) Object.assign(sessao, s.dados);
@@ -128,7 +128,7 @@ async function bootstrap() {
       if (cached) versao = cached;
     } catch (_) {}
   }
-  if (!versao) versao = '0.2.9';
+  if (!versao) versao = '0.2.10';
   try { localStorage.setItem('__app_version', versao); } catch (_) {}
   const versaoSpan = document.getElementById('versao-app');
   if (versaoSpan) versaoSpan.textContent = 'v' + versao;
@@ -200,7 +200,7 @@ async function bootstrap() {
     }
   }
 
-  // 3. Tenta restaurar sessão (com timeout: o WebSocket pode nao estar pronto ainda)
+  // 3. Tenta restaurar sessÃ£o (com timeout: o WebSocket pode nao estar pronto ainda)
   // Primeiro: checa sessao gravada em localStorage ("Lembrar senha").
   // FIX v0.2.8: mesmo que tenha token no localStorage, valida via sessao:atual
   // (o token pode estar expirado ou a conta pode ter sido recadastrada depois).
@@ -223,8 +223,12 @@ async function bootstrap() {
   }
   if (sessaoResult.ok && sessaoResult.dados?.autenticado) {
     Object.assign(sessao, sessaoResult.dados);
-    D('[app] chamando irPara(hoje)');
-    irPara('hoje');
+    D('[app] sessao autenticada, verificando ?rota=');
+    // FIX v0.2.10: permite ?rota=projetos pra deep link
+    const params = new URLSearchParams(location.search);
+    const rotaInicial = params.get('rota') || 'hoje';
+    D('[app] chamando irPara(' + rotaInicial + ')');
+    irPara(rotaInicial);
   } else {
     // Token do localStorage era invalido (ou nao tinha). Limpa pra nao tentar de novo.
     if (lembrar && lembrar.token) {
@@ -236,7 +240,9 @@ async function bootstrap() {
     // (util para primeira instalacao / teste automatico).
     let autoDemoResult = null;
     try {
+      D('[app] tentando auto-demo. Neutralino?', typeof window.Neutralino);
       const listaUsers = await servidor.processar('sessao:listarUsuarios', {});
+      D('[app] listaUsers=', JSON.stringify(listaUsers));
       if (listaUsers.ok && listaUsers.dados && listaUsers.dados.length === 1 && listaUsers.dados[0].email === 'demo@gestor.local') {
         D('[app] auto-login com demo (unico usuario)');
         autoDemoResult = await servidor.processar('auth:login', { email: 'demo@gestor.local', senha: '' });
@@ -245,11 +251,14 @@ async function bootstrap() {
         }
       }
     } catch (e) {
-      D('[app] ERRO auto-demo:', e.message);
+      D('[app] ERRO auto-demo:', e.message, e.stack);
     }
     if (autoDemoResult && autoDemoResult.ok) {
       D('[app] auto-demo OK, chamando irPara(hoje)');
-      irPara('hoje');
+      // FIX v0.2.10: permite ?rota=projetos pra deep link
+      const params = new URLSearchParams(location.search);
+      const rotaInicial = params.get('rota') || 'hoje';
+      irPara(rotaInicial);
     } else {
       D('[app] chamando irPara(login)');
       irPara('login');
@@ -293,9 +302,9 @@ const ROTAS = {
   tarefas:  { titulo: 'Tarefas',          render: () => import('./telas/tarefas.js').then(m => m.renderTarefas()) },
   projetos: { titulo: 'Projetos',         render: () => import('./telas/projetos.js').then(m => m.renderProjetos()) },
   clientes: { titulo: 'Clientes',         render: () => import('./telas/clientes.js').then(m => m.renderClientes()) },
-  areas:    { titulo: 'Áreas',             render: () => import('./telas/areas.js').then(m => m.renderAreas()) },
+  areas:    { titulo: 'Ãreas',             render: () => import('./telas/areas.js').then(m => m.renderAreas()) },
   busca:    { titulo: 'Buscar',            render: () => import('./telas/busca.js').then(m => m.renderBusca()) },
-  config:   { titulo: 'Configurações',     render: () => import('./telas/configuracoes.js').then(m => m.renderConfig()) },
+  config:   { titulo: 'ConfiguraÃ§Ãµes',     render: () => import('./telas/configuracoes.js').then(m => m.renderConfig()) },
 };
 
 export function irPara(nome) {
@@ -330,7 +339,7 @@ function renderLogin() {
     <div class="login-page">
       <div class="login-card">
         <div class="login-brand">
-          <img src="/resources/images/logo-icon.png" alt="Gestor" class="login-logo">
+          <img src="/resources/images/logo-login.png" alt="mlopes dev" class="login-logo">
           <div class="login-brand-text">
             <div class="login-titulo">Gestor</div>
             <div class="login-subtitulo">Inteligente de Demandas</div>
@@ -367,7 +376,7 @@ function renderLogin() {
           ${salvo ? '<button id="btn-sair-gravado" class="login-sair">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
         </div>
 
-        <div class="login-rodape">v${window.__appVersion || '0.2.9'}</div>
+        <div class="login-rodape">v${window.__appVersion || '0.2.10'}</div>
       </div>
     </div>
   `;
@@ -435,7 +444,7 @@ export async function verificarAtualizacao({ silencioso = true } = {}) {
   try {
     const r = await fetch(UPDATE_URL, { cache: 'no-store' });
     if (!r.ok) {
-      if (!silencioso) toast({ tipo: 'erro', titulo: 'Atualização', corpo: 'Não consegui verificar (' + r.status + ')' });
+      if (!silencioso) toast({ tipo: 'erro', titulo: 'AtualizaÃ§Ã£o', corpo: 'NÃ£o consegui verificar (' + r.status + ')' });
       return null;
     }
     const info = await r.json();
@@ -456,14 +465,14 @@ export async function verificarAtualizacao({ silencioso = true } = {}) {
     D('[update] info.version=' + info.version + ' atual=' + atual + ' cmp=' + cmp);
     if (cmp <= 0) {
       D('[update] mesma versao, NAO mostra toast');
-      if (!silencioso) toast({ tipo: 'info', titulo: 'Atualização', corpo: 'Você já está na versão mais recente (' + atual + ')' });
+      if (!silencioso) toast({ tipo: 'info', titulo: 'AtualizaÃ§Ã£o', corpo: 'VocÃª jÃ¡ estÃ¡ na versÃ£o mais recente (' + atual + ')' });
       return null;
     }
     // Nova versao disponivel!
     D('[update] NOVA VERSAO, mostra toast');
     return info;
   } catch (e) {
-    if (!silencioso) toast({ tipo: 'erro', titulo: 'Atualização', corpo: 'Erro: ' + e.message });
+    if (!silencioso) toast({ tipo: 'erro', titulo: 'AtualizaÃ§Ã£o', corpo: 'Erro: ' + e.message });
     return null;
   }
 }
@@ -487,7 +496,7 @@ export async function aplicarAtualizacao(info) {
           if (window.Neutralino?.updater?.install) {
             const r = await withTimeout(window.Neutralino.updater.install(), 10000, 'updater.install');
             if (r && r.success !== false) {
-              toast({ tipo: 'sucesso', titulo: 'Atualização', corpo: 'Baixando... vai reiniciar.' });
+              toast({ tipo: 'sucesso', titulo: 'AtualizaÃ§Ã£o', corpo: 'Baixando... vai reiniciar.' });
               setTimeout(() => window.Neutralino?.app?.exit?.(), 2500);
               return true;
             }
@@ -500,7 +509,7 @@ export async function aplicarAtualizacao(info) {
       try {
         const appPath = (window.__appData ? window.__appData + '\\GestorInteligenteDeDemandas' : null);
         if (appPath) {
-          toast({ tipo: 'info', titulo: 'Atualização', corpo: 'Baixando versão ' + info.version + '...' });
+          toast({ tipo: 'info', titulo: 'AtualizaÃ§Ã£o', corpo: 'Baixando versÃ£o ' + info.version + '...' });
           const r = await fetch(info.resourcesURL, { cache: 'no-store' });
           if (r.ok) {
             const buf = new Uint8Array(await r.arrayBuffer());
@@ -512,7 +521,7 @@ export async function aplicarAtualizacao(info) {
             try { await withTimeout(window.Neutralino.filesystem.writeFile(oldPath, ''), 2000, 'writeFile.old').catch(() => {}); } catch (_) {}
             try { await withTimeout(window.Neutralino.filesystem.move(dstPath, oldPath).catch(() => {}), 2000, 'move.old'); } catch (_) {}
             await withTimeout(window.Neutralino.filesystem.move(tmpPath, dstPath), 3000, 'move.new');
-            toast({ tipo: 'sucesso', titulo: 'Atualização', corpo: 'Pronto! Reiniciando...' });
+            toast({ tipo: 'sucesso', titulo: 'AtualizaÃ§Ã£o', corpo: 'Pronto! Reiniciando...' });
             setTimeout(() => window.Neutralino?.app?.exit?.(), 1500);
             return true;
           }
@@ -520,7 +529,7 @@ export async function aplicarAtualizacao(info) {
       } catch (_) { /* cai no proximo fallback */ }
     }
     // Ultimo fallback: abre o link no browser
-    toast({ tipo: 'info', titulo: 'Atualização', corpo: 'Abrindo download da versão ' + info.version });
+    toast({ tipo: 'info', titulo: 'AtualizaÃ§Ã£o', corpo: 'Abrindo download da versÃ£o ' + info.version });
     if (window.Neutralino?.os?.open) {
       await withTimeout(window.Neutralino.os.open(info.resourcesURL), 2000, 'os.open');
     } else {
@@ -528,7 +537,7 @@ export async function aplicarAtualizacao(info) {
     }
     return true;
   } catch (e) {
-    toast({ tipo: 'erro', titulo: 'Atualização', corpo: 'Falhou: ' + e.message });
+    toast({ tipo: 'erro', titulo: 'AtualizaÃ§Ã£o', corpo: 'Falhou: ' + e.message });
     return false;
   }
 }
@@ -559,7 +568,7 @@ export function mostrarAvisoAtualizacao(info) {
   const el = tpl.content.firstElementChild.cloneNode(true);
   el.classList.add('info', 'atualizacao');
   el.innerHTML = `
-    <div class="titulo">Nova versão disponível: v${info.version}</div>
+    <div class="titulo">Nova versÃ£o disponÃ­vel: v${info.version}</div>
     <div class="corpo">${(info.notes || '').substring(0, 200)}</div>
     <div style="display:flex; gap:8px; margin-top:8px;">
       <button class="btn-atualizar" style="flex:1; padding:6px 12px; background:var(--cor-marca); color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:600;">Atualizar agora</button>

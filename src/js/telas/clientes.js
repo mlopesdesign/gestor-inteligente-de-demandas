@@ -24,7 +24,7 @@ export async function renderClientes() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version || '0.1.0');
+ document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.9');
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
  });
@@ -41,8 +41,9 @@ async function carregar() {
  const f = { busca: document.getElementById('filtro-busca').value || undefined };
  const r = await window.api('clientes:listar', f);
  const el = document.getElementById('lista-clientes');
- if (!r.ok) { el.innerHTML = `<p class="vazia">Erro: ${escapeHtml(r.erro?.mensagem || '')}</p>`; return; }
- const mostrar = document.getElementById('filtro-arquivados').checked ? r.dados : r.dados.filter(c => !c.arquivado_em);
+ if (!r.ok) { el.innerHTML = `<p class="vazia">Erro: ${escapeHtml(r.erro?.mensagem || r.erro?.codigo || '')}</p>`; return; }
+ // FIX v0.2.10: arquivado agora vem como bool derivado de status
+ const mostrar = document.getElementById('filtro-arquivados').checked ? r.dados : r.dados.filter(c => !c.arquivado);
  if (mostrar.length === 0) { el.innerHTML = `<p class="vazia">Nenhum cliente.</p>`; return; }
  document.getElementById('status-topo').textContent = '● ' + mostrar.length + ' clientes';
  el.innerHTML = `<div class="card" style="padding:0;"><table class="tabela">
@@ -56,7 +57,7 @@ async function carregar() {
  <td>${c.tarefas_ativas || 0}</td>
  <td style="text-align:right;">
  <button data-id="${c.id}" data-acao="editar">Editar</button>
- ${!c.arquivado_em ? `<button data-id="${c.id}" data-acao="arquivar" class="danger"></button>` : '<span style="color:var(--fg-3);">arquivado</span>'}
+ ${!c.arquivado ? `<button data-id="${c.id}" data-acao="arquivar" class="danger">Arquivar</button>` : '<span style="color:var(--fg-3);">arquivado</span>'}
  </td>
  </tr>`).join('')}</tbody>
  </table></div>`;

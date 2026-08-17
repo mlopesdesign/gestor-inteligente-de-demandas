@@ -1,4 +1,0 @@
-﻿JSON diz: size=1886 offset=0
-src len: 1886
-content len: 1886
-content[200:300]: b',\n    "enableNativeAPI": true,\n    "tokenSecurity": "one-time",\n    "logging": {\n        "enabled": '

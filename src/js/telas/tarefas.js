@@ -41,7 +41,7 @@ export async function renderTarefas() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version || '0.1.0');
+ document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.9');
  menuLateralBind(main);
 
  // Carrega listas auxiliares (areas, projetos, clientes)

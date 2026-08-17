@@ -6,11 +6,14 @@ import { auditar } from './auditoria.js';
 export function listar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
   const { status, cliente_id, area_id } = payload || {};
+  // FIX v0.2.10: schema novo usa `inicio_em`/`fim_em` (sem termino_previsto_em/termino_real_em/arquivado_em)
+  // status='ARQUIVADO' substitui arquivado_em
   let sql = `SELECT p.id, p.titulo, p.descricao, p.cliente_id, p.area_id, p.status, p.prioridade,
-                    p.inicio_em, p.termino_previsto_em, p.termino_real_em, p.arquivado_em, p.criado_em, p.atualizado_em, p.versao,
+                    p.inicio_em, p.fim_em, p.progresso_calc, p.participantes_json, p.criado_em, p.atualizado_em, p.versao,
                     c.nome AS cliente_nome, a.nome AS area_nome, a.cor AS area_cor,
                     (SELECT COUNT(*) FROM tarefas t WHERE t.projeto_id = p.id AND t.status NOT IN ('CONCLUIDA','CANCELADA','ARQUIVADA')) AS tarefas_ativas,
-                    (SELECT COUNT(*) FROM tarefas t WHERE t.projeto_id = p.id) AS tarefas_total
+                    (SELECT COUNT(*) FROM tarefas t WHERE t.projeto_id = p.id) AS tarefas_total,
+                    CASE WHEN p.status = 'ARQUIVADO' THEN 1 ELSE 0 END AS arquivado
              FROM projetos p
              LEFT JOIN clientes c ON c.id = p.cliente_id
              LEFT JOIN areas a ON a.id = p.area_id
@@ -19,9 +22,18 @@ export function listar(db, payload, sessao) {
   if (status) { sql += ' AND p.status = ?'; params.push(status); }
   if (cliente_id) { sql += ' AND p.cliente_id = ?'; params.push(cliente_id); }
   if (area_id) { sql += ' AND p.area_id = ?'; params.push(area_id); }
-  sql += ' ORDER BY p.arquivado_em IS NOT NULL, p.prioridade DESC, p.termino_previsto_em IS NULL, p.termino_previsto_em ASC, p.criado_em DESC';
+  sql += ' ORDER BY CASE WHEN p.status = \'ARQUIVADO\' THEN 1 ELSE 0 END, p.prioridade DESC, p.fim_em IS NULL, p.fim_em ASC, p.criado_em DESC';
   const r = db.exec(sql, params);
   if (!r.ok) return r;
+  // DEBUG: log do que tá sendo filtrado
+  try {
+    if (typeof window !== 'undefined' && window.__appLog) {
+      window.__appLog('[projetos.listar] uid=' + sessao.usuario_id + ' rows=' + r.dados.length + ' sql=' + sql.substring(0, 100));
+    }
+  } catch (_) {}
+  console.log('[projetos.listar] uid=', sessao.usuario_id, 'rows=', r.dados.length);
+  // mapear arquivado virtual
+  for (const row of r.dados) row.arquivado = !!row.arquivado;
   return { ok: true, dados: r.dados };
 }
 
@@ -29,30 +41,33 @@ export function obter(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
   const { id } = payload;
   const r = db.exec(
-    `SELECT p.*, c.nome AS cliente_nome, a.nome AS area_nome, a.cor AS area_cor
+    `SELECT p.*, c.nome AS cliente_nome, a.nome AS area_nome, a.cor AS area_cor,
+            CASE WHEN p.status = 'ARQUIVADO' THEN 1 ELSE 0 END AS arquivado
      FROM projetos p LEFT JOIN clientes c ON c.id = p.cliente_id LEFT JOIN areas a ON a.id = p.area_id
      WHERE p.id = ? AND p.usuario_id = ?`,
     [id, sessao.usuario_id]
   );
   if (!r.ok) return r;
   if (r.dados.length === 0) return { ok: false, erro: { codigo: 'NAO_ENCONTRADO' } };
+  r.dados[0].arquivado = !!r.dados[0].arquivado;
   return { ok: true, dados: r.dados[0] };
 }
 
 export function criar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
-  const { titulo, descricao, cliente_id, area_id, status, prioridade, inicio_em, termino_previsto_em } = payload;
+  const { titulo, descricao, cliente_id, area_id, status, prioridade, inicio_em, fim_em } = payload;
   if (!titulo || !String(titulo).trim()) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'titulo obrigatorio' } };
   const id = UlidFactory.next();
   const agora = new Date().toISOString();
+  // FIX v0.2.10: schema novo usa `inicio_em`/`fim_em` (sem termino_previsto_em/termino_real_em)
   const r = db.exec(
-    `INSERT INTO projetos(id, usuario_id, dono_id, titulo, descricao, cliente_id, area_id, status, prioridade, inicio_em, termino_previsto_em, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+    `INSERT INTO projetos(id, usuario_id, dono_id, titulo, descricao, cliente_id, area_id, status, prioridade, inicio_em, fim_em, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
     [id, sessao.usuario_id, sessao.usuario_id, String(titulo).trim().slice(0,200),
      descricao ? String(descricao).trim().slice(0,2000) : null,
      cliente_id || null, area_id || null,
      status || 'PLANEJADO',
      prioridade || 'NORMAL',
-     inicio_em || null, termino_previsto_em || null,
+     inicio_em || null, fim_em || null,
      agora, agora]
   );
   if (!r.ok) return r;
@@ -62,10 +77,11 @@ export function criar(db, payload, sessao) {
 
 export function atualizar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
-  const { id, versao, titulo, descricao, cliente_id, area_id, status, prioridade, inicio_em, termino_previsto_em, termino_real_em } = payload;
+  const { id, versao, titulo, descricao, cliente_id, area_id, status, prioridade, inicio_em, fim_em } = payload;
   if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
   const sets = []; const vals = [];
-  const map = { titulo:'titulo', descricao:'descricao', cliente_id:'cliente_id', area_id:'area_id', status:'status', prioridade:'prioridade', inicio_em:'inicio_em', termino_previsto_em:'termino_previsto_em', termino_real_em:'termino_real_em' };
+  // FIX v0.2.10: schema novo usa `inicio_em`/`fim_em` (sem termino_*)
+  const map = { titulo:'titulo', descricao:'descricao', cliente_id:'cliente_id', area_id:'area_id', status:'status', prioridade:'prioridade', inicio_em:'inicio_em', fim_em:'fim_em' };
   for (const k of Object.keys(map)) {
     if (payload[k] !== undefined) { sets.push(`${map[k]}=?`); vals.push(payload[k]); }
   }
@@ -85,9 +101,10 @@ export function arquivar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
   const { id } = payload;
   if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
+  // FIX v0.2.10: schema novo usa `status='ARQUIVADO'` em vez de `arquivado_em`
   const r = db.exec(
-    `UPDATE projetos SET arquivado_em = ?, atualizado_em = ?, versao = versao + 1 WHERE id = ? AND usuario_id = ?`,
-    [new Date().toISOString(), new Date().toISOString(), id, sessao.usuario_id]
+    `UPDATE projetos SET status = 'ARQUIVADO', atualizado_em = ?, versao = versao + 1 WHERE id = ? AND usuario_id = ?`,
+    [new Date().toISOString(), id, sessao.usuario_id]
   );
   if (!r.ok) return r;
   auditar(db, sessao, 'projetos', id, 'arquivado', {});
@@ -98,8 +115,9 @@ export function concluir(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
   const { id } = payload;
   const agora = new Date().toISOString();
+  // FIX v0.2.10: schema novo nao tem `termino_real_em`. Conclui via status.
   const r = db.exec(
-    `UPDATE projetos SET status='CONCLUIDO', termino_real_em=?, atualizado_em=?, versao=versao+1 WHERE id=? AND usuario_id=?`,
+    `UPDATE projetos SET status='CONCLUIDO', fim_em=COALESCE(fim_em, ?), atualizado_em=?, versao=versao+1 WHERE id=? AND usuario_id=?`,
     [agora, agora, id, sessao.usuario_id]
   );
   if (!r.ok) return r;

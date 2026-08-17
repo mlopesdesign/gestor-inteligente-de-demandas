@@ -15,7 +15,7 @@ export async function renderConfig() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version || '0.1.0');
+ document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.9');
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
  });
@@ -28,7 +28,7 @@ async function carregar() {
  const { usuario, cobranca, stats } = r.dados;
  document.getElementById('config-content').innerHTML = `
  <div class="card">
- <h3> Perfil</h3>
+ <h3>Perfil</h3>
  <form id="form-perfil">
  <div class="campo"><label>Nome</label><input name="nome" value="${escapeHtml(usuario.nome || '')}"></div>
  <div class="campo"><label>Email (somente leitura)</label><input value="${escapeHtml(usuario.email || '')}" disabled></div>
@@ -56,7 +56,7 @@ async function carregar() {
  </div>
 
  ${stats ? `<div class="card">
- <h3> Estatísticas</h3>
+ <h3>Estatísticas</h3>
  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px;">
  <div><div style="color:var(--fg-3); font-size:11px;">Tarefas</div><div style="font-size:24px; font-weight:bold;">${stats.total_tarefas || 0}</div><div style="font-size:11px; color:var(--success);">${stats.concluidas || 0} concluídas</div></div>
  <div><div style="color:var(--fg-3); font-size:11px;">Projetos</div><div style="font-size:24px; font-weight:bold;">${stats.total_projetos || 0}</div></div>
@@ -66,19 +66,19 @@ async function carregar() {
  </div>` : ''}
 
  <div class="card">
- <h3>💾 Exportar dados (LGPD)</h3>
+ <h3>Exportar dados (LGPD)</h3>
  <p style="color:var(--fg-3); font-size:12px;">Baixa um JSON com TODOS os seus dados (tarefas, projetos, clientes, áreas, lembretes, auditoria).</p>
  <button id="btn-exportar" class="primary">Exportar tudo</button>
  </div>
 
  <div class="card" style="border-left: 4px solid var(--danger);">
- <h3 style="color:var(--danger);"> Apagar conta (LGPD)</h3>
+ <h3 style="color:var(--danger);">Apagar conta (LGPD)</h3>
  <p style="color:var(--fg-3); font-size:12px;">Esta ação é IRREVERSÍVEL. Todos os seus dados serão apagados permanentemente.</p>
  <button id="btn-apagar" class="danger">Apagar minha conta</button>
  </div>
 
  <div class="card">
- <h3>🚪 Sessão</h3>
+ <h3>Sessão</h3>
  <button id="btn-logout">Sair (logout)</button>
  </div>
  `;

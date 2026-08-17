@@ -6,18 +6,30 @@ import { auditar } from './auditoria.js';
 export function listar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
   const busca = (payload?.busca || '').trim();
-  let sql = `SELECT c.id, c.nome, c.organizacao, c.email, c.telefone, c.observacoes, c.arquivado_em, c.criado_em, c.atualizado_em, c.versao,
+  // FIX v0.2.10: schema novo: clientes tem `status` ('ATIVO'/'INATIVO'/'ARQUIVADO'),
+  // `contatos_json` (texto JSON com {email, telefone, ...}) em vez de colunas email/telefone/arquivado_em.
+  let sql = `SELECT c.id, c.nome, c.organizacao, c.contatos_json, c.observacoes, c.status, c.criado_em, c.atualizado_em, c.versao,
                     (SELECT COUNT(*) FROM tarefas t WHERE t.cliente_id = c.id AND t.status NOT IN ('CONCLUIDA','CANCELADA','ARQUIVADA')) AS tarefas_ativas,
-                    (SELECT COUNT(*) FROM projetos p WHERE p.cliente_id = c.id AND p.arquivado_em IS NULL) AS projetos_ativos
+                    (SELECT COUNT(*) FROM projetos p WHERE p.cliente_id = c.id AND p.status <> 'ARQUIVADO') AS projetos_ativos,
+                    CASE WHEN c.status = 'ARQUIVADO' THEN 1 ELSE 0 END AS arquivado
              FROM clientes c WHERE c.usuario_id = ?`;
   const params = [sessao.usuario_id];
   if (busca) {
-    sql += ` AND (c.nome LIKE ? OR c.organizacao LIKE ? OR c.email LIKE ?)`;
+    sql += ` AND (c.nome LIKE ? OR c.organizacao LIKE ? OR c.contatos_json LIKE ?)`;
     params.push('%' + busca + '%', '%' + busca + '%', '%' + busca + '%');
   }
-  sql += ` ORDER BY c.arquivado_em IS NOT NULL, c.nome`;
+  sql += ` ORDER BY CASE WHEN c.status = 'ARQUIVADO' THEN 1 ELSE 0 END, c.nome`;
   const r = db.exec(sql, params);
   if (!r.ok) return r;
+  // Mapear contatos_json em campos email/telefone pra UI
+  for (const row of r.dados) {
+    row.arquivado = !!row.arquivado;
+    try {
+      const c = JSON.parse(row.contatos_json || '{}');
+      row.email = c.email || '';
+      row.telefone = c.telefone || '';
+    } catch (_) { row.email = ''; row.telefone = ''; }
+  }
   return { ok: true, dados: r.dados };
 }
 
@@ -26,27 +38,40 @@ export function obter(db, payload, sessao) {
   const { id } = payload;
   if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
   const r = db.exec(
-    `SELECT c.* FROM clientes c WHERE c.id = ? AND c.usuario_id = ?`,
+    `SELECT c.*, CASE WHEN c.status = 'ARQUIVADO' THEN 1 ELSE 0 END AS arquivado
+     FROM clientes c WHERE c.id = ? AND c.usuario_id = ?`,
     [id, sessao.usuario_id]
   );
   if (!r.ok) return r;
   if (r.dados.length === 0) return { ok: false, erro: { codigo: 'NAO_ENCONTRADO' } };
-  return { ok: true, dados: r.dados[0] };
+  const row = r.dados[0];
+  row.arquivado = !!row.arquivado;
+  try {
+    const c = JSON.parse(row.contatos_json || '{}');
+    row.email = c.email || '';
+    row.telefone = c.telefone || '';
+  } catch (_) { row.email = ''; row.telefone = ''; }
+  return { ok: true, dados: row };
 }
 
 export function criar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
-  const { nome, organizacao, email, telefone, observacoes } = payload;
+  const { nome, organizacao, email, telefone, observacoes, status } = payload;
   if (!nome || !String(nome).trim()) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'nome obrigatorio' } };
   const id = UlidFactory.next();
   const agora = new Date().toISOString();
+  // FIX v0.2.10: schema novo. contatos_json armazena email/telefone.
+  const contatos = JSON.stringify({
+    email: email ? String(email).trim().slice(0,160) : '',
+    telefone: telefone ? String(telefone).trim().slice(0,40) : '',
+  });
   const r = db.exec(
-    `INSERT INTO clientes(id, usuario_id, dono_id, nome, organizacao, email, telefone, observacoes, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,?,?,?,1)`,
+    `INSERT INTO clientes(id, usuario_id, dono_id, nome, organizacao, contatos_json, observacoes, status, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,?,?,?,1)`,
     [id, sessao.usuario_id, sessao.usuario_id, String(nome).trim().slice(0,120),
      organizacao ? String(organizacao).trim().slice(0,120) : null,
-     email ? String(email).trim().slice(0,160) : null,
-     telefone ? String(telefone).trim().slice(0,40) : null,
+     contatos,
      observacoes ? String(observacoes).trim().slice(0,2000) : null,
+     status || 'ATIVO',
      agora, agora]
   );
   if (!r.ok) return r;
@@ -56,15 +81,25 @@ export function criar(db, payload, sessao) {
 
 export function atualizar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
-  const { id, versao, nome, organizacao, email, telefone, observacoes } = payload;
+  const { id, versao, nome, organizacao, email, telefone, observacoes, status } = payload;
   if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
   const sets = [];
   const vals = [];
   if (nome !== undefined) { sets.push('nome=?'); vals.push(String(nome).trim().slice(0,120)); }
   if (organizacao !== undefined) { sets.push('organizacao=?'); vals.push(organizacao ? String(organizacao).trim().slice(0,120) : null); }
-  if (email !== undefined) { sets.push('email=?'); vals.push(email ? String(email).trim().slice(0,160) : null); }
-  if (telefone !== undefined) { sets.push('telefone=?'); vals.push(telefone ? String(telefone).trim().slice(0,40) : null); }
   if (observacoes !== undefined) { sets.push('observacoes=?'); vals.push(observacoes ? String(observacoes).trim().slice(0,2000) : null); }
+  if (status !== undefined) { sets.push('status=?'); vals.push(status); }
+  if (email !== undefined || telefone !== undefined) {
+    // precisa ler o JSON atual pra preservar o outro campo
+    const atual = db.exec(`SELECT contatos_json FROM clientes WHERE id = ? AND usuario_id = ?`, [id, sessao.usuario_id]);
+    let c = {};
+    if (atual.ok && atual.dados[0]?.contatos_json) {
+      try { c = JSON.parse(atual.dados[0].contatos_json); } catch (_) { c = {}; }
+    }
+    if (email !== undefined) c.email = email ? String(email).trim().slice(0,160) : '';
+    if (telefone !== undefined) c.telefone = telefone ? String(telefone).trim().slice(0,40) : '';
+    sets.push('contatos_json=?'); vals.push(JSON.stringify(c));
+  }
   if (sets.length === 0) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'nenhum campo para atualizar' } };
   sets.push('atualizado_em=?'); vals.push(new Date().toISOString());
   sets.push('versao=versao+1');
@@ -83,9 +118,10 @@ export function arquivar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
   const { id } = payload;
   if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
+  // FIX v0.2.10: schema novo usa `status='ARQUIVADO'`
   const r = db.exec(
-    `UPDATE clientes SET arquivado_em = ?, atualizado_em = ?, versao = versao + 1 WHERE id = ? AND usuario_id = ?`,
-    [new Date().toISOString(), new Date().toISOString(), id, sessao.usuario_id]
+    `UPDATE clientes SET status = 'ARQUIVADO', atualizado_em = ?, versao = versao + 1 WHERE id = ? AND usuario_id = ?`,
+    [new Date().toISOString(), id, sessao.usuario_id]
   );
   if (!r.ok) return r;
   auditar(db, sessao, 'clientes', id, 'arquivado', {});

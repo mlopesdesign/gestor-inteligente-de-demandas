@@ -1,0 +1,44 @@
+{
+  "palette": {
+    "light": "#FFE45C",
+    "primary": "#FFD633",
+    "gold": "#FFB800"
+  },
+  "files": [
+    {
+      "name": "favicon-amarelo.png",
+      "sha256": "7f3b9a1716e7513ae154b52a7169c04c66b6cbb7f2fa3d1d4bc96bd96f094d51",
+      "bytes": 1494506
+    },
+    {
+      "name": "icone-app-amarelo.png",
+      "sha256": "bdb10d32c7597c5c364f60ee3ffa6b6fdedaff7e97f639c037305bde79393385",
+      "bytes": 1116346
+    },
+    {
+      "name": "icone-app-redondo-amarelo.png",
+      "sha256": "51e7f8d820919655201310e24dd6995f6cac51836d0fee7fb65f5dd42b8cadef",
+      "bytes": 867927
+    },
+    {
+      "name": "logo-fundo-transparente-amarelo.png",
+      "sha256": "e40f08be3f802313c9212702e29e44e5325dc7879f02120127d05d665db1ca35",
+      "bytes": 439457
+    },
+    {
+      "name": "logo-horizontall-transparente-amarelo.png",
+      "sha256": "aff2c6faf1c6b9f52ab86725c7848050e084e71c6ec4b37935a213a350c79cf6",
+      "bytes": 413509
+    },
+    {
+      "name": "icone-app-amarelo.ico",
+      "sha256": "901bdfd27878de7010b2b51393a5eaabea5847d00a3e22c37c11884d97cff916",
+      "bytes": 75182
+    },
+    {
+      "name": "preview-paleta-amarela.jpg",
+      "sha256": "f80c2845bf200ab6fca5306ebcb888b9461c0608e65dd12464288ac6a9dcaf70",
+      "bytes": 139565
+    }
+  ]
+}

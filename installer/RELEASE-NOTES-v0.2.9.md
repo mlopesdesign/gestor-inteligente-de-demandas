@@ -1,20 +1,24 @@
-# v0.2.9 — 17/08/2026
+# v0.2.9 - 17/08/2026
 
-## Correcoes
+## Correções
 
-- **DevTools NAO abre mais automaticamente** (`enableInspector: false` no `neutralino.config.json`). Se voce abriu o DevTools manualmente, ele sobrepoe a janela do app — agora isso nao acontece sozinho.
-- **Versao do app nao atualizava no header** (ficava mostrando a versao antiga do cache do `NEUTRALINO_GLOBALS`). FIX: meta tag `<meta name="app-version">` no `index.html` como fonte da verdade, o `app.js` le dele no boot.
-- **Encoding do `neutralino.config.json` quebrava** os acentos dos textos do tray ("rÃ¡pida" em vez de "rapida"). FIX: gravacao com UTF-8 sem BOM no `instalar-agora.ps1`.
+- **DevTools NÃO abre mais automaticamente** (`enableInspector: false` no `neutralino.config.json`)
+- **Versão correta no header** (v0.2.9, não mais v0.1.0): meta tag `<meta name="app-version">` é a fonte da verdade
+- **Tela Projetos funcional**: query SQL ajustada ao schema novo (`fim_em` em vez de `termino_previsto_em`)
+- **Tela Clientes funcional**: query SQL ajustada ao schema novo (`contatos_json` em vez de colunas `email`/`telefone`/`arquivado_em`)
+- **Tela Configurações sem emojis decorativos** (removidos 📋 💾 🚪 do HTML)
+- **Ícone do .exe MLOPES DEV embutido no instalador** (via `rcedit-x64.exe`)
+- **Loading screen com fundo preto e logo "mlopes dev"** (não mais lâmpada sozinha)
+- **Login screen com fundo preto e logo vertical** (não mais radial azul vazando)
 
-## IMPORTANTE
+## Banco
 
-- Para aplicar o `enableInspector: false`, **tem que reinstalar** o Setup.exe. O auto-update so atualiza o `resources.neu` (codigo do app), NAO atualiza o `.exe` nem o `neutralino.config.json` que estao no disco.
-- Se voce so clicar em "Atualizar agora" no toast, o DevTools ainda vai abrir porque o `neutralino.config.json` continua com a versao antiga.
-- **Reinstale o Setup.exe v0.2.9** pra parar de ver DevTools abrindo.
+- 4 clientes, 4 projetos, 12 tarefas seedados para teste
+- Migração idempotente (ALTER TABLE ... IF NOT EXISTS)
 
-## Instalacao
+## Instalação
 
-- Baixe o `GestorInteligenteDeDemandas-Setup-0.2.9.exe` (3.2 MB)
+- Baixe o `GestorInteligenteDeDemandas-Setup-0.2.9.exe` (5.6 MB)
 - Executa como admin (clica direito > Executar como administrador)
-- Substitui a instalacao anterior sem perder dados
+- Substitui a instalação anterior sem perder dados
 - Banco do cliente preservado

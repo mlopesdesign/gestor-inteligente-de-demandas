@@ -35,7 +35,7 @@ export async function renderProjetos() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version || '0.1.0');
+ document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.9');
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
  });
@@ -65,8 +65,9 @@ async function carregar() {
  };
  const r = await window.api('projetos:listar', f);
  const el = document.getElementById('lista-projetos');
- if (!r.ok) { el.innerHTML = `<p class="vazia">Erro: ${escapeHtml(r.erro?.mensagem || '')}</p>`; return; }
- const mostrar = document.getElementById('filtro-arquivados').checked ? r.dados : r.dados.filter(p => !p.arquivado_em);
+ if (!r.ok) { el.innerHTML = `<p class="vazia">Erro: ${escapeHtml(r.erro?.mensagem || r.erro?.codigo || '')}</p>`; return; }
+ // FIX v0.2.10: arquivado agora vem como bool derivado de status
+ const mostrar = document.getElementById('filtro-arquivados').checked ? r.dados : r.dados.filter(p => !p.arquivado);
  const busca = document.getElementById('filtro-busca').value.toLowerCase().trim();
  const lista = busca ? mostrar.filter(p => (p.titulo || '').toLowerCase().includes(busca)) : mostrar;
  if (lista.length === 0) { el.innerHTML = `<p class="vazia">Nenhum projeto.</p>`; return; }
@@ -91,7 +92,7 @@ async function carregar() {
 
 function cardProjeto(p) {
  const ini = p.inicio_em ? new Date(p.inicio_em).toLocaleDateString('pt-BR') : '';
- const fim = p.termino_previsto_em ? new Date(p.termino_previsto_em).toLocaleDateString('pt-BR') : '—';
+ const fim = p.fim_em ? new Date(p.fim_em).toLocaleDateString('pt-BR') : '—';
  return `<div class="card" style="margin:0;">
  <div style="display:flex; align-items:center; gap:8px;">
  <span class="dot" style="background:${p.area_cor || '#888'}"></span>
@@ -109,8 +110,8 @@ function cardProjeto(p) {
  </div>
  <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">
  <button data-id="${p.id}" data-v="${p.versao}" data-acao="editar">Editar</button>
- ${!p.arquivado_em && p.status !== 'CONCLUIDO' ? `<button data-id="${p.id}" data-v="${p.versao}" data-acao="concluir" class="success"> Concluir</button>` : ''}
- ${!p.arquivado_em ? `<button data-id="${p.id}" data-v="${p.versao}" data-acao="arquivar"></button>` : ''}
+ ${!p.arquivado && p.status !== 'CONCLUIDO' ? `<button data-id="${p.id}" data-v="${p.versao}" data-acao="concluir" class="success"> Concluir</button>` : ''}
+ ${!p.arquivado ? `<button data-id="${p.id}" data-v="${p.versao}" data-acao="arquivar"></button>` : ''}
  <button data-id="${p.id}" data-acao="tarefas">Ver tarefas</button>
  </div>
  </div>`;
@@ -147,7 +148,7 @@ export function modalProjeto(p, cache, onClose) {
  </div>
  <div style="display:flex; gap:8px;">
  <div class="campo" style="flex:1;"><label>Início</label><input type="date" name="inicio_em" value="${t.inicio_em ? t.inicio_em.slice(0,10) : ''}"></div>
- <div class="campo" style="flex:1;"><label>Término previsto</label><input type="date" name="termino_previsto_em" value="${t.termino_previsto_em ? t.termino_previsto_em.slice(0,10) : ''}"></div>
+ <div class="campo" style="flex:1;"><label>Término previsto</label><input type="date" name="fim_em" value="${t.fim_em ? t.fim_em.slice(0,10) : ''}"></div>
  </div>
  <div class="acoes">
  <button type="button" data-acao="cancelar">Cancelar</button>
@@ -162,11 +163,11 @@ export function modalProjeto(p, cache, onClose) {
  const fd = new FormData(e.target);
  const dados = Object.fromEntries(fd.entries());
  if (dados.inicio_em) dados.inicio_em = new Date(dados.inicio_em).toISOString();
- if (dados.termino_previsto_em) dados.termino_previsto_em = new Date(dados.termino_previsto_em).toISOString();
+ if (dados.fim_em) dados.fim_em = new Date(dados.fim_em).toISOString();
  if (!dados.cliente_id) delete dados.cliente_id;
  if (!dados.area_id) delete dados.area_id;
  if (!dados.inicio_em) delete dados.inicio_em;
- if (!dados.termino_previsto_em) delete dados.termino_previsto_em;
+ if (!dados.fim_em) delete dados.fim_em;
  let r;
  if (isEdit) { dados.id = t.id; dados.versao = t.versao; r = await window.api('projetos:atualizar', dados); }
  else { r = await window.api('projetos:criar', dados); }

@@ -262,7 +262,7 @@ a:hover { text-decoration: underline; }
 
 .loading-screen {
     position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: var(--bg);
+    background: #0a0a0a;
 }
 .loading-content { text-align: center; display: flex; flex-direction: column; align-items: center; }
 .loading-spinner {
@@ -277,49 +277,52 @@ a:hover { text-decoration: underline; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ==========================================================================
-   Login (v0.2.8 - clean, sem emojis, paleta amarela)
+   Login (v0.2.9 - logo mlopes dev vertical + background PRETO)
    ========================================================================== */
 
 .login-page {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
-    background:
-      radial-gradient(circle at 20% 0%, rgba(240, 160, 0, 0.08), transparent 50%),
-      radial-gradient(circle at 100% 100%, rgba(240, 160, 0, 0.05), transparent 50%),
-      var(--bg);
+    background: #0a0a0a;
     padding: 24px;
+    overflow: hidden;
 }
 
 .login-card {
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 40px;
+    background: rgba(20, 20, 20, 0.85);
+    border: 1px solid rgba(255, 214, 51, 0.20);
+    border-radius: 12px;
+    padding: 40px 36px;
     width: 100%;
-    max-width: 420px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-width: 440px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+    position: relative;
+    z-index: 1;
+    backdrop-filter: blur(6px);
 }
 
 .login-brand {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 24px;
+    gap: 12px;
+    margin-bottom: 28px;
+    text-align: center;
 }
 .login-logo {
-    width: 56px; height: 56px;
-    border-radius: 12px;
+    width: 180px;
+    height: auto;
     flex-shrink: 0;
 }
 .login-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
 .login-titulo {
-    color: var(--cor-marca);
-    font-size: 22px;
+    color: #FFE45C;
+    font-size: 24px;
     font-weight: 700;
     letter-spacing: -0.01em;
 }
 .login-subtitulo {
-    color: var(--fg-3);
+    color: #999;
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -328,7 +331,7 @@ a:hover { text-decoration: underline; }
 
 .login-separador {
     height: 1px;
-    background: var(--border);
+    background: rgba(255, 214, 51, 0.20);
     margin: 0 0 24px;
 }
 
@@ -336,12 +339,12 @@ a:hover { text-decoration: underline; }
 .login-boasvindas h2 {
     font-size: 18px;
     font-weight: 600;
-    color: var(--fg);
+    color: #f0f0f0;
     margin: 0 0 6px;
 }
 .login-boasvindas p {
     font-size: 13px;
-    color: var(--fg-3);
+    color: #b0b0b0;
     line-height: 1.5;
     margin: 0;
 }
@@ -350,12 +353,12 @@ a:hover { text-decoration: underline; }
 .login-form label { display: flex; flex-direction: column; gap: 6px; }
 .login-form label > span {
     font-size: 12px;
-    color: var(--fg-2);
+    color: #b0b0b0;
     font-weight: 500;
 }
 .login-form label > span em {
     font-style: normal;
-    color: var(--fg-3);
+    color: #888;
     font-weight: 400;
     margin-left: 4px;
 }
@@ -363,6 +366,18 @@ a:hover { text-decoration: underline; }
 .login-form input[type=password] {
     padding: 10px 12px;
     font-size: 14px;
+    background: rgba(0, 0, 0, 0.5);
+    color: #f0f0f0;
+    border: 1px solid rgba(255, 214, 51, 0.15);
+}
+.login-form input[type=email]::placeholder,
+.login-form input[type=password]::placeholder {
+    color: #666;
+}
+.login-form input[type=email]:focus,
+.login-form input[type=password]:focus {
+    border-color: #FFD633;
+    outline: none;
 }
 
 .login-lembrar {
@@ -370,10 +385,10 @@ a:hover { text-decoration: underline; }
     align-items: center;
     gap: 8px !important;
     font-size: 13px;
-    color: var(--fg-2);
+    color: #b0b0b0;
     cursor: pointer;
 }
-.login-lembrar input[type=checkbox] { width: 16px; height: 16px; }
+.login-lembrar input[type=checkbox] { width: 16px; height: 16px; accent-color: #FFD633; }
 
 .login-botoes {
     display: flex;
@@ -385,11 +400,19 @@ a:hover { text-decoration: underline; }
     padding: 10px 16px;
     font-weight: 600;
 }
+.login-botoes button:not(.primary) {
+    background: transparent;
+    color: #e0e0e0;
+    border: 1px solid rgba(255, 214, 51, 0.25);
+}
+.login-botoes button:not(.primary):hover {
+    background: rgba(255, 214, 51, 0.08);
+}
 
 .login-sair {
     background: none;
     border: none;
-    color: var(--fg-3);
+    color: #888;
     font-size: 12px;
     cursor: pointer;
     text-decoration: underline;
@@ -401,8 +424,8 @@ a:hover { text-decoration: underline; }
 .login-rodape {
     text-align: center;
     font-size: 11px;
-    color: var(--fg-3);
+    color: #777;
     margin-top: 24px;
     padding-top: 16px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid rgba(255, 214, 51, 0.10);
 }

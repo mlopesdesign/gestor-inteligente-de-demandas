@@ -23,6 +23,10 @@ const DATA_SUBDIR = 'dados';
 
 // Resolve APPDATA de verdade. No app, %APPDATA% e' literal, precisa expandir via
 // Neutralino.os.getEnv. No browser, process.env nao existe, cai pro fallback.
+// FIX v0.2.10: SEMPRE checa window.__appData primeiro (o db.js pode ter setado
+// antes da gente). Sem isso, o fallback hardcoded `C:\\Users\\Public\\AppData\\Roaming`
+// é retornado e o app grava em localStorage (que tem dados de sessoes antigas
+// com IDs de usuarios que nao existem mais).
 let _APPDATA_RESOLVIDO = null;
 function resolverAppdata() {
   if (_APPDATA_RESOLVIDO) return _APPDATA_RESOLVIDO;
@@ -36,18 +40,26 @@ function resolverAppdata() {
     _APPDATA_RESOLVIDO = process.env.APPDATA;
     return _APPDATA_RESOLVIDO;
   }
-  // 3) Fallback final: valor hardcoded razoavel (dev / browser)
-  _APPDATA_RESOLVIDO = 'C:\\Users\\Public\\AppData\\Roaming';
-  return _APPDATA_RESOLVIDO;
+  // 3) Fallback final: NAO usar `C:\\Users\\Public\\AppData\\Roaming`
+  // porque esse path nao existe no Windows moderno (Public/ nao tem AppData/).
+  // O resultado é o app cair pro localStorage e o seed/banco em disco
+  // serem ignorados. Melhor lancar erro e o app mostrar mensagem clara.
+  throw new Error('Nao foi possivel resolver APPDATA. O app precisa de Neutralino.os.getEnv("APPDATA") funcional.');
 }
 
 export async function resolverAppdataAsync() {
   if (_APPDATA_RESOLVIDO) return _APPDATA_RESOLVIDO;
+  // 1) Primeiro checa window.__appData (pode ter sido setado pelo db.js)
+  if (typeof window !== 'undefined' && window.__appData) {
+    _APPDATA_RESOLVIDO = window.__appData;
+    return _APPDATA_RESOLVIDO;
+  }
+  // 2) Tenta Neutralino.os.getEnv
   if (NO_APP && window.Neutralino?.os?.getEnv) {
     try {
       const v = await Promise.race([
         window.Neutralino.os.getEnv('APPDATA'),
-        new Promise(res => setTimeout(() => res(null), 5000)),
+        new Promise(res => setTimeout(() => res(null), 8000)),
       ]);
       if (v && typeof v === 'string' && v.length > 0) {
         _APPDATA_RESOLVIDO = v;

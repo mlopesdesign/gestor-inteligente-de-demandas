@@ -134,6 +134,8 @@ CREATE TABLE IF NOT EXISTS tarefas (
   duracao_estimada_min      INTEGER,
   duracao_realizada_min     INTEGER NOT NULL DEFAULT 0,
   recorrencia_json          TEXT,
+  recorrencia_tipo          TEXT,
+  recorrencia_data_base     TEXT,
   etiquetas_json            TEXT NOT NULL DEFAULT '[]',
   responsavel               TEXT,
   origem                    TEXT NOT NULL DEFAULT 'MANUAL'

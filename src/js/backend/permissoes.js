@@ -9,6 +9,7 @@ export const PERM_ROTA = {
   'auth:login':           'AUTH',
   'auth:logout':          'AUTH',
   'sessao:atual':         'AUTH',
+  'sessao:listarUsuarios': 'AUTH',
 
   // tarefas
   'tarefas:listar':       'TAREFAS',
