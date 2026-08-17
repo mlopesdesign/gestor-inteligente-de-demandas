@@ -83,7 +83,14 @@ async function carregar() {
  if (confirm('Concluir este projeto?')) { await window.api('projetos:concluir', { id }); carregar(); }
  } else if (ac === 'arquivar') {
  if (confirm('Arquivar?')) { await window.api('projetos:arquivar', { id }); carregar(); }
- } else if (ac === 'tarefas') {
+ } else if (ac === 'tarefas') {  } else if (ac === 'excluir') {
+    if (confirm('Excluir este projeto? Esta ação não pode ser desfeita.')) {
+      const r = await window.api('projetos:excluir', { id, versao: v });
+      if (!r.ok) { alert(r.erro?.mensagem || 'erro'); return; }
+      carregar();
+    }
+  }
+
  window.irPara('tarefas');
  }
  };
@@ -110,7 +117,8 @@ function cardProjeto(p) {
  </div>
  <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">
  <button data-id="${p.id}" data-v="${p.versao}" data-acao="editar">Editar</button>
- ${!p.arquivado && p.status !== 'CONCLUIDO' ? `<button data-id="${p.id}" data-v="${p.versao}" data-acao="concluir" class="success"> Concluir</button>` : ''}
+ ${!p.arquivado && p.status !== 'CONCLUIDO' ? `<button data-id="${p.id}" data-v="${p.versao}" data-acao="concluir" class="success"> Concluir</button>
+    <button data-id="${p.id}" data-v="${p.versao}" data-acao="excluir" class="danger" title="Excluir permanentemente">Excluir</button>` : ''}
  ${!p.arquivado ? `<button data-id="${p.id}" data-v="${p.versao}" data-acao="arquivar"></button>` : ''}
  <button data-id="${p.id}" data-acao="tarefas">Ver tarefas</button>
  </div>

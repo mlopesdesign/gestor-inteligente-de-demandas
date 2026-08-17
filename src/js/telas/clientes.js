@@ -58,13 +58,21 @@ async function carregar() {
  <td style="text-align:right;">
  <button data-id="${c.id}" data-acao="editar">Editar</button>
  ${!c.arquivado ? `<button data-id="${c.id}" data-acao="arquivar" class="danger">Arquivar</button>` : '<span style="color:var(--fg-3);">arquivado</span>'}
+    <button data-id="${c.id}" data-acao="excluir" class="danger" title="Excluir permanentemente">Excluir</button>
  </td>
  </tr>`).join('')}</tbody>
  </table></div>`;
  el.querySelectorAll('[data-acao]').forEach(b => {
  b.onclick = async () => {
  const id = b.dataset.id, ac = b.dataset.acao;
- if (ac === 'editar') {
+ if (ac === 'editar') {  if (ac === 'excluir') {
+    if (confirm('Excluir este cliente? Esta ação não pode ser desfeita.')) {
+      const r = await window.api('clientes:excluir', { id });
+      if (!r.ok) { alert(r.erro?.mensagem || 'erro'); return; }
+      carregar();
+    }
+  }
+
  const t = (await window.api('clientes:obter', { id })).dados;
  modalCliente(t, carregar);
  } else if (ac === 'arquivar') {

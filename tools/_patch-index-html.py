@@ -3,11 +3,16 @@
 """Atualiza meta app-version e app-build no index.html"""
 import re
 import sys
+import os
+
+# Pega versão do package.json
+pkg = open(r'E:\Projetos\LOPES FOCUS\package.json', 'r', encoding='utf-8').read()
+m = re.search(r'"version":\s*"(\d+\.\d+\.\d+)"', pkg)
+nova_versao = m.group(1) if m else '0.0.0'
+import datetime
+novo_build = f'{nova_versao}-{datetime.date.today().isoformat()}'
 
 path = r'E:\Projetos\LOPES FOCUS\src\index.html'
-nova_versao = '0.2.17'
-novo_build = '0.2.17-2026-08-17'
-
 with open(path, 'r', encoding='utf-8') as f:
     content = f.read()
 

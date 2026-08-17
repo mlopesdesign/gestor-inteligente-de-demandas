@@ -21,6 +21,7 @@ export const PERM_ROTA = {
   'tarefas:adiar':        'TAREFAS',
   'tarefas:reabrir':      'TAREFAS',
   'tarefas:arquivar':     'TAREFAS',
+  'tarefas:excluir':      'TAREFAS',
   'tarefas:adicionarSubtarefa': 'TAREFAS',
   'tarefas:toggleSubtarefa':    'TAREFAS',
 
@@ -36,6 +37,7 @@ export const PERM_ROTA = {
   'clientes:criar':       'CLIENTES',
   'clientes:atualizar':   'CLIENTES',
   'clientes:arquivar':    'CLIENTES',
+  'clientes:excluir':     'CLIENTES',
 
   // projetos
   'projetos:listar':      'PROJETOS',
@@ -44,6 +46,7 @@ export const PERM_ROTA = {
   'projetos:atualizar':   'PROJETOS',
   'projetos:arquivar':    'PROJETOS',
   'projetos:concluir':    'PROJETOS',
+  'projetos:excluir':     'PROJETOS',
 
   // cobranca / recorrencia
   'cobranca:pendentes':   'COBRANCA',

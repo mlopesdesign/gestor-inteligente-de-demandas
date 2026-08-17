@@ -124,3 +124,23 @@ export function concluir(db, payload, sessao) {
   auditar(db, sessao, 'projetos', id, 'concluido', {});
   return { ok: true, dados: { id } };
 }
+
+
+// FIX v0.2.18: exclusao real do projeto. Bloqueia se há tarefas vinculadas.
+export function excluir(db, payload, sessao) {
+  if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
+  const { id } = payload;
+  if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
+  const uso = db.exec(`SELECT COUNT(*) AS c FROM tarefas WHERE projeto_id=? AND usuario_id=?`, [id, sessao.usuario_id]);
+  if (uso.ok && uso.dados[0]?.c > 0) {
+    return { ok: false, erro: { codigo: 'EM_USO', mensagem: 'projeto possui ' + uso.dados[0].c + ' tarefa(s) vinculada(s). Reatribua antes de excluir.' } };
+  }
+  const r = db.exec(
+    `DELETE FROM projetos WHERE id=? AND usuario_id=?`,
+    [id, sessao.usuario_id]
+  );
+  if (!r.ok) return r;
+  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'NAO_ENCONTRADO', mensagem: 'projeto nao encontrado' } };
+  auditar(db, sessao, 'projetos', id, 'excluido', {});
+  return { ok: true, dados: { id } };
+}

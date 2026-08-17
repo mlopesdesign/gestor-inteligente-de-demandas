@@ -44,6 +44,7 @@ export const servidor = {
         case 'tarefas:adiar':              return tarefasCore.adiar(db, payload, s);
         case 'tarefas:reabrir':            return tarefasCore.reabrir(db, payload, s);
         case 'tarefas:arquivar':           return tarefasCore.arquivar(db, payload, s);
+        case 'tarefas:excluir':            return tarefasCore.excluir(db, payload, s);
         case 'tarefas:adicionarSubtarefa': return tarefasCore.adicionarSubtarefa(db, payload, s);
         case 'tarefas:toggleSubtarefa':    return tarefasCore.toggleSubtarefa(db, payload, s);
 
@@ -59,6 +60,7 @@ export const servidor = {
         case 'clientes:criar':       return clientesCore.criar(db, payload, s);
         case 'clientes:atualizar':   return clientesCore.atualizar(db, payload, s);
         case 'clientes:arquivar':    return clientesCore.arquivar(db, payload, s);
+        case 'clientes:excluir':     return clientesCore.excluir(db, payload, s);
 
         // projetos
         case 'projetos:listar':      return projetosCore.listar(db, payload, s);
@@ -67,6 +69,7 @@ export const servidor = {
         case 'projetos:atualizar':   return projetosCore.atualizar(db, payload, s);
         case 'projetos:arquivar':    return projetosCore.arquivar(db, payload, s);
         case 'projetos:concluir':    return projetosCore.concluir(db, payload, s);
+        case 'projetos:excluir':     return projetosCore.excluir(db, payload, s);
 
         // cobranca / recorrencia
         case 'cobranca:pendentes':   return cobrancasCore.pendentes(db, payload, s);

@@ -206,3 +206,19 @@ export function toggleSubtarefa(db, payload, sessao) {
   if (!r.ok) return r;
   return { ok: true, dados: { id } };
 }
+
+
+// FIX v0.2.18: exclusao real da tarefa (era só "concluir" antes)
+export function excluir(db, payload, sessao) {
+  if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
+  const { id } = payload;
+  if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
+  const r = db.exec(
+    `DELETE FROM tarefas WHERE id=? AND usuario_id=?`,
+    [id, sessao.usuario_id]
+  );
+  if (!r.ok) return r;
+  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'NAO_ENCONTRADO', mensagem: 'tarefa nao encontrada' } };
+  auditar(db, sessao, 'tarefas', id, 'excluida', {});
+  return { ok: true, dados: { id } };
+}

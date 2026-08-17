@@ -127,3 +127,29 @@ export function arquivar(db, payload, sessao) {
   auditar(db, sessao, 'clientes', id, 'arquivado', {});
   return { ok: true, dados: { id } };
 }
+
+
+// FIX v0.2.18: exclusao real do cliente. Bloqueia se há tarefas/projetos vinculados.
+export function excluir(db, payload, sessao) {
+  if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
+  const { id } = payload;
+  if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
+  // Verifica uso em tarefas
+  const usoT = db.exec(`SELECT COUNT(*) AS c FROM tarefas WHERE cliente_id=? AND usuario_id=?`, [id, sessao.usuario_id]);
+  if (usoT.ok && usoT.dados[0]?.c > 0) {
+    return { ok: false, erro: { codigo: 'EM_USO', mensagem: 'cliente possui ' + usoT.dados[0].c + ' tarefa(s) vinculada(s). Reatribua antes de excluir.' } };
+  }
+  // Verifica uso em projetos
+  const usoP = db.exec(`SELECT COUNT(*) AS c FROM projetos WHERE cliente_id=? AND usuario_id=?`, [id, sessao.usuario_id]);
+  if (usoP.ok && usoP.dados[0]?.c > 0) {
+    return { ok: false, erro: { codigo: 'EM_USO', mensagem: 'cliente possui ' + usoP.dados[0].c + ' projeto(s) vinculado(s). Reatribua antes de excluir.' } };
+  }
+  const r = db.exec(
+    `DELETE FROM clientes WHERE id=? AND usuario_id=?`,
+    [id, sessao.usuario_id]
+  );
+  if (!r.ok) return r;
+  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'NAO_ENCONTRADO', mensagem: 'cliente nao encontrado' } };
+  auditar(db, sessao, 'clientes', id, 'excluido', {});
+  return { ok: true, dados: { id } };
+}
