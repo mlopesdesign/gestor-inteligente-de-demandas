@@ -12,7 +12,8 @@ export function listar(db, payload, sessao) {
   const { status, area_id, projeto_id, cliente_id, vencidas, busca, incluir_arquivadas, limite } = payload || {};
   const lim = Math.min(Number(limite) || 200, 1000);
   let sql = `SELECT t.id, t.titulo, t.descricao, t.status, t.prioridade, t.nivel_cobranca, t.area_id, t.projeto_id, t.cliente_id,
-                    t.inicio_em, t.vencimento_em, t.concluida_em, t.cancelada_em, t.cancelada_motivo, t.adiada_ate, t.adiada_motivo,
+                    t.inicio_em, t.vencimento_em, t.concluida_em, t.motivo_cancelamento, t.motivo_adiamento,
+                    t.cancelada_em, t.cancelada_motivo, t.adiada_ate, t.adiada_motivo,
                     t.recorrencia_tipo, t.versao, t.atualizado_em, t.criado_em,
                     a.nome AS area_nome, a.cor AS area_cor,
                     p.titulo AS projeto_titulo,
@@ -95,6 +96,7 @@ export function atualizar(db, payload, sessao) {
   const map = {
     titulo:'titulo', descricao:'descricao', area_id:'area_id', projeto_id:'projeto_id', cliente_id:'cliente_id',
     inicio_em:'inicio_em', vencimento_em:'vencimento_em', recorrencia_tipo:'recorrencia_tipo', recorrencia_data_base:'recorrencia_data_base',
+    motivo_cancelamento:'motivo_cancelamento', motivo_adiamento:'motivo_adiamento',
     cancelada_motivo:'cancelada_motivo', adiada_ate:'adiada_ate', adiada_motivo:'adiada_motivo',
   };
   const sets = []; const vals = [];
@@ -131,8 +133,10 @@ function _alterarStatus(db, payload, sessao, novoStatus, campos) {
   if (campos.concluida_em) { sets.push('concluida_em=?'); vals.push(agora); }
   if (campos.cancelada_em) { sets.push('cancelada_em=?'); vals.push(agora); }
   if (campos.cancelada_motivo) { sets.push('cancelada_motivo=?'); vals.push(motivo || ''); }
+  if (campos.motivo_cancelamento) { sets.push('motivo_cancelamento=?'); vals.push(motivo || ''); }
   if (campos.adiada_ate) { sets.push('adiada_ate=?'); vals.push(payload.adiada_ate || null); }
   if (campos.adiada_motivo) { sets.push('adiada_motivo=?'); vals.push(motivo || ''); }
+  if (campos.motivo_adiamento) { sets.push('motivo_adiamento=?'); vals.push(motivo || ''); }
   vals.push(id, sessao.usuario_id, versao || 0);
   const r = db.exec(
     `UPDATE tarefas SET ${sets.join(', ')} WHERE id = ? AND usuario_id = ? AND versao = ?`, vals
@@ -151,7 +155,7 @@ export function cancelar(db, payload, sessao) {
   if (!payload.motivo || !String(payload.motivo).trim()) {
     return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'motivo obrigatorio para cancelar' } };
   }
-  return _alterarStatus(db, payload, sessao, 'CANCELADA', { cancelada_em: true, cancelada_motivo: true });
+  return _alterarStatus(db, payload, sessao, 'CANCELADA', { cancelada_em: true, cancelada_motivo: true, motivo_cancelamento: true });
 }
 
 export function adiar(db, payload, sessao) {
@@ -159,8 +163,8 @@ export function adiar(db, payload, sessao) {
     return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'vencimento_em obrigatorio para adiar' } };
   }
   const r1 = db.exec(
-    `UPDATE tarefas SET vencimento_em=?, adiada_ate=?, adiada_motivo=?, status='ADIADA', atualizado_em=?, versao=versao+1 WHERE id=? AND usuario_id=? AND versao=?`,
-    [payload.vencimento_em, payload.vencimento_em, payload.motivo || null, new Date().toISOString(), payload.id, sessao.usuario_id, payload.versao || 0]
+    `UPDATE tarefas SET vencimento_em=?, adiada_ate=?, adiada_motivo=?, motivo_adiamento=?, status='ADIADA', atualizado_em=?, versao=versao+1 WHERE id=? AND usuario_id=? AND versao=?`,
+    [payload.vencimento_em, payload.vencimento_em, payload.motivo || null, payload.motivo || null, new Date().toISOString(), payload.id, sessao.usuario_id, payload.versao || 0]
   );
   if (!r1.ok) return r1;
   if (r1.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'tarefa nao encontrada ou versao desatualizada' } };

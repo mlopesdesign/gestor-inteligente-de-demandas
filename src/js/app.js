@@ -124,36 +124,46 @@ async function bootstrap() {
       if (cached) versao = cached;
     } catch (_) {}
   }
-  if (!versao) versao = '0.2.7';
+  if (!versao) versao = '0.2.8';
+  // FIX v0.2.8: cache de versao desatualizado. Atualiza SEMPRE o que esta em
+  // memoria, mesmo se o cache bate, pra evitar o bug do "v0.1.0" eterno.
+  try { localStorage.setItem('__app_version', versao); } catch (_) {}
   const versaoSpan = document.getElementById('versao-app');
   if (versaoSpan) versaoSpan.textContent = 'v' + versao;
   document.querySelectorAll('.brand-sub').forEach(el => { el.textContent = 'v' + versao; });
+  window.__appVersion = versao;
 
   // 3. Tenta restaurar sessão (com timeout: o WebSocket pode nao estar pronto ainda)
-  // Primeiro: checa sessao gravada em localStorage ("Lembrar senha")
+  // Primeiro: checa sessao gravada em localStorage ("Lembrar senha").
+  // FIX v0.2.8: mesmo que tenha token no localStorage, valida via sessao:atual
+  // (o token pode estar expirado ou a conta pode ter sido recadastrada depois).
   const lembrar = (() => { try { return JSON.parse(localStorage.getItem('gestor-lembrar-sessao') || 'null'); } catch (_) { return null; } })();
-  let sessaoResult;
   if (lembrar && lembrar.token) {
-    Object.assign(sessao, { autenticado: true, email: lembrar.email, token: lembrar.token });
-    D('[app] restaurou sessao do localStorage:', lembrar.email);
-    sessaoResult = { ok: true, dados: { autenticado: true, ...lembrar } };
-  } else {
-    try {
-      sessaoResult = await Promise.race([
-        servidor.processar('sessao:atual', {}),
-        new Promise(res => setTimeout(() => res({ ok: false, erro: 'timeout 3s' }), 3000)),
-      ]);
-      D('[app] sessaoResult=', sessaoResult.ok, JSON.stringify(sessaoResult.dados));
-    } catch (e) {
-      D('[app] ERRO sessao:atual:', e.message, e.stack);
-      sessaoResult = { ok: false };
-    }
+    // Poe o token no objeto sessao pra que sessao:atual valide contra o banco
+    Object.assign(sessao, { token: lembrar.token, email: lembrar.email });
+    D('[app] token restaurado do localStorage, validando via sessao:atual...');
+  }
+  let sessaoResult;
+  try {
+    sessaoResult = await Promise.race([
+      servidor.processar('sessao:atual', {}),
+      new Promise(res => setTimeout(() => res({ ok: false, erro: 'timeout 3s' }), 3000)),
+    ]);
+    D('[app] sessaoResult=', sessaoResult.ok, JSON.stringify(sessaoResult.dados));
+  } catch (e) {
+    D('[app] ERRO sessao:atual:', e.message, e.stack);
+    sessaoResult = { ok: false };
   }
   if (sessaoResult.ok && sessaoResult.dados?.autenticado) {
     Object.assign(sessao, sessaoResult.dados);
     D('[app] chamando irPara(hoje)');
     irPara('hoje');
   } else {
+    // Token do localStorage era invalido (ou nao tinha). Limpa pra nao tentar de novo.
+    if (lembrar && lembrar.token) {
+      D('[app] token do localStorage INVALIDO, limpando');
+      try { localStorage.removeItem(LEMBRAR_KEY); } catch (_) {}
+    }
     // FIX v0.2.7: se existe o usuario demo no banco e nenhum outro usuario,
     // faz auto-login com o demo pra nao obrigar o usuario a digitar
     // (util para primeira instalacao / teste automatico).
@@ -250,24 +260,48 @@ function renderLogin() {
   const salvo = (() => { try { return JSON.parse(localStorage.getItem(LEMBRAR_KEY) || 'null'); } catch (_) { return null; } })();
 
   app.innerHTML = `
-    <div style="display:flex; flex-direction:column; height:100vh; align-items:center; justify-content:center; gap:16px; padding:40px;">
-      <img src="/resources/images/logo.png" alt="mlopes dev" style="width:280px; max-width:80%; margin-bottom:8px;">
-      <h1 style="color: var(--cor-marca); font-size:24px; margin:0;">Gestor Inteligente de Demandas</h1>
-      <p style="color: var(--fg-3);">Entre com sua conta ou crie uma nova</p>
-      <div id="login-form" style="display:flex; flex-direction:column; gap:8px; min-width:300px;">
-        <input type="email" id="login-email" placeholder="Email" value="${salvo?.email ? escapeAttr(salvo.email) : ''}" autocomplete="username">
-        <input type="password" id="login-senha" placeholder="Senha (opcional - deixe vazio se cadastrou sem)" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password">
-        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--fg-3);">
-          <input type="checkbox" id="login-lembrar" ${salvo ? 'checked' : ''} style="width:auto;">
-          Lembrar senha (não pedir login da próxima vez)
-        </label>
-        <div style="display:flex; gap:8px;">
-          <button id="btn-login" class="primary" style="flex:1;">Entrar</button>
-          <button id="btn-cadastro" style="flex:1;">Criar conta</button>
+    <div class="login-page">
+      <div class="login-card">
+        <div class="login-brand">
+          <img src="/resources/images/logo-icon.png" alt="Gestor" class="login-logo">
+          <div class="login-brand-text">
+            <div class="login-titulo">Gestor</div>
+            <div class="login-subtitulo">Inteligente de Demandas</div>
+          </div>
         </div>
-        ${salvo ? '<button id="btn-sair-gravado" style="font-size:11px; color:var(--fg-3); background:none; border:none; text-decoration:underline; cursor:pointer;">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
+
+        <div class="login-separador"></div>
+
+        <div class="login-boasvindas">
+          <h2>Sua conta</h2>
+          <p>Entre com seu email ou crie uma conta nova. A senha e' opcional e fica salva so no seu computador.</p>
+        </div>
+
+        <div class="login-form">
+          <label>
+            <span>Email</span>
+            <input type="email" id="login-email" placeholder="seu@email.com" value="${salvo?.email ? escapeAttr(salvo.email) : ''}" autocomplete="username">
+          </label>
+          <label>
+            <span>Senha <em>(opcional)</em></span>
+            <input type="password" id="login-senha" placeholder="deixe vazio se cadastrou sem senha" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password">
+          </label>
+
+          <label class="login-lembrar">
+            <input type="checkbox" id="login-lembrar" ${salvo ? 'checked' : ''}>
+            <span>Manter conectado</span>
+          </label>
+
+          <div class="login-botoes">
+            <button id="btn-login" class="primary">Entrar</button>
+            <button id="btn-cadastro">Criar conta</button>
+          </div>
+
+          ${salvo ? '<button id="btn-sair-gravado" class="login-sair">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
+        </div>
+
+        <div class="login-rodape">v${window.__appVersion || '0.2.8'}</div>
       </div>
-      <div style="color: var(--fg-3); font-size:12px;">v${(window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version) || '0.2.7'}</div>
     </div>
   `;
 

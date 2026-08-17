@@ -275,3 +275,134 @@ a:hover { text-decoration: underline; }
 }
 .loading-content p { color: var(--fg-3); }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ==========================================================================
+   Login (v0.2.8 - clean, sem emojis, paleta amarela)
+   ========================================================================== */
+
+.login-page {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(240, 160, 0, 0.08), transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(240, 160, 0, 0.05), transparent 50%),
+      var(--bg);
+    padding: 24px;
+}
+
+.login-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.login-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.login-logo {
+    width: 56px; height: 56px;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+.login-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+.login-titulo {
+    color: var(--cor-marca);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+.login-subtitulo {
+    color: var(--fg-3);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+}
+
+.login-separador {
+    height: 1px;
+    background: var(--border);
+    margin: 0 0 24px;
+}
+
+.login-boasvindas { margin-bottom: 24px; }
+.login-boasvindas h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--fg);
+    margin: 0 0 6px;
+}
+.login-boasvindas p {
+    font-size: 13px;
+    color: var(--fg-3);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.login-form { display: flex; flex-direction: column; gap: 14px; }
+.login-form label { display: flex; flex-direction: column; gap: 6px; }
+.login-form label > span {
+    font-size: 12px;
+    color: var(--fg-2);
+    font-weight: 500;
+}
+.login-form label > span em {
+    font-style: normal;
+    color: var(--fg-3);
+    font-weight: 400;
+    margin-left: 4px;
+}
+.login-form input[type=email],
+.login-form input[type=password] {
+    padding: 10px 12px;
+    font-size: 14px;
+}
+
+.login-lembrar {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 8px !important;
+    font-size: 13px;
+    color: var(--fg-2);
+    cursor: pointer;
+}
+.login-lembrar input[type=checkbox] { width: 16px; height: 16px; }
+
+.login-botoes {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+.login-botoes button {
+    flex: 1;
+    padding: 10px 16px;
+    font-weight: 600;
+}
+
+.login-sair {
+    background: none;
+    border: none;
+    color: var(--fg-3);
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 4px;
+    margin-top: 4px;
+}
+.login-sair:hover { color: var(--fg); }
+
+.login-rodape {
+    text-align: center;
+    font-size: 11px;
+    color: var(--fg-3);
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}

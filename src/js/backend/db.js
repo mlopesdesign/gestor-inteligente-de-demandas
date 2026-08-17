@@ -165,6 +165,27 @@ async function migrar() {
   } catch (e) {
     throw new Error('Falha ao aplicar schema: ' + e.message);
   }
+  // FIX v0.2.8: migra banco existente adicionando as 6 colunas novas da tabela tarefas
+  // (cancelada_em, cancelada_motivo, adiada_ate, adiada_motivo, recorrencia_tipo,
+  // recorrencia_data_base) que o schema.sql passou a referenciar mas a migracao
+  // CREATE TABLE IF NOT EXISTS nao adiciona coluna em tabela ja existente.
+  // Idempotente: se a coluna ja existe, da erro e ignoramos.
+  const colunasNovas = [
+    ['cancelada_em',          'TEXT'],
+    ['cancelada_motivo',      'TEXT'],
+    ['adiada_ate',            'TEXT'],
+    ['adiada_motivo',         'TEXT'],
+    ['recorrencia_tipo',      'TEXT'],
+    ['recorrencia_data_base', 'TEXT'],
+  ];
+  for (const [col, tipo] of colunasNovas) {
+    try {
+      dbInstance.exec(`ALTER TABLE tarefas ADD COLUMN ${col} ${tipo}`);
+      console.log('[db.migrar] coluna tarefas.' + col + ' adicionada');
+    } catch (_) {
+      // coluna ja existe - ignora
+    }
+  }
   schemaAplicado = true;
 }
 

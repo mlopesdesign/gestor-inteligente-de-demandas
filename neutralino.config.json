@@ -1,63 +1,81 @@
 {
-    "applicationId": "app.mllopes.gestor",
-    "version": "0.2.7",
-    "defaultMode": "window",
-    "port": 8723,
-    "documentRoot": "/src/",
-    "url": "/",
-    "enableServer": true,
-    "enableNativeAPI": true,
-    "tokenSecurity": "one-time",
-    "logging": {
-        "enabled": true,
-        "writeToLogFile": true
-    },
-    "nativeAllowList": [
-        "app.*",
-        "os.*",
-        "filesystem.*",
-        "storage.*",
-        "events.*",
-        "window.*",
-        "computer.*",
-        "updater.*",
-        "extensions.*"
-    ],
-    "globalVariables": [],
-    "modes": {
-        "window": {
-            "title": "Gestor Inteligente de Demandas",
-            "width": 1200,
-            "height": 760,
-            "minWidth": 900,
-            "minHeight": 600,
-            "resizable": true,
-            "maximizable": true,
-            "minimizable": true,
-            "exitProcessOnClose": true,
-            "enableInspector": true,
-            "borderless": false,
-            "alwaysOnTop": false,
-            "icon": "/src/resources/icons/app.png",
-            "tray": {
-                "icon": "/src/resources/icons/tray.png",
-                "menuItems": [
-                    { "id": "open", "text": "Abrir Gestor" },
-                    { "id": "new", "text": "Nova tarefa rápida" },
-                    { "id": "---", "text": "---" },
-                    { "id": "checkUpdate", "text": "Verificar atualizações" },
-                    { "id": "---", "text": "---" },
-                    { "id": "quit", "text": "Sair" }
-                ]
-            }
-        }
-    },
-    "cli": {
-        "binaryName": "GestorInteligenteDeDemandas",
-        "resourcesPath": "/src/",
-        "extensionsPath": "/src/extensions/",
-        "clientLibrary": "/src/js/vendor/neutralino.js",
-        "binaryVersion": "6.3.0.0",
-        "rollupConfig": null
+  "applicationId": "app.mllopes.gestor",
+  "version": "0.2.8",
+  "defaultMode": "window",
+  "port": 8723,
+  "documentRoot": "/src/",
+  "url": "/",
+  "enableServer": true,
+  "enableNativeAPI": true,
+  "tokenSecurity": "one-time",
+  "logging": {
+    "enabled": true,
+    "writeToLogFile": true
+  },
+  "nativeAllowList": [
+    "app.*",
+    "os.*",
+    "filesystem.*",
+    "storage.*",
+    "events.*",
+    "window.*",
+    "computer.*",
+    "updater.*",
+    "extensions.*"
+  ],
+  "globalVariables": [],
+  "modes": {
+    "window": {
+      "title": "Gestor Inteligente de Demandas",
+      "width": 1200,
+      "height": 760,
+      "minWidth": 900,
+      "minHeight": 600,
+      "resizable": true,
+      "maximizable": true,
+      "minimizable": true,
+      "exitProcessOnClose": true,
+      "enableInspector": true,
+      "borderless": false,
+      "alwaysOnTop": false,
+      "icon": "/src/resources/icons/app.png",
+      "tray": {
+        "icon": "/src/resources/icons/tray.png",
+        "menuItems": [
+          {
+            "id": "open",
+            "text": "Abrir Gestor"
+          },
+          {
+            "id": "new",
+            "text": "Nova tarefa rápida"
+          },
+          {
+            "id": "---",
+            "text": "---"
+          },
+          {
+            "id": "checkUpdate",
+            "text": "Verificar atualizações"
+          },
+          {
+            "id": "---",
+            "text": "---"
+          },
+          {
+            "id": "quit",
+            "text": "Sair"
+          }
+        ]
+      }
     }
+  },
+  "cli": {
+    "binaryName": "GestorInteligenteDeDemandas",
+    "resourcesPath": "/src/",
+    "extensionsPath": "/src/extensions/",
+    "clientLibrary": "/src/js/vendor/neutralino.js",
+    "binaryVersion": "6.3.0.0",
+    "rollupConfig": null
+  }
 }
