@@ -53,10 +53,16 @@ if (Test-Path $iconSrc) {
     Write-Host "[instalar] icon.ico OK ($( (Get-Item $iconSrc).Length ) bytes)" -ForegroundColor Green
 }
 
-# Copia o resources.neu
+# Copia o resources.neu (FIX v0.2.9: usa Python pq Copy-Item do PowerShell
+# as vezes grava 0 bytes - bug de race ou de handle aberto)
 Write-Host "[instalar] Copiando resources.neu..." -ForegroundColor Cyan
-Copy-Item -Path (Join-Path $src "resources.neu") -Destination (Join-Path $dst "resources.neu") -Force
-Write-Host "[instalar] resources.neu OK ($( (Get-Item (Join-Path $src 'resources.neu')).Length ) bytes)" -ForegroundColor Green
+& python -c "import shutil, os; src = r'$src\resources.neu'; dst = r'$dst\resources.neu'; os.remove(dst) if os.path.exists(dst) else None; shutil.copy2(src, dst); print('OK ' + str(os.path.getsize(dst)) + ' bytes')"
+$dstLen = (Get-Item (Join-Path $dst "resources.neu")).Length
+if ($dstLen -eq 0) {
+    Write-Host "[instalar] ERRO: resources.neu ficou com 0 bytes!" -ForegroundColor Red
+    throw "Falha ao copiar resources.neu"
+}
+Write-Host "[instalar] resources.neu OK ($dstLen bytes)" -ForegroundColor Green
 
 # Recria atalhos
 Write-Host "[instalar] Recriando atalhos..." -ForegroundColor Cyan

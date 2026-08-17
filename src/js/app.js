@@ -421,8 +421,8 @@ const UPDATE_URL = 'https://mlopesdesign.github.io/gestor-inteligente-de-demanda
 const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6h
 
 function compararVersao(a, b) {
-  const pa = a.split('.').map(Number);
-  const pb = b.split('.').map(Number);
+  const pa = String(a).split('.').map(Number);
+  const pb = String(b).split('.').map(Number);
   for (let i = 0; i < 3; i++) {
     const x = pa[i] || 0, y = pb[i] || 0;
     if (x > y) return 1;
@@ -439,13 +439,28 @@ export async function verificarAtualizacao({ silencioso = true } = {}) {
       return null;
     }
     const info = await r.json();
-    const atual = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version || '0.0.0';
     if (!info.version) return null;
-    if (compararVersao(info.version, atual) <= 0) {
+    // FIX v0.2.9: pega a versao instalada de varias fontes. NEUTRALINO_GLOBALS
+    // nao tem .neutralinoConfig populado (vendor nao popula), entao o fallback
+    // era 0.0.0 e SEMPRE mostrava "tem versao nova" mesmo ja estando na ultima.
+    let atual = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version;
+    if (!atual) atual = window.__appVersion;
+    if (!atual) {
+      try { atual = document.querySelector('meta[name="app-version"]')?.content; } catch (_) {}
+    }
+    if (!atual) {
+      try { atual = localStorage.getItem('__app_version'); } catch (_) {}
+    }
+    if (!atual) atual = '0.0.0';
+    const cmp = compararVersao(info.version, atual);
+    D('[update] info.version=' + info.version + ' atual=' + atual + ' cmp=' + cmp);
+    if (cmp <= 0) {
+      D('[update] mesma versao, NAO mostra toast');
       if (!silencioso) toast({ tipo: 'info', titulo: 'Atualização', corpo: 'Você já está na versão mais recente (' + atual + ')' });
       return null;
     }
     // Nova versao disponivel!
+    D('[update] NOVA VERSAO, mostra toast');
     return info;
   } catch (e) {
     if (!silencioso) toast({ tipo: 'erro', titulo: 'Atualização', corpo: 'Erro: ' + e.message });
