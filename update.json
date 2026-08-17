@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.13",
-  "notes": "v0.2.13 - Topbar com fundo PRETO (mesma cor do fundo da logo) e logo MLOPES DEV maior (44px vs 28px). Visual mais integrado e profissional.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.13/resources.neu",
-  "sha256": "6B036EC0520057F5B07DBFB685FF1AC0861FCC734B7D277FCA90D2CFFA1F5D7B",
-  "size": 5357562
+  "version": "0.2.14",
+  "notes": "v0.2.14 - Adiciona instalar-windows.bat (bypass automatico do SmartScreen via Unblock-File do PowerShell). README atualizado com 3 opcoes de download/instalacao: Setup.exe direto, instalar-windows.bat (com bypass), ou desbloqueio manual.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.14/resources.neu",
+  "sha256": "03BED7AA6735BBA1CFE671E3E61804A24876C439ACF2B24326D295D74F2DD1AF",
+  "size": 5357530
 }
