@@ -135,6 +135,71 @@ async function bootstrap() {
   document.querySelectorAll('.brand-sub').forEach(el => { el.textContent = 'v' + versao; });
   window.__appVersion = versao;
 
+  // 2.5. FIX v0.2.9: auto-atualiza neutralino.config.json no disco se a versao do .neu for maior
+  // que a versao do disco. O auto-update do Neutralino NAO atualiza o config (so o .neu), entao
+  // sem isso o cliente fica preso com o config antigo. Faz com timeout pq as chamadas
+  // Neutralino.filesystem penduram por causa do bug do init().
+  if (NO_APP && window.Neutralino?.filesystem && versao) {
+    try {
+      const discoPath = (window.__appData ? window.__appData + '\\GestorInteligenteDeDemandas\\neutralino.config.json' : null);
+      let discoVersao = null;
+      if (discoPath) {
+        try {
+          const r = await Promise.race([
+            window.Neutralino.filesystem.readFile(discoPath),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2000)),
+          ]);
+          if (r) {
+            const txt = (typeof r === 'object' && r.data) ? r.data : (typeof r === 'string' ? r : '');
+            if (txt) {
+              const cfg = JSON.parse(txt);
+              discoVersao = cfg?.version || null;
+            }
+          }
+        } catch (_) {}
+      }
+      D('[app] config disco:', discoVersao, 'config .neu:', versao);
+      if (discoVersao && compararVersao(versao, discoVersao) > 0) {
+        D('[app] config do disco esta atrasado, atualizando...');
+        // Busca o config novo do .neu
+        try {
+          const r = await Promise.race([
+            fetch('/neutralino.config.json', { cache: 'no-store' }),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2000)),
+          ]);
+          if (r.ok) {
+            const novoCfg = await r.text();
+            // Escreve no disco (com timeout, com backup)
+            if (discoPath) {
+              try {
+                const backupPath = discoPath + '.bak';
+                await Promise.race([
+                  window.Neutralino.filesystem.writeFile(backupPath, novoCfg),
+                  new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000)),
+                ]).catch(() => {});
+                await Promise.race([
+                  window.Neutralino.filesystem.writeFile(discoPath, novoCfg),
+                  new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000)),
+                ]);
+                D('[app] config do disco atualizado pra v' + versao);
+                toast({ tipo: 'sucesso', titulo: 'Atualizacao', corpo: 'Configuracao atualizada. O app vai reiniciar.' });
+                setTimeout(() => {
+                  try { window.Neutralino?.app?.exit?.(); } catch (_) {}
+                  setTimeout(() => { try { window.Neutralino?.app?.restartProcess?.(); } catch (_) {} }, 500);
+                }, 1500);
+                return; // nao continua o bootstrap
+              } catch (e) {
+                D('[app] falhou ao gravar config no disco:', e.message);
+              }
+            }
+          }
+        } catch (_) {}
+      }
+    } catch (e) {
+      D('[app] erro na auto-att do config:', e.message);
+    }
+  }
+
   // 3. Tenta restaurar sessão (com timeout: o WebSocket pode nao estar pronto ainda)
   // Primeiro: checa sessao gravada em localStorage ("Lembrar senha").
   // FIX v0.2.8: mesmo que tenha token no localStorage, valida via sessao:atual
@@ -391,20 +456,55 @@ export async function verificarAtualizacao({ silencioso = true } = {}) {
 export async function aplicarAtualizacao(info) {
   if (!info || !info.resourcesURL) return false;
   try {
-    // 1. Fala pro Neutralino trocar a URL de atualizacao
-    if (window.Neutralino?.updater?.setUpdateUrl) {
-      await withTimeout(window.Neutralino.updater.setUpdateUrl(info.resourcesURL), 2000, 'setUpdateUrl');
+    // FIX v0.2.9: usa o updater oficial do Neutralino via checkForUpdates, que
+    // valida o applicationId e seta a variavel interna R do updater. Sem isso,
+    // o install() falha com "No update manifest loaded".
+    if (window.Neutralino?.updater?.checkForUpdates && window.NEUTRALINO_GLOBALS) {
+      try {
+        const appId = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.applicationId;
+        if (appId) {
+          // O checkForUpdates le o manifest do UPDATE_URL global; o manifest tem
+          // que bater com o appId. A gente ja validou antes no verificarAtualizacao.
+          await withTimeout(
+            window.Neutralino.updater.checkForUpdates('https://mlopesdesign.github.io/gestor-inteligente-de-demandas/update.json'),
+            4000, 'updater.checkForUpdates'
+          );
+          if (window.Neutralino?.updater?.install) {
+            const r = await withTimeout(window.Neutralino.updater.install(), 10000, 'updater.install');
+            if (r && r.success !== false) {
+              toast({ tipo: 'sucesso', titulo: 'Atualização', corpo: 'Baixando... vai reiniciar.' });
+              setTimeout(() => window.Neutralino?.app?.exit?.(), 2500);
+              return true;
+            }
+          }
+        }
+      } catch (_) { /* cai no fallback */ }
     }
-    // 2. Tenta usar o updater nativo do Neutralino
-    if (window.Neutralino?.updater?.install) {
-      const r = await withTimeout(window.Neutralino.updater.install(), 3000, 'updater.install');
-      if (r && r.success !== false) {
-        toast({ tipo: 'sucesso', titulo: 'Atualização', corpo: 'Baixando... vai reiniciar.' });
-        setTimeout(() => window.Neutralino?.app?.exit?.(), 2000);
-        return true;
-      }
+    // Fallback: baixa o .neu direto via fetch e grava no disco
+    if (window.Neutralino?.filesystem?.writeFile) {
+      try {
+        const appPath = (window.__appData ? window.__appData + '\\GestorInteligenteDeDemandas' : null);
+        if (appPath) {
+          toast({ tipo: 'info', titulo: 'Atualização', corpo: 'Baixando versão ' + info.version + '...' });
+          const r = await fetch(info.resourcesURL, { cache: 'no-store' });
+          if (r.ok) {
+            const buf = new Uint8Array(await r.arrayBuffer());
+            const b64 = btoa(String.fromCharCode.apply(null, buf));
+            const tmpPath = appPath + '\\resources.neu.tmp';
+            const dstPath = appPath + '\\resources.neu';
+            const oldPath = appPath + '\\resources.neu.old';
+            await withTimeout(window.Neutralino.filesystem.writeFile(tmpPath, b64), 8000, 'writeFile.tmp');
+            try { await withTimeout(window.Neutralino.filesystem.writeFile(oldPath, ''), 2000, 'writeFile.old').catch(() => {}); } catch (_) {}
+            try { await withTimeout(window.Neutralino.filesystem.move(dstPath, oldPath).catch(() => {}), 2000, 'move.old'); } catch (_) {}
+            await withTimeout(window.Neutralino.filesystem.move(tmpPath, dstPath), 3000, 'move.new');
+            toast({ tipo: 'sucesso', titulo: 'Atualização', corpo: 'Pronto! Reiniciando...' });
+            setTimeout(() => window.Neutralino?.app?.exit?.(), 1500);
+            return true;
+          }
+        }
+      } catch (_) { /* cai no proximo fallback */ }
     }
-    // 3. Fallback: abre o link de download no browser
+    // Ultimo fallback: abre o link no browser
     toast({ tipo: 'info', titulo: 'Atualização', corpo: 'Abrindo download da versão ' + info.version });
     if (window.Neutralino?.os?.open) {
       await withTimeout(window.Neutralino.os.open(info.resourcesURL), 2000, 'os.open');

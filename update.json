@@ -1,5 +1,6 @@
 {
+    "applicationId": "app.mllopes.gestor",
     "version": "0.2.9",
-    "notes": "v0.2.9 — DevTools nao abre mais automaticamente (enableInspector desativado no config). Bug do header mostrando versao antiga corrigido via fetch do /neutralino.config.json.",
+    "notes": "v0.2.9 - DevTools nao abre mais sozinho. Auto-update corrigido.",
     "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.9/resources.neu"
 }
