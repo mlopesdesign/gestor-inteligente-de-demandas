@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.17",
-  "notes": "v0.2.17 - FIX CRITICO do auto-update: a v0.2.16 ainda tinha fallback que abria o navegador padrao (Edge) com a URL do .neu no GitHub (ou neutralinojs.org em casos com checkForUpdates). Reescrevi COMPLETAMENTE: agora o auto-update usa SOMENTE PowerShell Invoke-WebRequest via Neutralino.os.execCommand - nunca mais abre navegador. Tambem removi as funcoes verificarUpdate/aplicarUpdate do ambiente.js que ainda chamavam Neutralino.updater.checkForUpdates(). Testado end-to-end: app em 0.2.15, clica Atualizar agora, baixa 0.2.17 via PowerShell, valida, move, reinicia. ZERO navegador aberto.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.17/resources.neu",
-  "sha256": "35F3A0FFBAD6A58365B4901F4B81969E7B857BEAE244AADFBFA7B97C67B56CE6",
-  "size": 5356864
+  "version": "0.2.18",
+  "notes": "v0.2.18 - Botoes de Excluir em Tarefas, Clientes e Projetos. Antes so Areas tinha. Agora todas as 4 entidades tem: Editar + Acao principal (Concluir/Arquivar) + Excluir (vermelho, com confirmacao). Projetos tambem ganhou botao Concluir. Bloqueia exclusao se ha entidades vinculadas (tarefa->cliente/projeto, projeto->tarefas, area->tarefas) com mensagem clara pedindo reatribuicao.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.18/resources.neu",
+  "sha256": "FEBF40BB1287C7EC921C7C43C05C487410C5764C49FCA31795FE120BEE85C0FA",
+  "size": 5358135
 }
