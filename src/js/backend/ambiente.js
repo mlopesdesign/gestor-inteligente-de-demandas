@@ -186,32 +186,10 @@ export function escapeAttr(s) {
 
 // ---------------------------------------------------------------------------
 // Atualização online (PADRAO §5)
+// FIX v0.2.17: REMOVIDAS as funções verificarUpdate() e aplicarUpdate() deste módulo.
+// Elas chamavam Neutralino.updater.checkForUpdates() e applyUpdate() que ABRIAM o
+// navegador do usuário (Edge) com a URL do manifest do Neutralino. A v0.2.16 só
+// removeu do app.js, esqueceu daqui. O fluxo oficial de update é:
+//   app.js:verificarAtualizacao()   -> fetch(update.json), sem abrir navegador
+//   app.js:aplicarAtualizacao()     -> Neutralino.os.execCommand(powershell)
 // ---------------------------------------------------------------------------
-
-export async function verificarUpdate() {
-  if (!NO_APP || !window.Neutralino?.updater) {
-    return { ok: false, motivo: 'fora do app' };
-  }
-  try {
-    const info = await window.Neutralino.updater.checkForUpdates();
-    return { ok: true, dados: info };
-  } catch (e) {
-    return { ok: false, erro: e.message };
-  }
-}
-
-export async function aplicarUpdate() {
-  if (!NO_APP || !window.Neutralino?.updater) return false;
-  try {
-    // 1. Backup do banco antes (PADRAO §5.2)
-    await db.salvarAgora();
-    // 2. Aplica update
-    await window.Neutralino.updater.applyUpdate();
-    // 3. Reinicia
-    setTimeout(() => window.Neutralino?.app?.restart?.(), 1000);
-    return true;
-  } catch (e) {
-    toast({ tipo: 'erro', titulo: 'Update', corpo: e.message });
-    return false;
-  }
-}
