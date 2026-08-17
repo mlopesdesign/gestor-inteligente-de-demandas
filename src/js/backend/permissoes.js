@@ -71,6 +71,15 @@ export const PERM_ROTA = {
 
   // busca
   'busca:global':         'BUSCA',
+
+  // backup (v0.2.12: manual + automatico)
+  'backup:criar':         'BACKUP',
+  'backup:listar':        'BACKUP',
+  'backup:restaurar':     'BACKUP',
+  'backup:excluir':       'BACKUP',
+  'backup:obterAuto':     'BACKUP',
+  'backup:salvarAuto':    'BACKUP',
+  'backup:aplicarAuto':   'BACKUP',
 };
 
 export function podeExecutar(permsUsuario, canal) {

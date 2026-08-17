@@ -14,6 +14,7 @@ import * as cobrancasCore from './core/cobrancas.js';
 import * as recorrenciasCore from './core/recorrencias.js';
 import * as configCore from './core/config.js';
 import * as buscaCore from './core/busca.js';
+import * as backupCore from './core/backup.js';
 import { clientes as clientesStub, projetos as projetosStub, recorrencias as recorrenciasStub, sync as syncCore, ia as iaCore } from './core/stubs.js';
 
 export const servidor = {
@@ -93,6 +94,15 @@ export const servidor = {
 
         // busca
         case 'busca:global':         return buscaCore.global_(db, payload, s);
+
+        // backup (v0.2.12: manual + automatico)
+        case 'backup:criar':         return backupCore.criar(db, payload, s);
+        case 'backup:listar':        return backupCore.listar(db, payload, s);
+        case 'backup:restaurar':     return backupCore.restaurar(db, payload, s);
+        case 'backup:excluir':       return backupCore.excluir(db, payload, s);
+        case 'backup:obterAuto':     return backupCore.obterAuto(db, payload, s);
+        case 'backup:salvarAuto':    return backupCore.salvarAuto(db, payload, s);
+        case 'backup:aplicarAuto':   return backupCore.aplicarAuto(db, payload, s);
 
         default:
           return { ok: false, erro: { codigo: 'CANAL_DESCONHECIDO', mensagem: 'Canal inexistente: ' + canal } };

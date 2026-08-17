@@ -81,6 +81,9 @@ export const env = {
   caminhoBanco() {
     return `${this.dataDir()}\\${DB_FILE}`;
   },
+  backupDir() {
+    return `${this.dataDir()}\\backups`;
+  },
   appdataRoot() {
     return `${resolverAppdata()}\\${BINARY}`;
   },

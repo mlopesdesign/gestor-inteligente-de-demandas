@@ -13,7 +13,7 @@ let _releasesErro = null;
 
 export async function renderConfig(opts = {}) {
  // FIX v0.2.11: permite deep link via ?aba=atualizacao ou via sessionStorage
- if (opts.aba && (opts.aba === 'geral' || opts.aba === 'atualizacao')) {
+ if (opts.aba && ['geral','atualizacao','backup'].includes(opts.aba)) {
  _abaAtiva = opts.aba;
  } else {
  try {
@@ -50,6 +50,7 @@ async function carregar() {
  document.getElementById('config-content').innerHTML = `
  <nav class="tabs-bar" id="tabs-bar" role="tablist">
  <button data-aba="geral" class="${_abaAtiva==='geral'?'ativa':''}" role="tab">Geral</button>
+ <button data-aba="backup" class="${_abaAtiva==='backup'?'ativa':''}" role="tab">Backup</button>
  <button data-aba="atualizacao" class="${_abaAtiva==='atualizacao'?'ativa':''}" role="tab">Atualização</button>
  </nav>
 
@@ -139,16 +140,84 @@ async function carregar() {
  </div>
  </div>
  </div>
+
+ <div class="tab-painel ${_abaAtiva==='backup'?'ativa':''}" id="tab-backup" role="tabpanel">
+ <div class="tab-grid">
+ <div>
+ <div class="card">
+ <h3>Fazer backup agora</h3>
+ <p style="color:var(--fg-3); font-size:12px; margin:6px 0 12px;">
+ Copia o banco SQLite atual pra <code>%APPDATA%\GestorInteligenteDeDemandas\dados\backups\</code>.
+ Você pode restaurar a qualquer momento pelo histórico abaixo.
+ </p>
+ <button id="btn-backup-manual" class="primary">Fazer backup agora</button>
+ <div id="backup-resultado" style="margin-top:10px;"></div>
+ </div>
+
+ <div class="card">
+ <h3>Backup automático</h3>
+ <p style="color:var(--fg-3); font-size:12px; margin:6px 0 12px;">
+ Quando ligado, o app cria um backup a cada abertura (ou periodicamente, abaixo).
+ Os backups antigos são apagados automaticamente conforme a retenção.
+ </p>
+ <form id="form-backup-auto">
+ <div class="campo" style="display:flex; align-items:center; gap:8px;">
+ <label style="display:flex; align-items:center; gap:6px;">
+ <input type="checkbox" name="ativo" id="backup-auto-ativo"> Backup automático ligado
+ </label>
+ </div>
+ <div class="campo"><label>Frequência</label>
+ <select name="frequencia" id="backup-auto-frequencia">
+ <option value="diaria">Diária (uma vez por dia)</option>
+ <option value="semanal">Semanal (uma vez por semana)</option>
+ <option value="a cada abertura">A cada abertura do app</option>
+ </select>
+ </div>
+ <div style="display:flex; gap:8px;">
+ <div class="campo" style="flex:1;"><label>Hora preferida (informativo)</label>
+ <input type="number" name="hora" id="backup-auto-hora" min="0" max="23" value="18">
+ </div>
+ <div class="campo" style="flex:1;"><label>Manter últimos N</label>
+ <input type="number" name="retencao" id="backup-auto-retencao" min="1" max="365" value="30">
+ </div>
+ </div>
+ <p style="color:var(--fg-3); font-size:11px; margin:6px 0;">
+ Último backup automático: <span id="backup-auto-ultimo">—</span>
+ </p>
+ <div class="acoes"><button type="submit" class="primary">Salvar configuração</button></div>
+ </form>
+ </div>
+ </div>
+
+ <div>
+ <div class="card">
+ <h3>Histórico de backups</h3>
+ <p style="color:var(--fg-3); font-size:12px; margin-bottom:12px;">
+ Lista de todos os backups. Clique em "Restaurar" pra substituir o banco atual por este backup.
+ O app cria um backup de segurança antes de restaurar.
+ </p>
+ <div id="backup-lista" class="releases-lista">
+ <div class="release-vazia">carregando histórico...</div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
  `;
 
  // Tabs
  document.getElementById('tabs-bar').querySelectorAll('button[data-aba]').forEach(btn => {
  btn.onclick = () => {
  _abaAtiva = btn.dataset.aba;
+ try { sessionStorage.setItem('gestor-ultima-aba', 'config:' + _abaAtiva); } catch (_) {}
  document.querySelectorAll('#tabs-bar button').forEach(b => b.classList.toggle('ativa', b.dataset.aba === _abaAtiva));
  document.querySelectorAll('.tab-painel').forEach(p => p.classList.toggle('ativa', p.id === 'tab-' + _abaAtiva));
  if (_abaAtiva === 'atualizacao' && !_releasesCache && !_releasesErro) {
  carregarHistoricoReleases();
+ }
+ if (_abaAtiva === 'backup') {
+ carregarConfigBackupAuto();
+ carregarHistoricoBackups();
  }
  };
  });
@@ -198,10 +267,19 @@ async function carregar() {
  // Atualizacao handlers
  document.getElementById('btn-verificar-atualizacao').onclick = () => verificarAgora();
 
+ // Backup handlers (v0.2.12)
+ const btnBackupManual = document.getElementById('btn-backup-manual');
+ if (btnBackupManual) btnBackupManual.onclick = () => fazerBackupManual();
+ salvarConfigBackupAuto();
+
  // Auto-verifica ao entrar na aba se nunca checou
  if (_abaAtiva === 'atualizacao') {
  if (!_releasesCache && !_releasesErro) carregarHistoricoReleases();
  // Nao dispara verificarAtualizacao automatico pra nao incomodar — usuario clica no botao
+ }
+ if (_abaAtiva === 'backup') {
+ carregarConfigBackupAuto();
+ carregarHistoricoBackups();
  }
 }
 
@@ -313,3 +391,154 @@ function renderizarReleases(lista) {
  };
  });
 }
+
+// ---------------------------------------------------------------------------
+// Backup (v0.2.12: manual + automatico + historico)
+// ---------------------------------------------------------------------------
+
+function fmtTamanho(bytes) {
+ if (!bytes) return '0 B';
+ if (bytes < 1024) return bytes + ' B';
+ if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+ return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+function fmtDataHoraCurta(iso) {
+ if (!iso) return '—';
+ try {
+ const d = new Date(iso);
+ const pad = (n) => String(n).padStart(2, '0');
+ return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+ } catch (_) { return iso; }
+}
+
+async function carregarConfigBackupAuto() {
+ const r = await window.api('backup:obterAuto');
+ if (!r.ok || !r.dados) return;
+ const c = r.dados;
+ const ativo = document.getElementById('backup-auto-ativo');
+ const freq = document.getElementById('backup-auto-frequencia');
+ const hora = document.getElementById('backup-auto-hora');
+ const ret = document.getElementById('backup-auto-retencao');
+ const ult = document.getElementById('backup-auto-ultimo');
+ if (ativo) ativo.checked = !!c.ativo;
+ if (freq) freq.value = c.frequencia || 'diaria';
+ if (hora) hora.value = c.hora ?? 18;
+ if (ret) ret.value = c.retencao ?? 30;
+ if (ult) ult.textContent = c.ultimoAuto ? fmtDataHoraCurta(c.ultimoAuto) : '— (nunca)';
+}
+
+async function carregarHistoricoBackups() {
+ const host = document.getElementById('backup-lista');
+ if (!host) return;
+ host.innerHTML = '<div class="release-vazia">carregando histórico...</div>';
+ const r = await window.api('backup:listar');
+ if (!r.ok || !r.dados) {
+ host.innerHTML = '<div class="release-vazia">Erro: ' + escapeHtml(r.erro?.mensagem || 'desconhecido') + '</div>';
+ return;
+ }
+ if (r.dados.length === 0) {
+ host.innerHTML = '<div class="release-vazia">Nenhum backup ainda. Use o botão "Fazer backup agora" à esquerda.</div>';
+ return;
+ }
+ host.innerHTML = r.dados.map(b => {
+ const data = fmtDataHoraCurta(b.criado_em);
+ const tam = fmtTamanho(b.tamanho_real || b.tamanho_bytes);
+ const origem = b.origem === 'auto' ? 'auto' : (b.origem === 'pre-update' ? 'pre-restore' : 'manual');
+ const obs = b.observacao ? ' — ' + escapeHtml(b.observacao) : '';
+ const status = b.status !== 'ok' ? ' <span style="color:var(--warning);">(' + b.status + ')</span>' : '';
+ const faltando = b.arquivo_existe ? '' : ' <span style="color:var(--danger);">[arquivo faltando]</span>';
+ return `
+ <div class="release-item" data-id="${escapeHtml(b.id)}">
+ <div class="release-cabecalho">
+ <span class="release-versao">v${data.replace(/[/: ]/g, '').slice(0,8)}</span>
+ <span class="release-titulo">${origem} · ${tam}${obs}${status}${faltando}</span>
+ <span class="release-data">${escapeHtml(data.split(' ')[0])}</span>
+ </div>
+ <div class="release-corpo">
+ <p style="margin:4px 0 8px; font-size:12px;">Caminho: <code>${escapeHtml(b.caminho)}</code></p>
+ <div style="display:flex; gap:8px;">
+ <button class="backup-restaurar primary" data-id="${escapeHtml(b.id)}" ${b.arquivo_existe && b.status === 'ok' ? '' : 'disabled'}>Restaurar este backup</button>
+ <button class="backup-excluir" data-id="${escapeHtml(b.id)}" style="background:transparent; color:var(--danger); border:1px solid var(--danger);">Excluir</button>
+ </div>
+ </div>
+ </div>
+ `;
+ }).join('');
+ host.querySelectorAll('.release-item').forEach(item => {
+ item.onclick = () => {
+ const estava = item.classList.contains('ativa');
+ host.querySelectorAll('.release-item').forEach(x => x.classList.remove('ativa'));
+ if (!estava) item.classList.add('ativa');
+ };
+ });
+ host.querySelectorAll('.backup-restaurar').forEach(btn => {
+ btn.onclick = (e) => { e.stopPropagation(); restaurarBackup(btn.dataset.id); };
+ });
+ host.querySelectorAll('.backup-excluir').forEach(btn => {
+ btn.onclick = (e) => { e.stopPropagation(); excluirBackup(btn.dataset.id); };
+ });
+}
+
+async function fazerBackupManual() {
+ const btn = document.getElementById('btn-backup-manual');
+ const slot = document.getElementById('backup-resultado');
+ if (btn) { btn.disabled = true; btn.textContent = 'Fazendo backup...'; }
+ if (slot) slot.innerHTML = '<p style="color:var(--fg-3); font-size:12px;">Copiando banco...</p>';
+ try {
+ const r = await window.api('backup:criar', { origem: 'manual', observacao: 'manual via tela de Configuracoes' });
+ if (r.ok) {
+ if (slot) slot.innerHTML = '<p style="color:var(--success); font-size:12px;">Backup criado. ' + fmtTamanho(r.dados.tamanho_bytes) + ' em ' + fmtDataHoraCurta(r.dados.criado_em) + '</p>';
+ toast({ tipo: 'sucesso', titulo: 'Backup criado', corpo: fmtTamanho(r.dados.tamanho_bytes) });
+ carregarHistoricoBackups();
+ } else {
+ if (slot) slot.innerHTML = '<p style="color:var(--danger); font-size:12px;">Erro: ' + escapeHtml(r.erro?.mensagem || '') + '</p>';
+ toast({ tipo: 'erro', titulo: 'Falha no backup', corpo: r.erro?.mensagem || '' });
+ }
+ } catch (e) {
+ if (slot) slot.innerHTML = '<p style="color:var(--danger); font-size:12px;">Erro: ' + escapeHtml(e.message) + '</p>';
+ } finally {
+ if (btn) { btn.disabled = false; btn.textContent = 'Fazer backup agora'; }
+ }
+}
+
+async function restaurarBackup(id) {
+ if (!confirm('Restaurar este backup?\n\nO banco atual será substituído. Um backup de segurança será criado antes.\n\nRecomendamos fechar o app depois de restaurar.')) return;
+ const r = await window.api('backup:restaurar', { id });
+ if (!r.ok) { toast({ tipo: 'erro', titulo: 'Falha ao restaurar', corpo: r.erro?.mensagem || '' }); return; }
+ toast({ tipo: 'sucesso', titulo: 'Banco restaurado', corpo: 'O app sera reiniciado em 3s.' });
+ setTimeout(() => {
+ try { window.Neutralino?.app?.exit?.(); } catch (_) {}
+ setTimeout(() => location.reload(), 1500);
+ }, 2500);
+}
+
+async function excluirBackup(id) {
+ if (!confirm('Excluir este backup? O arquivo sera removido do disco.')) return;
+ const r = await window.api('backup:excluir', { id });
+ if (!r.ok) { toast({ tipo: 'erro', titulo: 'Falha ao excluir', corpo: r.erro?.mensagem || '' }); return; }
+ toast({ tipo: 'sucesso', titulo: 'Backup excluido' });
+ carregarHistoricoBackups();
+}
+
+function salvarConfigBackupAuto() {
+ const form = document.getElementById('form-backup-auto');
+ if (!form) return;
+ form.onsubmit = async (e) => {
+ e.preventDefault();
+ const dados = {
+ ativo: form.querySelector('#backup-auto-ativo').checked,
+ frequencia: form.querySelector('#backup-auto-frequencia').value,
+ hora: parseInt(form.querySelector('#backup-auto-hora').value, 10) || 18,
+ retencao: parseInt(form.querySelector('#backup-auto-retencao').value, 10) || 30,
+ };
+ const r = await window.api('backup:salvarAuto', dados);
+ if (r.ok) {
+ toast({ tipo: 'sucesso', titulo: 'Configuracao salva', corpo: 'Backup automatico ' + (dados.ativo ? 'ligado' : 'desligado') });
+ carregarConfigBackupAuto();
+ } else {
+ toast({ tipo: 'erro', titulo: 'Falha', corpo: r.erro?.mensagem || '' });
+ }
+ };
+}
+

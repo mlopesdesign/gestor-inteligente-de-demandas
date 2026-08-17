@@ -230,7 +230,10 @@ async function bootstrap() {
     const abaInicial = params.get('aba') || null;
     D('[app] chamando irPara(' + rotaInicial + (abaInicial ? '/' + abaInicial : '') + ')');
     irPara(rotaInicial, abaInicial ? { aba: abaInicial } : undefined);
-    irPara(rotaInicial);
+    // v0.2.12: hook de auto-backup no boot (fire-and-forget)
+    servidor.processar('backup:aplicarAuto', {}).then(r => {
+      D('[app] auto-backup resultado:', JSON.stringify(r?.dados || r?.erro || r));
+    }).catch(e => D('[app] ERRO auto-backup:', e.message));
   } else {
     // Token do localStorage era invalido (ou nao tinha). Limpa pra nao tentar de novo.
     if (lembrar && lembrar.token) {
@@ -262,6 +265,10 @@ async function bootstrap() {
       const rotaInicial = params.get('rota') || 'hoje';
       const abaInicial = params.get('aba') || null;
       irPara(rotaInicial, abaInicial ? { aba: abaInicial } : undefined);
+      // v0.2.12: hook de auto-backup no boot (fire-and-forget)
+      servidor.processar('backup:aplicarAuto', {}).then(r => {
+        D('[app] auto-backup resultado:', JSON.stringify(r?.dados || r?.erro || r));
+      }).catch(e => D('[app] ERRO auto-backup:', e.message));
     } else {
       D('[app] chamando irPara(login)');
       irPara('login');

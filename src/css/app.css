@@ -624,3 +624,60 @@ a:hover { text-decoration: underline; }
     gap: 8px;
     margin-top: 8px;
 }
+
+/* ==========================================================================
+   Backup (v0.2.12)
+   ========================================================================== */
+
+.backup-status-origem {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-right: 6px;
+}
+.backup-status-origem.manual { background: var(--info); color: #fff; }
+.backup-status-origem.auto { background: var(--cor-marca); color: #000; }
+.backup-status-origem.pre-update { background: var(--warning); color: #000; }
+
+.backup-lista-item {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+.backup-lista-item:hover { background: var(--bg-elev); border-color: var(--fg-3); }
+.backup-lista-item.ativa { border-color: var(--cor-marca); }
+.backup-lista-item .backup-linha {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.backup-lista-item .backup-arquivo {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+    color: var(--fg-3);
+    background: var(--bg);
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 6px;
+    word-break: break-all;
+}
+.backup-lista-item .backup-acoes {
+    display: none;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    gap: 8px;
+}
+.backup-lista-item.ativa .backup-acoes { display: flex; }
+.backup-lista-item .backup-tamanho {
+    color: var(--fg-2);
+    font-size: 12px;
+    font-weight: 600;
+}

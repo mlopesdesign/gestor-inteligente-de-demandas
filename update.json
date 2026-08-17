@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.11",
-  "notes": "v0.2.11 - Conserta logo horizontal (paisagem mlopes dev) na topbar. Adiciona sistema de abas em Configuracoes estilo Salgueiro: Geral (perfil, estatisticas, LGPD, sessao) + Atualizacao (verificar agora, nova versao disponivel, historico do GitHub).",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.11/resources.neu",
-  "sha256": "DD35A50C803B6649CAF10F620E246857471AD611E02464677089ED19B3E98038",
-  "size": 5351899
+  "version": "0.2.12",
+  "notes": "v0.2.12 - Nova aba Backup em Configuracoes (manual + automatico estilo Salgueiro). Backup manual com 1 clique, backup automatico (diaria/semanal/a cada abertura), retencao dos ultimos N, historico com restaurar/excluir. README no GitHub com link direto pro Setup.exe.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.12/resources.neu",
+  "sha256": "9B41F9CA348AEF1C886E8D2D3379BC1DA9ED12D70EB3B43987A7A3BFCD7BF2D7",
+  "size": 5355738
 }

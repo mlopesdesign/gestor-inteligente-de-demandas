@@ -350,6 +350,22 @@ CREATE TABLE IF NOT EXISTS anexos (
 );
 CREATE INDEX IF NOT EXISTS idx_anexos_tarefa ON anexos(tarefa_id);
 
+-- Backups ------------------------------------------------------------------
+-- Registro de backups (manual e automatico). O arquivo em si fica em
+-- %APPDATA%\GestorInteligenteDeDemandas\dados\backups\gestor-YYYYMMDD-HHMMSS.db
+CREATE TABLE IF NOT EXISTS backups (
+  id              TEXT PRIMARY KEY,
+  criado_em       TEXT NOT NULL,
+  caminho         TEXT NOT NULL,
+  tamanho_bytes   INTEGER NOT NULL,
+  origem          TEXT NOT NULL,                 -- 'manual' | 'auto' | 'pre-update'
+  observacao      TEXT,                          -- ex: "antes de v0.2.12", "auto diario"
+  sha256          TEXT,                          -- integridade (opcional)
+  status          TEXT NOT NULL DEFAULT 'ok'     -- 'ok' | 'restaurado' | 'invalido' | 'excluido'
+);
+CREATE INDEX IF NOT EXISTS idx_backups_criado_em ON backups(criado_em DESC);
+CREATE INDEX IF NOT EXISTS idx_backups_origem ON backups(origem);
+
 -- Triggers de invariante ------------------------------------------------
 
 CREATE TRIGGER IF NOT EXISTS trg_auditoria_no_delete
