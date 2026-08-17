@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.15",
-  "notes": "v0.2.15 - Manuais em PDF (MANUAL-INSTALACAO.pdf e GUIA-PRATICO.pdf) + scripts de geracao (tools/_md-to-pdf.cjs usa Edge + puppeteer-core, GRÁTIS, sem dependencias externas).",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.15/resources.neu",
-  "sha256": "E6B7F2FD0D03030FE483B10D5EC2EB7A1836FE30264CDD9D2AD51ABBE8E51EEA",
-  "size": 5356566
+  "version": "0.2.16",
+  "notes": "v0.2.16 - REMOVIDO uso do Neutralino.updater.checkForUpdates que abria o navegador do user com a URL do manifest. Agora o auto-update usa SOMENTE fetch + writeFile do .neu, sem abrir navegador.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.16/resources.neu",
+  "sha256": "0513A1CF816F4CA940D3A84048D0ED584334AEA26328A1562BE4B351F475B822",
+  "size": 5357542
 }
