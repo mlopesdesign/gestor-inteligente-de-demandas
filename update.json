@@ -1,6 +1,8 @@
 {
-    "applicationId": "app.mllopes.gestor",
-    "version": "0.2.9",
-    "notes": "v0.2.9 - DevTools nao abre mais sozinho. Auto-update corrigido.",
-    "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.9/resources.neu"
+  "applicationId": "app.mllopes.gestor",
+  "version": "0.2.10",
+  "notes": "v0.2.10 - Correção crítica: banco não era lido (Neutralino readFile decodificava binário como UTF-8, corrompendo). Agora usa readBinaryFile. Os 4 projetos do Marcio aparecem corretamente. Sem emojis decorativos. Ícone MLOPES DEV no .exe.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.10/resources.neu",
+  "sha256": "a780d26a334e598ef4a1e30f910e0b59b3c6ed28cef32ef3ae426436d606d362",
+  "size": 5892157
 }
