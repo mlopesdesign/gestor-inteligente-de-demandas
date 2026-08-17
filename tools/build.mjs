@@ -75,6 +75,17 @@ if (!existsSync(srcNeu)) {
 }
 copyFileSync(srcNeu, join(appImageDst, 'resources.neu'));
 
+// FIX v0.2.19: copia o src/ inteiro pra app-image (era o motivo do "abre neutralino"
+// no PC do usuario — o documentRoot: '/' + url: '/src/index.html' aponta pro disco,
+// e sem src/ no Program Files o app nao tem onde carregar o HTML/CSS/JS)
+import { cpSync } from 'node:fs';
+const srcDir = join(src);
+const dstSrc = join(appImageDst, 'src');
+console.log(`[build] copiando src/ pra ${dstSrc}...`);
+if (existsSync(dstSrc)) rmSync(dstSrc, { recursive: true, force: true });
+cpSync(srcDir, dstSrc, { recursive: true });
+console.log(`[build] OK src/ copiado`);
+
 console.log(`[build] OK app-image em ${appImageDst}`);
 console.log(`[build] Tamanho do .exe: ${(statSync(join(appImageDst, 'GestorInteligenteDeDemandas.exe')).size / 1024).toFixed(0)} KB`);
 console.log(`[build] Tamanho do .neu: ${(statSync(join(appImageDst, 'resources.neu')).size / 1024).toFixed(0)} KB`);
