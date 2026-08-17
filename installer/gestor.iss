@@ -1,4 +1,4 @@
-#define AppVersion "0.2.19"
+#define AppVersion "0.2.20"
 #define AppName "Gestor Inteligente de Demandas"
 #define AppPublisher "ML Lopes Design"
 #define AppExeName "GestorInteligenteDeDemandas.exe"

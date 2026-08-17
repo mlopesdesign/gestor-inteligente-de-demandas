@@ -86,6 +86,15 @@ if (existsSync(dstSrc)) rmSync(dstSrc, { recursive: true, force: true });
 cpSync(srcDir, dstSrc, { recursive: true });
 console.log(`[build] OK src/ copiado`);
 
+// FIX v0.2.20: copia o neutralino.config.json pro app-image
+// (sem isso o .exe nao acha o config e cai na pagina default do neutralinojs.org)
+const cfgSrc = join(root, 'neutralino.config.json');
+const cfgDst = join(appImageDst, 'neutralino.config.json');
+if (existsSync(cfgSrc)) {
+  copyFileSync(cfgSrc, cfgDst);
+  console.log(`[build] OK neutralino.config.json copiado`);
+}
+
 console.log(`[build] OK app-image em ${appImageDst}`);
 console.log(`[build] Tamanho do .exe: ${(statSync(join(appImageDst, 'GestorInteligenteDeDemandas.exe')).size / 1024).toFixed(0)} KB`);
 console.log(`[build] Tamanho do .neu: ${(statSync(join(appImageDst, 'resources.neu')).size / 1024).toFixed(0)} KB`);

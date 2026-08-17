@@ -1,13 +1,13 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.19",
+  "version": "0.2.20",
   "defaultMode": "window",
   "port": 8723,
   "url": "/src/index.html",
   "enableServer": true,
   "enableNativeAPI": true,
-  "tokenSecurity": "one-time",
-  "exportAuthInfo": false,
+  "tokenSecurity": "none",
+  "exportAuthInfo": true,
   "logging": {
     "enabled": true,
     "writeToLogFile": true
