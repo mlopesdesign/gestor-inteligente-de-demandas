@@ -1,6 +1,6 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "defaultMode": "window",
   "port": 8723,
   "documentRoot": "/src/",
@@ -35,7 +35,7 @@
       "maximizable": true,
       "minimizable": true,
       "exitProcessOnClose": true,
-      "enableInspector": true,
+      "enableInspector": false,
       "borderless": false,
       "alwaysOnTop": false,
       "icon": "/src/resources/icons/app.png",

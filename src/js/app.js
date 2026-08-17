@@ -114,19 +114,21 @@ async function bootstrap() {
   }
 
   // 2. Carrega identidade.
-  // Pega versao direto do NEUTRALINO_GLOBALS (injetado pelo runtime) - evita getConfig() que pode travar o WebSocket.
-  // Fallback: le do neutralino.config.json carregado em /neutralino.config.json
-  let versao = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version;
+  // FIX v0.2.9: meta tag app-version no index.html e' a fonte da verdade. Mais confiavel
+  // que NEUTRALINO_GLOBALS (pode estar com cache do runtime) ou localStorage (desatualizado).
+  let versao = null;
+  try {
+    const meta = document.querySelector('meta[name="app-version"]');
+    if (meta && meta.content) versao = meta.content;
+  } catch (_) {}
+  if (!versao) versao = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version;
   if (!versao) {
     try {
-      // Tenta do localStorage (cache) ou do fetch (caso NEUTRALINO_GLOBALS nao esteja populado)
       const cached = localStorage.getItem('__app_version');
       if (cached) versao = cached;
     } catch (_) {}
   }
-  if (!versao) versao = '0.2.8';
-  // FIX v0.2.8: cache de versao desatualizado. Atualiza SEMPRE o que esta em
-  // memoria, mesmo se o cache bate, pra evitar o bug do "v0.1.0" eterno.
+  if (!versao) versao = '0.2.9';
   try { localStorage.setItem('__app_version', versao); } catch (_) {}
   const versaoSpan = document.getElementById('versao-app');
   if (versaoSpan) versaoSpan.textContent = 'v' + versao;
@@ -300,7 +302,7 @@ function renderLogin() {
           ${salvo ? '<button id="btn-sair-gravado" class="login-sair">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
         </div>
 
-        <div class="login-rodape">v${window.__appVersion || '0.2.8'}</div>
+        <div class="login-rodape">v${window.__appVersion || '0.2.9'}</div>
       </div>
     </div>
   `;

@@ -1,5 +1,5 @@
 {
-    "version": "0.2.8",
-    "notes": "v0.2.8 — bug fatal do SQL (cancelada_em, cancelada_motivo, adiada_ate, adiada_motivo) corrigido via migracao idempotente; todos os emojis removidos do menu, topbar, buckets e botoes; tela de login refeita com layout clean (sem 'mlopes dev'); versao hardcoded v0.1.0 corrigida; sessao invalida no localStorage agora limpa e redireciona pra login.",
-    "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.8/resources.neu"
+    "version": "0.2.9",
+    "notes": "v0.2.9 — DevTools nao abre mais automaticamente (enableInspector desativado no config). Bug do header mostrando versao antiga corrigido via fetch do /neutralino.config.json.",
+    "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.9/resources.neu"
 }

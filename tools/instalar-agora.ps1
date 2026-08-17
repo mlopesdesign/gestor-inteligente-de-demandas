@@ -17,9 +17,17 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 
 Write-Host "[instalar] ADMIN OK, instalando v$Version..." -ForegroundColor Green
 
-# Para o app se estiver rodando
+# Para o app se estiver rodando (inclui filhos do WebView2)
 Get-Process -Name GestorInteligenteDeDemandas -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 1
+Get-Process -Name msedgewebview2 -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 3
+# Confirma que matou
+$stillRunning = Get-Process -Name GestorInteligenteDeDemandas -ErrorAction SilentlyContinue
+if ($stillRunning) {
+    Write-Host "[instalar] AVISO: processo ainda rodando, forçando..." -ForegroundColor Yellow
+    $stillRunning | Stop-Process -Force
+    Start-Sleep -Seconds 2
+}
 
 # Cria pasta se nao existir
 if (-not (Test-Path $dst)) {
@@ -29,6 +37,13 @@ if (-not (Test-Path $dst)) {
 # Copia o .exe
 Write-Host "[instalar] Copiando GestorInteligenteDeDemandas.exe..." -ForegroundColor Cyan
 Copy-Item -Path (Join-Path $src "GestorInteligenteDeDemandas.exe") -Destination (Join-Path $dst "GestorInteligenteDeDemandas.exe") -Force
+
+# Copia o neutralino.config.json (essencial - controla enableInspector, port, etc)
+$configSrc = Join-Path $root "neutralino.config.json"
+if (Test-Path $configSrc) {
+    Copy-Item -Path $configSrc -Destination (Join-Path $dst "neutralino.config.json") -Force
+    Write-Host "[instalar] neutralino.config.json OK" -ForegroundColor Green
+}
 
 # Copia o icon
 $iconSrc = Join-Path $root "installer\resources\icon.ico"

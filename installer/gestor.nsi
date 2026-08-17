@@ -15,7 +15,7 @@ SetCompressor /SOLID lzma
 !define APP_NAME "GestorInteligenteDeDemandas"
 !define APP_DISPLAY "Gestor Inteligente de Demandas"
 !define APP_PUBLISHER "ML Lopes Design"
-!define APP_VERSION "0.2.8"
+!define APP_VERSION "0.2.9"
 !define APP_ID "app.mllopes.gestor"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}"
 !define INSTALL_DIR_REG "Software\${APP_ID}"
