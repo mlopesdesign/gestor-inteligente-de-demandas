@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.18",
-  "notes": "v0.2.18 - Botoes de Excluir em Tarefas, Clientes e Projetos. Antes so Areas tinha. Agora todas as 4 entidades tem: Editar + Acao principal (Concluir/Arquivar) + Excluir (vermelho, com confirmacao). Projetos tambem ganhou botao Concluir. Bloqueia exclusao se ha entidades vinculadas (tarefa->cliente/projeto, projeto->tarefas, area->tarefas) com mensagem clara pedindo reatribuicao.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.18/resources.neu",
-  "sha256": "FEBF40BB1287C7EC921C7C43C05C487410C5764C49FCA31795FE120BEE85C0FA",
-  "size": 5358135
+  "version": "0.2.19",
+  "notes": "v0.2.19 - MIGRADO pra Inno Setup (mesmo empacotador do MLopes Finance) + FIX CRITICO: o Setup.exe agora inclui o diretorio src/ inteiro. Antes o Setup copiava so o .exe e o .neu, e o app abria a janela do Neutralino sem carregar o HTML porque o documentRoot=/ + url=/src/index.html aponta pro disco. Reproduzido no PC do usuario, agora corrigido. Inno Setup tambem tem MUITO mais reputacao no Windows SmartScreen que o NSIS, entao o bloqueio cai pra maioria dos usuarios.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.19/resources.neu",
+  "sha256": "085B969C0E42F8097DD503641063A8C848C60432AED17CD91C18AD557863515A",
+  "size": 7254161
 }
