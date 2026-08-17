@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.20",
-  "notes": "v0.2.20 - FIX CRITICO do "abre neutralinojs.org": o neutralino.config.json nao estava sendo copiado pro app-image, e o tokenSecurity estava como "one-time" (causa NE_CL_IVCTOKN). Agora o build.mjs copia o config pro dist/ e usa tokenSecurity=none + exportAuthInfo=true. Tambem copia o src/ (HTML+CSS+JS+imagens) pro instalador, que era o motivo do "abre neutralino" com tela em branco na v0.2.18. Resultado: app abre normal em qualquer PC.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.20/resources.neu",
-  "sha256": "1573F7D706090395CF9881A1B9E3A1A4F2DE59B76FBD2AE3DCED6830E9E45C9F",
-  "size": 7253350
+  "version": "0.2.22",
+  "notes": "v0.2.22 - FIX icone dos atalhos: o atalho do Gestor Inteligente de Demandas na Area de Trabalho e no Menu Iniciar estava com icone GENERICO do Windows (pagina com imagem) em vez da lampada MLOPES DEV. Causa: o installer/resources/icon.ico nao estava sendo copiado pro app-image, e o IconFilename do .iss apontava pro .exe (que tem icone generico do Neutralino). Agora: build.mjs copia o icon.ico pro dist, e o IconFilename aponta direto pro {app}\icon.ico.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.22/resources.neu",
+  "sha256": "B4C4FB0ECB6F9CD3B1B8C16AAFB15CE3F497FB0793FD8E4854B7A3123BAF9E18",
+  "size": 7254260
 }

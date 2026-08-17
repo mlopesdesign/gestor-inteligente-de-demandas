@@ -1,4 +1,4 @@
-#define AppVersion "0.2.20"
+#define AppVersion "0.2.22"
 #define AppName "Gestor Inteligente de Demandas"
 #define AppPublisher "ML Lopes Design"
 #define AppExeName "GestorInteligenteDeDemandas.exe"
@@ -36,9 +36,9 @@ Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortugue
 Source: "..\dist\GestorInteligenteDeDemandas\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 
 [Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\{#AppExeName}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\{#AppExeName}"; Tasks: desktopicon
-Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"; IconFilename: "{app}\{#AppExeName}"
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\icon.ico"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\icon.ico"; Tasks: desktopicon
+Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"; IconFilename: "{app}\icon.ico"
 
 [Tasks]
 Name: "desktopicon"; Description: "Criar atalho na Área de trabalho"; GroupDescription: "Atalhos adicionais:"

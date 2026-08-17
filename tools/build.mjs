@@ -95,6 +95,15 @@ if (existsSync(cfgSrc)) {
   console.log(`[build] OK neutralino.config.json copiado`);
 }
 
+// FIX v0.2.22: copia o icon.ico pro app-image
+// (sem isso os atalhos do Menu Iniciar / Area de Trabalho ficam com icone default do Windows)
+const iconSrc = join(root, 'installer', 'resources', 'icon.ico');
+const iconDst = join(appImageDst, 'icon.ico');
+if (existsSync(iconSrc)) {
+  copyFileSync(iconSrc, iconDst);
+  console.log(`[build] OK icon.ico copiado`);
+}
+
 console.log(`[build] OK app-image em ${appImageDst}`);
 console.log(`[build] Tamanho do .exe: ${(statSync(join(appImageDst, 'GestorInteligenteDeDemandas.exe')).size / 1024).toFixed(0)} KB`);
 console.log(`[build] Tamanho do .neu: ${(statSync(join(appImageDst, 'resources.neu')).size / 1024).toFixed(0)} KB`);
