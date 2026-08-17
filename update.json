@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.12",
-  "notes": "v0.2.12 - Nova aba Backup em Configuracoes (manual + automatico estilo Salgueiro). Backup manual com 1 clique, backup automatico (diaria/semanal/a cada abertura), retencao dos ultimos N, historico com restaurar/excluir. README no GitHub com link direto pro Setup.exe.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.12/resources.neu",
-  "sha256": "9B41F9CA348AEF1C886E8D2D3379BC1DA9ED12D70EB3B43987A7A3BFCD7BF2D7",
-  "size": 5355738
+  "version": "0.2.13",
+  "notes": "v0.2.13 - Topbar com fundo PRETO (mesma cor do fundo da logo) e logo MLOPES DEV maior (44px vs 28px). Visual mais integrado e profissional.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.13/resources.neu",
+  "sha256": "6B036EC0520057F5B07DBFB685FF1AC0861FCC734B7D277FCA90D2CFFA1F5D7B",
+  "size": 5357562
 }
