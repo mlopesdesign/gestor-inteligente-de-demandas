@@ -429,3 +429,198 @@ a:hover { text-decoration: underline; }
     padding-top: 16px;
     border-top: 1px solid rgba(255, 214, 51, 0.10);
 }
+
+/* ==========================================================================
+   Abas (v0.2.11 - estilo Salgueiro: pílulas horizontais, scroll horizontal)
+   ========================================================================== */
+
+.tabs-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 0 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+.tabs-bar::-webkit-scrollbar { height: 4px; }
+.tabs-bar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.tabs-bar button {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    background: transparent;
+    color: var(--fg-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.tabs-bar button:hover {
+    background: var(--bg-elev);
+    color: var(--fg);
+}
+.tabs-bar button.ativa {
+    background: var(--cor-marca);
+    color: #000;
+    border-color: var(--cor-marca);
+    font-weight: 600;
+}
+.tabs-bar button .badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--danger);
+    color: #fff;
+    border-radius: 10px;
+    line-height: 1.4;
+    vertical-align: middle;
+}
+.tabs-bar button.ativa .badge {
+    background: #000;
+    color: var(--cor-marca);
+}
+
+.tab-painel { display: none; }
+.tab-painel.ativa { display: block; animation: fadein 0.2s ease-out; }
+
+.tab-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+}
+@media (max-width: 900px) { .tab-grid { grid-template-columns: 1fr; } }
+
+.releases-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+.releases-lista .release-item {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+.releases-lista .release-item:hover {
+    background: var(--bg-elev);
+    border-color: var(--fg-3);
+}
+.releases-lista .release-item.ativa {
+    border-color: var(--cor-marca);
+    background: var(--bg-elev);
+}
+.releases-lista .release-item .release-cabecalho {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.releases-lista .release-item .release-versao {
+    color: var(--cor-marca);
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.releases-lista .release-item .release-titulo {
+    color: var(--fg);
+    font-size: 13px;
+    flex: 1;
+    min-width: 100px;
+}
+.releases-lista .release-item .release-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 8px;
+    background: var(--success);
+    color: #fff;
+    text-transform: uppercase;
+}
+.releases-lista .release-item .release-data {
+    color: var(--fg-3);
+    font-size: 11px;
+    flex-shrink: 0;
+}
+.releases-lista .release-item .release-corpo {
+    display: none;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    color: var(--fg-2);
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+.releases-lista .release-item.ativa .release-corpo { display: block; }
+.releases-lista .release-vazia {
+    text-align: center;
+    color: var(--fg-3);
+    padding: 24px;
+    font-style: italic;
+}
+
+.atualizacao-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.atualizacao-status.ok { background: rgba(46, 125, 50, 0.15); color: var(--success); }
+.atualizacao-status.aviso { background: rgba(240, 160, 0, 0.15); color: var(--cor-marca); }
+.atualizacao-status.erro { background: rgba(198, 40, 40, 0.15); color: var(--danger); }
+.atualizacao-status .dot { width: 6px; height: 6px; }
+
+.atualizacao-novaversao {
+    border-left: 4px solid var(--cor-marca);
+    background: var(--bg-3);
+    padding: 14px 16px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    margin-top: 12px;
+}
+.atualizacao-novaversao .novaversao-titulo {
+    color: var(--cor-marca);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+.atualizacao-novaversao .novaversao-notes {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    margin: 8px 0;
+    font-size: 12px;
+    line-height: 1.6;
+    max-height: 160px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    color: var(--fg-2);
+}
+.atualizacao-novaversao .novaversao-meta {
+    font-size: 11px;
+    color: var(--fg-3);
+    margin: 6px 0;
+}
+.atualizacao-novaversao .novaversao-acoes {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}

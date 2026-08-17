@@ -1,6 +1,6 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "defaultMode": "window",
   "port": 8723,
   "url": "/src/index.html",

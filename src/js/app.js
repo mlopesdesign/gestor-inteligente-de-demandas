@@ -227,7 +227,9 @@ async function bootstrap() {
     // FIX v0.2.10: permite ?rota=projetos pra deep link
     const params = new URLSearchParams(location.search);
     const rotaInicial = params.get('rota') || 'hoje';
-    D('[app] chamando irPara(' + rotaInicial + ')');
+    const abaInicial = params.get('aba') || null;
+    D('[app] chamando irPara(' + rotaInicial + (abaInicial ? '/' + abaInicial : '') + ')');
+    irPara(rotaInicial, abaInicial ? { aba: abaInicial } : undefined);
     irPara(rotaInicial);
   } else {
     // Token do localStorage era invalido (ou nao tinha). Limpa pra nao tentar de novo.
@@ -258,7 +260,8 @@ async function bootstrap() {
       // FIX v0.2.10: permite ?rota=projetos pra deep link
       const params = new URLSearchParams(location.search);
       const rotaInicial = params.get('rota') || 'hoje';
-      irPara(rotaInicial);
+      const abaInicial = params.get('aba') || null;
+      irPara(rotaInicial, abaInicial ? { aba: abaInicial } : undefined);
     } else {
       D('[app] chamando irPara(login)');
       irPara('login');
@@ -307,7 +310,7 @@ const ROTAS = {
   config:   { titulo: 'ConfiguraÃ§Ãµes',     render: () => import('./telas/configuracoes.js').then(m => m.renderConfig()) },
 };
 
-export function irPara(nome) {
+export function irPara(nome, opts = {}) {
   if (!ROTAS[nome]) {
     console.error('[app] rota desconhecida:', nome);
     return;
@@ -319,7 +322,11 @@ export function irPara(nome) {
   });
   const titulo = document.querySelector('.topbar .titulo-tela');
   if (titulo) titulo.textContent = rota.titulo;
-  rota.render();
+  // FIX v0.2.11: permite deep link de aba (ex: ?rota=config&aba=atualizacao)
+  if (opts.aba) {
+    try { sessionStorage.setItem('gestor-ultima-aba', nome + ':' + opts.aba); } catch (_) {}
+  }
+  rota.render(opts);
 }
 
 // ---------------------------------------------------------------------------
@@ -339,7 +346,7 @@ function renderLogin() {
     <div class="login-page">
       <div class="login-card">
         <div class="login-brand">
-          <img src="/resources/images/logo-login.png" alt="mlopes dev" class="login-logo">
+          <img src="/src/resources/images/logo-login.png" alt="mlopes dev" class="login-logo">
           <div class="login-brand-text">
             <div class="login-titulo">Gestor</div>
             <div class="login-subtitulo">Inteligente de Demandas</div>

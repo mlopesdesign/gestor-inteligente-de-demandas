@@ -1,2 +1,1 @@
-a780d26a334e598ef4a1e30f910e0b59b3c6ed28cef32ef3ae426436d606d362  GestorInteligenteDeDemandas-Setup-0.2.10.exe
-d2ea16ed429ad9f2c01444a33d829e7c0e22dee4f26cabd86a2d1d7dd31a6f67  resources.neu
+﻿DD35A50C803B6649CAF10F620E246857471AD611E02464677089ED19B3E98038  GestorInteligenteDeDemandas-Setup-0.2.11.exe

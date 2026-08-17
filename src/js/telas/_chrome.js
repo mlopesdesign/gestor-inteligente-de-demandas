@@ -5,7 +5,7 @@
 export function topbar() {
  return `
  <div class="topbar">
- <img src="/resources/images/logo-icon.png" alt="Gestor" class="brand-logo">
+ <img src="/src/resources/images/logo.png" alt="Gestor" class="brand-logo">
  <span class="brand">Gestor</span>
  <span class="brand-sub" id="versao-app"></span>
  <span class="spacer"></span>
