@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.19",
-  "notes": "v0.2.19 - MIGRADO pra Inno Setup (mesmo empacotador do MLopes Finance) + FIX CRITICO: o Setup.exe agora inclui o diretorio src/ inteiro. Antes o Setup copiava so o .exe e o .neu, e o app abria a janela do Neutralino sem carregar o HTML porque o documentRoot=/ + url=/src/index.html aponta pro disco. Reproduzido no PC do usuario, agora corrigido. Inno Setup tambem tem MUITO mais reputacao no Windows SmartScreen que o NSIS, entao o bloqueio cai pra maioria dos usuarios.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.19/resources.neu",
-  "sha256": "085B969C0E42F8097DD503641063A8C848C60432AED17CD91C18AD557863515A",
-  "size": 7254161
+  "version": "0.2.20",
+  "notes": "v0.2.20 - FIX CRITICO do "abre neutralinojs.org": o neutralino.config.json nao estava sendo copiado pro app-image, e o tokenSecurity estava como "one-time" (causa NE_CL_IVCTOKN). Agora o build.mjs copia o config pro dist/ e usa tokenSecurity=none + exportAuthInfo=true. Tambem copia o src/ (HTML+CSS+JS+imagens) pro instalador, que era o motivo do "abre neutralino" com tela em branco na v0.2.18. Resultado: app abre normal em qualquer PC.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.20/resources.neu",
+  "sha256": "1573F7D706090395CF9881A1B9E3A1A4F2DE59B76FBD2AE3DCED6830E9E45C9F",
+  "size": 7253350
 }
