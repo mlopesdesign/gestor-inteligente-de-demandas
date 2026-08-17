@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.16",
-  "notes": "v0.2.16 - REMOVIDO uso do Neutralino.updater.checkForUpdates que abria o navegador do user com a URL do manifest. Agora o auto-update usa SOMENTE fetch + writeFile do .neu, sem abrir navegador.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.16/resources.neu",
-  "sha256": "0513A1CF816F4CA940D3A84048D0ED584334AEA26328A1562BE4B351F475B822",
-  "size": 5357542
+  "version": "0.2.17",
+  "notes": "v0.2.17 - FIX CRÍTICO do auto-update: a v0.2.16 ainda tinha fallback que abria o navegador padrão (Edge) com a URL do .neu no GitHub (ou neutralinojs.org em casos com checkForUpdates). Reescrevi COMPLETAMENTE: agora o auto-update usa SOMENTE PowerShell Invoke-WebRequest via Neutralino.os.execCommand — nunca mais abre navegador. Também removi as funções verificarUpdate/aplicarUpdate do ambiente.js que ainda chamavam Neutralino.updater.checkForUpdates().",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.17/resources.neu",
+  "sha256": "9F290545EC185AFD63778EB333E59A455572B16ACBBF7EA5E30EBA0EBB493088",
+  "size": 5358357
 }
