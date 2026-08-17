@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.14",
-  "notes": "v0.2.14 - Adiciona instalar-windows.bat (bypass automatico do SmartScreen via Unblock-File do PowerShell). README atualizado com 3 opcoes de download/instalacao: Setup.exe direto, instalar-windows.bat (com bypass), ou desbloqueio manual.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.14/resources.neu",
-  "sha256": "03BED7AA6735BBA1CFE671E3E61804A24876C439ACF2B24326D295D74F2DD1AF",
-  "size": 5357530
+  "version": "0.2.15",
+  "notes": "v0.2.15 - Manuais em PDF (MANUAL-INSTALACAO.pdf e GUIA-PRATICO.pdf) + scripts de geracao (tools/_md-to-pdf.cjs usa Edge + puppeteer-core, GRÁTIS, sem dependencias externas).",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.15/resources.neu",
+  "sha256": "E6B7F2FD0D03030FE483B10D5EC2EB7A1836FE30264CDD9D2AD51ABBE8E51EEA",
+  "size": 5356566
 }
