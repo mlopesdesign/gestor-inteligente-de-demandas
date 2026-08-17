@@ -1,166 +1,312 @@
-# Manual de Instalação — Gestor Inteligente de Demandas v0.1.0
+# Manual de Instalação — Gestor Inteligente de Demandas
 
-> Identidade imutável: `applicationId = app.mllopes.gestor`
-> Caminho de instalação: `%APPDATA%/GestorInteligenteDeDemandas/`
-
----
-
-## Visão geral
-
-O Gestor Inteligente de Demandas é um aplicativo **Windows nativo**, escrito em
-Java 21 LTS, distribuído como **app-image** (JRE 21 embutido) com instalador
-gerado via `jpackage`. Não requer Java instalado no sistema.
-
-Há 3 formas de instalar:
-
-| Forma | Arquivo | Tamanho | Quando usar |
-|---|---|---|---|
-| **ZIP portátil** | `GestorInteligenteDeDemandas-<versao>-win-x64.zip` | ~61 MB | Testar sem instalar; rodar de pen-drive |
-| **Setup.exe (NSIS)** | `GestorInteligenteDeDemandas-Setup-<versao>.exe` | ~62 MB | Instalar formalmente (gera atalhos + Adicionar/Remover Programas) |
-| **App-image** | `GestorInteligenteDeDemandas/` | ~120 MB | Build local de desenvolvimento |
-
-> No MVP (v0.1.0) ainda não há Setup.exe com NSIS. A entrega atual é **ZIP portátil**
-> + atalho criado manualmente. NSIS está previsto para a v0.1.1.
+> Versão 0.2.14 — 17/08/2026
+> Custo total: **R$ 0,00** (grátis, sem certificado, sem assinatura digital)
 
 ---
 
-## Requisitos
+## 1. Requisitos
 
-- **Windows 10** versão 1809+ ou **Windows 11**
-- **Sem Java pré-instalado** (o JRE vem embutido no ZIP)
-- 200 MB livres em disco para o app + dados
-- Para sincronização: acesso à internet (HTTPS) ao servidor central
-- Opcional: **OpenAI API key** se quiser usar os recursos de IA (sem ela, app usa heurística local)
+| Item | Mínimo |
+|---|---|
+| Sistema | Windows 10 ou Windows 11 (64 bits) |
+| RAM | 2 GB (recomendado 4 GB) |
+| Disco | 100 MB livres |
+| Permissões | Usuário com direito de instalar programas (admin) |
+| Internet | Necessária apenas no download (uso é 100% offline) |
+
+**Não precisa de:**
+- Java, .NET, Python, Node.js ou qualquer runtime
+- WebView2 (já vem no Windows 10/11 desde 2022)
+- Conta em qualquer serviço online
+- Cartão de crédito ou cadastro
 
 ---
 
-## Instalação via ZIP portátil (recomendada)
+## 2. Download do instalador (3 opções)
 
-### 1. Baixar
-Acesse a página de releases:
-```
-https://github.com/ml-lopes/gestor-inteligente-de-demandas/releases
-```
-Baixe o asset `GestorInteligenteDeDemandas-0.1.0-win-x64.zip`.
+Escolha a opção que melhor se adapta ao seu caso:
 
-### 2. Conferir integridade
-Antes de extrair, verifique o hash SHA-256:
+### Opção A — Setup.exe direto (recomendado se o Windows NÃO bloquear)
 
-**PowerShell**:
-```powershell
-Get-FileHash .\GestorInteligenteDeDemandas-0.1.0-win-x64.zip -Algorithm SHA256
-```
-
-Compare o resultado com o valor em `sha256sums.txt` da mesma release.
-
-### 3. Extrair
-Extraia o conteúdo para uma pasta permanente, **evitando caminhos com espaços
-ou caracteres acentuados**:
+Acesse pelo navegador:
 
 ```
-C:\Program Files\GestorInteligenteDeDemandas\
-├── GestorInteligenteDeDemandas.exe   ← launcher
-├── runtime\                          ← JRE 21 embutido
-└── app\                              ← código + recursos
+https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/latest
 ```
 
-### 4. Criar atalho (opcional)
-Clique com o botão direito em `GestorInteligenteDeDemandas.exe` →
-*Enviar para* → *Área de trabalho (criar atalho)*.
+Clique no asset **`GestorInteligenteDeDemandas-Setup-X.Y.Z.exe`** para baixar (5 a 6 MB).
 
-Para fixar no Menu Iniciar:
+> **Atenção:** ignore os outros 2-3 assets da mesma página:
+> - `resources.neu` = bundle de atualização (NÃO serve pra instalar do zero)
+> - `RELEASE-NOTES-X.Y.Z.md` = anotações da versão (só pra leitura)
+> - `instalar-windows.bat` = instalador alternativo (use a Opção B)
+> - `MANUAL-INSTALACAO.pdf` e `GUIA-PRATICO.pdf` = estes manuais (que você já está lendo)
+
+### Opção B — `instalar-windows.bat` (recomendado se o Windows BLOQUEAR o Setup.exe)
+
+Se o Windows mostrar **"A proteção Microsoft Defender SmartScreen impediu o início de um aplicativo não reconhecido"**, baixe o script instalador alternativo:
+
 ```
-Botão direito no .exe → Fixar no Início
+https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/latest/download/instalar-windows.bat
 ```
 
-### 5. Primeiro lançamento
-- **SmartScreen**: Windows pode mostrar "O Windows protegeu seu computador".
-  Clique em *Mais informações* → *Executar mesmo assim*. Isso acontece porque
-  o MVP não tem certificado Authenticode (planejado para v0.2.x).
-- O app cria a pasta `%APPDATA%\GestorInteligenteDeDemandas\` no primeiro
-  uso, com `gestor_local.db` (banco SQLite local).
-- O app aparece na bandeja do sistema (ícone ao lado do relógio). Fechar a
-  janela = esconder para a bandeja. Para sair de verdade: menu da bandeja → *Sair*.
+**Como usar (3 passos):**
+
+1. **Salve** o arquivo `.bat` em qualquer pasta (Área de Trabalho serve)
+2. **Clique com botão direito** no arquivo → **"Executar como administrador"**
+3. **Aguarde** o script baixar a versão mais recente automaticamente e abrir o instalador
+
+O script faz 3 coisas automaticamente:
+- Baixa o `Setup.exe` da versão mais recente direto do GitHub
+- Remove o "Mark-of-the-Web" (MotW) via PowerShell `Unblock-File`
+- Executa o instalador como administrador
+
+### Opção C — Desbloqueio manual (último recurso)
+
+Se tanto o Setup.exe quanto o `.bat` forem bloqueados pelo SmartScreen:
+
+1. **Localize** o `Setup.exe` que você baixou
+2. **Clique com botão direito** nele → **Propriedades**
+3. Na aba **Geral**, marque a checkbox **"Desbloquear"** (perto do rodapé, na seção "Segurança")
+4. Clique **OK** e dê duplo-clique no `Setup.exe`
+
+OU, na própria tela do SmartScreen:
+1. Clique em **"Mais informações"**
+2. Clique em **"Executar mesmo assim"**
 
 ---
 
-## Configuração do servidor central (opcional)
+## 3. Instalação
 
-Por padrão, o app **funciona 100% offline**. Para habilitar sincronização entre
-dispositivos, configure o servidor:
+### 3.1. Iniciando o instalador
 
-1. Levante o servidor (Java 21):
-   ```bash
-   java -jar server-0.1.0.jar
-   ```
-2. No app desktop, edite `%APPDATA%\GestorInteligenteDeDemandas\config.json`:
-   ```json
-   {
-     "servidor_url": "https://gestor.exemplo.com",
-     "auto_sync": true,
-     "intervalo_sync_segundos": 60
-   }
-   ```
-3. Reinicie o app. Ele vai pedir login/cadastro na primeira conexão.
+Após o download (por qualquer uma das 3 opções acima), execute o `Setup.exe` com **botão direito → "Executar como administrador"**.
 
-> **LGPD**: o servidor central guarda seu email e hash de senha (argon2id).
-> Nenhuma tarefa é enviada sem login. Você pode exportar ou apagar todos os
-> dados via *Configurações → Conta → Exportar / Apagar*.
+> Por que precisa de admin? O instalador precisa registrar o atalho no Menu Iniciar e criar pastas em `C:\Program Files\`.
 
----
+O instalador NSIS vai abrir uma janela como esta:
 
-## Configuração da IA (opcional)
+*(Print do Setup.exe: tela de boas-vindas "Bem-vindo ao instalador do Gestor Inteligente de Demandas 0.2.14")*
 
-Para usar a IA (parse de texto livre, sugestões):
+### 3.2. Telas do instalador (passo a passo)
 
-1. Obtenha uma API key em <https://platform.openai.com/api-keys>
-2. No servidor, defina a variável de ambiente `OPENAI_API_KEY`:
-   ```bash
-   # Windows
-   setx OPENAI_API_KEY sk-...
-   ```
-3. Reinicie o servidor. O endpoint `/api/v1/ai/status` deve retornar
-   `"disponivel": true`.
+**Tela 1 — Bem-vindo:**
+- Leia a mensagem
+- Clique em **"Avançar"**
 
-Sem a chave, o app usa **heurística local** (sem custo, sem dados saindo da máquina).
+**Tela 2 — Licença:**
+- Aceite os termos (ou cancele se não concordar)
+- Clique em **"Avançar"**
+
+**Tela 3 — Pasta de instalação:**
+- Padrão: `C:\Program Files\Gestor Inteligente de Demandas\`
+- Não mude a menos que saiba o que está fazendo
+- Clique em **"Avançar"**
+
+**Tela 4 — Instalando:**
+- Aguarde ~5-10 segundos
+- Barra de progresso vai de 0% a 100%
+
+**Tela 5 — Concluído:**
+- Deixe marcado "Executar Gestor Inteligente de Demandas"
+- Clique em **"Concluir"**
+
+O app vai abrir automaticamente. Você verá a tela de login com o logo MLOPES DEV.
 
 ---
 
-## Atualização
+## 4. Primeiro acesso
 
-O app verifica updates a cada 6h. Quando há versão nova:
-- Notificação na bandeja: *"Nova versão 0.1.1 disponível"*
-- Botão *Atualizar agora* baixa o ZIP, valida SHA-256, faz backup do
-  banco local e substitui os binários
-- Reinício automático
+### 4.1. Criar uma conta nova
 
-Para forçar: menu da bandeja → *Verificar atualizações*.
+Na tela de login, clique em **"Criar conta"** (se houver) ou preencha os campos:
+
+- **Email:** o email que você quer usar (ex: `voce@seudominio.com`)
+- **Senha:** deixe em branco se quiser entrar sem senha (o app é local, a senha é opcional)
+
+Clique em **"Entrar"** ou **"Criar conta"**.
+
+### 4.2. Conta demo (teste rápido)
+
+Se o app já tem uma conta demo (vem por padrão em algumas versões), faça login com:
+
+- **Email:** `demo@gestor.local`
+- **Senha:** (vazio)
+
+A conta demo vem com 5 tarefas de exemplo. Para começar do zero, crie sua conta e apague as tarefas demo em **Configurações → Apagar conta → Criar nova**.
+
+### 4.3. O que aparece depois do login
+
+Você verá a tela **"Hoje"** com 3 grupos de tarefas:
+- **Atrasadas** (em vermelho): tarefas com data de vencimento passada
+- **Vencendo hoje** (em laranja): tarefas que vencem hoje
+- **Esta semana** (em azul): tarefas que vencem nos próximos 7 dias
+- **Em andamento** (em azul claro): tarefas marcadas como em execução
+
+> A topbar preta mostra a logo MLOPES DEV à esquerda, "Gestor" em laranja, a versão (ex: "v0.2.14") e a contagem de tarefas ativas no canto direito.
 
 ---
 
-## Desinstalação
+## 5. Onde ficam os dados
 
-1. Menu da bandeja → *Sair* (fecha o app)
-2. Apague a pasta de instalação (`C:\Program Files\GestorInteligenteDeDemandas\`)
-3. **Opcional**: apague `%APPDATA%\GestorInteligenteDeDemandas\` para remover
-   também o banco local
-4. Atalho da área de trabalho: remova manualmente
+Todos os dados ficam **no seu computador, em uma pasta local**:
 
-> Para desinstalar e **apagar TODOS os dados** (LGPD): use *Configurações → Conta →
-> Apagar conta* antes de desinstalar. Isso remove do servidor central e do banco local.
+```
+C:\Users\SEU_USUARIO\AppData\Roaming\GestorInteligenteDeDemandas\
+├── dados\
+│   ├── gestor.db           ← banco SQLite (seus dados)
+│   └── backups\            ← backups automáticos e manuais
+└── logs\                   ← logs de diagnóstico (técnico)
+```
+
+Para acessar:
+1. Abra o Explorador de Arquivos
+2. Na barra de endereço, cole: `%APPDATA%\GestorInteligenteDeDemandas`
+3. Pressione Enter
+
+**Importante:**
+- Os dados **NUNCA saem do seu computador** (o app é 100% offline)
+- Para fazer backup, copie a pasta `dados\` inteira para um HD externo / nuvem
+- Para desinstalar e reinstalar em outra máquina, basta copiar a pasta `dados\`
 
 ---
 
-## Solução de problemas
+## 6. Atualização do app
 
-| Sintoma | Causa provável | Solução |
-|---|---|---|
-| "Aplicação não foi possível iniciar" | SmartScreen bloqueando | *Mais informações → Executar* |
-| App abre mas não lista tarefas | Banco local vazio | Crie uma tarefa pelo botão *Nova* |
-| Sync não funciona | Servidor inacessível | Verifique `config.json` + conexão |
-| Notificações não aparecem | Modo "Não Perturbe" do Windows | Desative em *Configurações → Sistema → Foco* |
-| Performance lenta | Banco grande (>50k tarefas) | Use *Arquivar concluídas* no menu |
+### 6.1. Atualização automática (recomendado)
+
+O app verifica automaticamente a cada 6 horas se há versão nova. Se houver:
+
+1. Aparece um **aviso** na tela com botão **"Atualizar agora"**
+2. Clique nele e o app baixa + instala a nova versão sozinho
+3. O app **reinicia** automaticamente
+
+### 6.2. Verificação manual
+
+1. Abra o app
+2. Vá em **Configurações** (último item do menu lateral)
+3. Clique na aba **"Atualização"**
+4. Clique no botão **"Verificar agora"**
+
+Se houver versão nova, aparece o card com botão **"Baixar e instalar"**.
+
+### 6.3. Atualização manual (último recurso)
+
+Se a atualização automática falhar:
+1. Baixe o novo `Setup.exe` da release mais recente
+2. Execute como administrador
+3. O instalador detecta a versão anterior e **atualiza por cima** (seus dados são preservados)
+
+---
+
+## 7. Backup dos dados (manual)
+
+### 7.1. Pelo próprio app (recomendado)
+
+1. Abra o app
+2. Vá em **Configurações → aba "Backup"**
+3. Clique em **"Fazer backup agora"**
+4. O arquivo `gestor-AAAAMMDD-HHMMSS.db` é salvo em `%APPDATA%\GestorInteligenteDeDemandas\dados\backups\`
+
+### 7.2. Backup automático
+
+1. Configurações → aba "Backup"
+2. Ligue o toggle **"Backup automático ligado"**
+3. Escolha a frequência (Diária / Semanal / A cada abertura)
+4. Defina quantos backups manter (padrão: 30)
+
+### 7.3. Backup manual via Windows Explorer
+
+1. Feche o app
+2. Copie a pasta `%APPDATA%\GestorInteligenteDeDemandas\dados\` inteira
+3. Cole em outro lugar (HD externo, OneDrive, Google Drive, etc)
+
+Para restaurar, basta colar a pasta de volta.
+
+---
+
+## 8. Desinstalação
+
+### 8.1. Desinstalação normal
+
+1. **Configurações do Windows → Aplicativos → Aplicativos instalados**
+2. Procure por **"Gestor Inteligente de Demandas"**
+3. Clique em **"Desinstalar"**
+4. Confirme
+
+O Windows pergunta se quer apagar os dados em `%APPDATA%\GestorInteligenteDeDemandas\`:
+- **Sim** = apaga tudo (irreversível, perde todas as tarefas/projetos)
+- **Não** = mantém os dados para reinstalar depois
+
+### 8.2. Desinstalação manual (último recurso)
+
+1. Feche o app
+2. Apague a pasta `C:\Program Files\Gestor Inteligente de Demandas\`
+3. (Opcional) Apague `%APPDATA%\GestorInteligenteDeDemandas\` se quiser remover tudo
+4. (Opcional) Apague os atalhos em `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Gestor Inteligente de Demandas\` e na Área de Trabalho
+
+---
+
+## 9. Solução de problemas
+
+### 9.1. Windows SmartScreen bloqueia o instalador
+
+**Sintoma:** "A proteção Microsoft Defender SmartScreen impediu..."
+
+**Causa:** O app é novo e não tem certificado de assinatura digital pago. É um aviso padrão do Windows para qualquer `.exe` novo.
+
+**Solução:** Use o `instalar-windows.bat` (Opção B) ou desbloqueie manualmente (Opção C). Veja a seção 2 acima.
+
+### 9.2. "Erro de certificado" ou "Publisher não confiável"
+
+Mesma causa do item 9.1. Use a Opção B ou C.
+
+### 9.3. App não abre / fica em "Carregando Gestor..."
+
+**Causas possíveis:**
+- Cache do WebView2 corrompido
+- Várias instâncias rodando
+- Banco de dados corrompido
+
+**Solução:**
+1. Feche TODAS as instâncias do app (inclusive o ícone na bandeja do sistema)
+2. Abra o Explorador de Arquivos
+3. Cole na barra de endereço: `%APPDATA%\GestorInteligenteDeDemandas.exe\EBWebView`
+4. Apague tudo dentro dessa pasta (especialmente as subpastas `Default\Cache`, `Default\Code Cache`, `Default\Local Storage`)
+5. Abra o app novamente
+
+### 9.4. Esqueci a senha
+
+**Causa:** O app é local. Se você cadastrou com senha e esqueceu:
+
+**Solução:**
+1. Feche o app
+2. Vá em `%APPDATA%\GestorInteligenteDeDemandas\dados\`
+3. **Renomeie** `gestor.db` para `gestor.db.bak` (backup de segurança)
+4. Abra o app (ele vai criar um banco novo vazio)
+5. Crie uma nova conta
+6. **Apague** o `gestor.db.bak` se não quiser os dados antigos
+
+> **Atenção:** renomear o banco apaga o acesso aos dados antigos. Se quiser recuperá-los depois, mantenha o `.bak` e use o app **Configurações → Backup → Restaurar**.
+
+### 9.5. "O instalador não roda como administrador"
+
+**Sintoma:** Duplo-clique no Setup.exe e nada acontece, ou erro "Acesso negado".
+
+**Solução:** Botão direito no `Setup.exe` → "Executar como administrador".
+
+---
+
+## 10. Próximos passos
+
+Depois de instalado, leia o **Guia Prático de Uso** (`GUIA-PRATICO.pdf` ou `GUIA-PRATICO.md`) para aprender a:
+- Criar tarefas, projetos, clientes e áreas
+- Usar o sistema de cobrança automática
+- Configurar backup automático
+- Sincronizar entre dispositivos (em breve)
 
 ---
 
 *ML Lopes Design · Marcio · mlopesdesign@gmail.com*
+*Versão 0.2.14 — 17/08/2026*
