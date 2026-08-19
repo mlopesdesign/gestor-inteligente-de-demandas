@@ -23,7 +23,7 @@ export async function renderAreas() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.9');
+ document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
  });
@@ -45,7 +45,7 @@ async function carregar() {
  const t = r.dados.find(x => x.id === id);
  modalArea(t, carregar);
  } else if (ac === 'excluir') {
- if (confirm('Excluir esta área?')) { const r2 = await window.api('areas:excluir', { id }); if (!r2.ok) alert(r2.erro?.mensagem || 'erro'); carregar(); }
+ if (confirm('Excluir esta area PERMANENTEMENTE? Esta acao nao pode ser desfeita.')) { const r2 = await window.api('areas:excluir', { id }); if (!r2.ok) alert(r2.erro?.mensagem || 'erro'); carregar(); }
  }
  };
  });
@@ -59,8 +59,8 @@ function cardArea(a) {
  <span style="font-size:11px; color:var(--fg-3);">${a.tarefas_ativas || 0} ativas</span>
  </div>
  <div style="margin-top:8px; display:flex; gap:4px;">
- <button data-id="${a.id}" data-acao="editar">Editar</button>
- <button data-id="${a.id}" data-acao="excluir" class="danger">Excluir</button>
+ <button data-id="${a.id}" data-acao="editar" title="Editar">✎</button>
+ <button data-id="${a.id}" data-acao="excluir" class="danger" title="Excluir permanentemente">🗑</button>
  </div>
  </div>`;
 }

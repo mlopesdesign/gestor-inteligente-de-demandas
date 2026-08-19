@@ -24,7 +24,7 @@ export async function renderClientes() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.9');
+ document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
  });
@@ -65,18 +65,17 @@ async function carregar() {
  el.querySelectorAll('[data-acao]').forEach(b => {
  b.onclick = async () => {
  const id = b.dataset.id, ac = b.dataset.acao;
- if (ac === 'editar') {  if (ac === 'excluir') {
-    if (confirm('Excluir este cliente? Esta ação não pode ser desfeita.')) {
-      const r = await window.api('clientes:excluir', { id });
-      if (!r.ok) { alert(r.erro?.mensagem || 'erro'); return; }
-      carregar();
-    }
-  }
-
+ if (ac === 'editar') {
  const t = (await window.api('clientes:obter', { id })).dados;
  modalCliente(t, carregar);
  } else if (ac === 'arquivar') {
  if (confirm('Arquivar este cliente?')) { await window.api('clientes:arquivar', { id }); carregar(); }
+ } else if (ac === 'excluir') {
+ if (confirm('Excluir este cliente PERMANENTEMENTE? Esta acao nao pode ser desfeita.')) {
+ const r = await window.api('clientes:excluir', { id });
+ if (!r.ok) { alert(r.erro?.mensagem || 'erro'); return; }
+ carregar();
+ }
  }
  };
  });

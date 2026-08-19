@@ -41,7 +41,7 @@ export async function renderTarefas() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.9');
+ document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
  menuLateralBind(main);
 
  // Carrega listas auxiliares (areas, projetos, clientes)
@@ -100,6 +100,12 @@ async function carregar() {
  const nova = prompt('Nova data de vencimento (YYYY-MM-DD):'); if (nova) { await window.api('tarefas:adiar', { id, versao: v, vencimento_em: new Date(nova).toISOString(), motivo: 'adiada manualmente' }); carregar(); }
  } else if (ac === 'arquivar') {
  if (confirm('Arquivar?')) { await window.api('tarefas:arquivar', { id, versao: v }); carregar(); }
+ } else if (ac === 'excluir') {
+ if (confirm('Excluir esta tarefa PERMANENTEMENTE? Esta acao nao pode ser desfeita.')) {
+ const r = await window.api('tarefas:excluir', { id, versao: v });
+ if (!r.ok) alert('Erro ao excluir: ' + (r.erro?.mensagem || ''));
+ carregar();
+ }
  }
  };
  });
@@ -116,11 +122,12 @@ function linhaTarefa(t) {
  <td>${t.area_nome ? escapeHtml(t.area_nome) : '—'}</td>
  <td>${t.projeto_titulo ? escapeHtml(t.projeto_titulo) : '—'}</td>
  <td>${vencida ? '<span style="color:var(--danger);"> ' : ''}${venc ? formatarData(venc) : '—'}</td>
- <td style="text-align:right;">
- <button data-id="${t.id}" data-v="${t.versao}" data-acao="editar">Editar</button>
- ${t.status !== 'CONCLUIDA' ? `<button data-id="${t.id}" data-v="${t.versao}" data-acao="concluir" class="success"></button>` : ''}
- ${t.status !== 'CANCELADA' && t.status !== 'ARQUIVADA' ? `<button data-id="${t.id}" data-v="${t.versao}" data-acao="adiar"></button><button data-id="${t.id}" data-v="${t.versao}" data-acao="cancelar" class="danger"></button>` : ''}
- ${t.status !== 'ARQUIVADA' ? `<button data-id="${t.id}" data-v="${t.versao}" data-acao="arquivar"></button>` : ''}
+ <td style="text-align:right; white-space:nowrap;">
+ <button data-id="${t.id}" data-v="${t.versao}" data-acao="editar" title="Editar">✎</button>
+ ${t.status !== 'CONCLUIDA' ? `<button data-id="${t.id}" data-v="${t.versao}" data-acao="concluir" class="success" title="Marcar como concluída">✓</button>` : ''}
+ ${t.status !== 'CANCELADA' && t.status !== 'ARQUIVADA' ? `<button data-id="${t.id}" data-v="${t.versao}" data-acao="adiar" title="Adiar vencimento">⏰</button><button data-id="${t.id}" data-v="${t.versao}" data-acao="cancelar" class="danger" title="Cancelar tarefa">✕</button>` : ''}
+ ${t.status !== 'ARQUIVADA' ? `<button data-id="${t.id}" data-v="${t.versao}" data-acao="arquivar" title="Arquivar">📦</button>` : ''}
+ <button data-id="${t.id}" data-v="${t.versao}" data-acao="excluir" class="danger" title="Excluir permanentemente">🗑</button>
  </td>
  </tr>`;
 }

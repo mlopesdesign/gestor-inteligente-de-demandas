@@ -170,6 +170,43 @@ E:\Projetos\LOPES FOCUS\
 │       ├── icon.ico
 │       └── icon.png
 │
+├── wp-api/                                     ← NOVO 2026-08-17: plugin WP da API REST
+│   ├── AGENTS.md                                ← governança do plugin WP
+│   ├── README.md
+│   └── gestor-api/                              ← slug do plugin = nome da pasta
+│       ├── gestor-api.php                       ← bootstrap + activation hook
+│       ├── uninstall.php
+│       ├── includes/
+│       │   ├── rest/                            ← controllers REST
+│       │   ├── auth/                            ← email+senha → token
+│       │   ├── db/                              ← schema + migrations
+│       │   └── sync/                            ← pull/push incremental
+│       ├── tests/                               ← PHPUnit contra WP test framework
+│       ├── docs/
+│       └── languages/
+│
+├── android-app/                                ← NOVO 2026-08-17: app Android (Kotlin+Compose)
+│   ├── AGENTS.md                                ← governança do app
+│   ├── README.md
+│   ├── build.gradle.kts
+│   ├── settings.gradle.kts
+│   ├── gradle.properties
+│   ├── gradle/wrapper/                          ← gradle-wrapper.jar + properties
+│   ├── docs/                                    ← MANUAL-ANDROID + GUIA-API
+│   └── app/
+│       ├── build.gradle.kts
+│       ├── proguard-rules.pro
+│       └── src/
+│           ├── main/
+│           │   ├── AndroidManifest.xml
+│           │   ├── java/com/mlopes/gestor/
+│           │   │   ├── data/                    ← Retrofit + Room + Repositories
+│           │   │   ├── domain/                  ← Models + UseCases
+│           │   │   ├── ui/                      ← Compose screens (auth, tarefas, projetos, clientes, áreas)
+│           │   │   └── di/                      ← Hilt modules
+│           │   └── res/                         ← Material 3 theme + icons
+│           └── test/                            ← JUnit + MockK
+│
 ├── tools/
 │   ├── setup-env.ps1                           ← carrega PATH do Node + Neutralino + NSIS
 │   ├── build.mjs                               ← neu build + empacota
@@ -229,5 +266,66 @@ Será mantido em `docs/HISTORICO-VERSOES.md` no formato do padrão — causa rai
 
 ---
 
-*ML Lopes Design · Marcio · mlopesdesign@gmail.com*
+## 9. Projetos irmãos (wp-api + android-app) — iniciado em 2026-08-17
+
+A partir de 17/08/2026, o Marcio quer **conversar com o Gestor (desktop)** a partir de um app Android. A integração passa por uma **API REST central hospedada como plugin WordPress** no subdomínio dele (`tools.mlopesdesign.com.br`).
+
+### 9.1 REGRA DE FERRO — NÃO MEXER NO GESTOR v0.2.22
+
+> **Marcio mandou "NÃO MEXA EM MAIS NADA AGORA" depois da v0.2.22 estar funcional.**
+> Qualquer alteração no `src/`, `installer/`, `schema.sql`, `tools/`, ou `neutralino.config.json` do Gestor desktop **SÓ com ordem explícita dele por escrito neste chat**.
+>
+> Fases de sync (que mexem no Gestor) ficam **bloqueadas** até liberação.
+
+### 9.2 Os 2 novos projetos
+
+| Projeto | Diretório | Stack | Agente responsável | Status |
+|---|---|---|---|---|
+| **Plugin WP da API** | `wp-api/` | PHP 8.x + WordPress 6.x + WP REST API + MySQL | `wp-architect` | Aguardando briefing detalhado |
+| **App Android** | `android-app/` | Kotlin + Jetpack Compose + Material 3 + Room (offline) + Retrofit + Hilt | `coder` | Aguardando briefing detalhado (DEPOIS da API estar pronta) |
+
+### 9.3 Domínio e URL
+
+- **Subdomínio da API**: `https://tools.mlopesdesign.com.br/wp-json/gestor/v1/...` (em construção, mas pode ser usado)
+- **Banco**: MySQL do WP, tabelas custom `wp_gestor_*` (espelho do `schema.sql` do Gestor)
+- **Auth**: email + senha (mesma base de `usuarios` do Gestor, validada no plugin) → token de sessão com validade 30 dias
+
+### 9.4 Princípios dos 2 projetos novos (somam aos do PADRÃO)
+
+1. **Custo zero absoluto.** Sem Play Store, sem certificado pago, sem hospedagem premium, sem Firebase, sem Supabase. Self-hosted no VPS do Marcio, banco MySQL já existente no WP.
+2. **Compatibilidade com o `schema.sql` do Gestor.** Cada tabela do MySQL do WP é espelho 1:1 do `schema.sql` (campos, tipos, defaults). O `wp_architect` lê `schema.sql` antes de criar as migrations.
+3. **CRUD bidirecional (Gestor ↔ WP ↔ Android).** Toda entidade tem `created_at`, `updated_at`, `deleted_at` (soft-delete) e ULID como ID (igual ao Gestor). Sync pull = `WHERE updated_at > since`. Sync push = batch de mutações locais.
+4. **Offline-first no Android.** Room guarda snapshot local; se rede cair, mutations ficam numa fila `pending_ops` e sobem no próximo push.
+5. **REST segue a convenção do `docs/03-CONTRATOS-API.md`.** Mesmo schema JSON que o Gestor já consome via `core/sync.js`.
+6. **Plugin WP no padrão TUDO PREMIUM do `wp-architect`.** Slug = nome da pasta, `register_activation_hook` com try/catch, sanitização em todo input, escape em todo output, nonce em toda mutation.
+7. **App Android no padrão TUDO PREMIUM do `coder`.** Kotlin idiomático, sem `!!`, sem `runBlocking` em produção, Hilt pra DI, Compose pra UI, testes JUnit + MockK antes de qualquer entrega.
+
+### 9.5 Fases de execução (ordem)
+
+| Fase | Entrega | Bloqueio |
+|---|---|---|
+| **F1** | Plugin WP completo: schema MySQL, REST endpoints, auth, sync, PHPUnit | — |
+| **F2** | App Android: esqueleto Android Studio, telas Compose, Retrofit+Room, login, CRUD básico | Depende de F1 |
+| **F3** | Sync bidirecional no Gestor desktop (v0.2.23+) | **BLOQUEADO** até Marcio liberar |
+| **F4** | Validação end-to-end (cria tarefa no Android → aparece no WP admin) | Depende de F2 |
+| **F5** | Docs: `MANUAL-ANDROID.md`/`.pdf` + `GUIA-API.md`/`.pdf` | Depende de F4 |
+
+### 9.6 Comandos rápidos dos 2 projetos
+
+```powershell
+# Plugin WP
+cd E:\Projetos\LOPES FOCUS\wp-api
+# (zipar) zip -r gestor-api.zip gestor-api/ -x "*.git*"
+# (instalar no WP) cp gestor-api.zip /var/www/tools.mlopesdesign.com.br/wp-content/plugins/ && unzip -o ...; ativa no admin WP
+
+# App Android
+cd E:\Projetos\LOPES FOCUS\android-app
+# (build) gradle wrapper + ./gradlew assembleDebug
+# (instalar no emulador/dispositivo) ./gradlew installDebug
+```
+
+---
+
+*ML Lopes Design · Marcio · mlopesdesign@gmail.com · mlopesdesign.com.br · tools.mlopesdesign.com.br*
 *Gerado em 14/08/2026 — refeito em 14/08/2026 22:25 BRT após reprovação da entrega em Java. Stack agora: JavaScript + Neutralino + sql.js + WebView2 + NSIS.*
+**Atualizado em 17/08/2026 — adicionados projetos irmãos `wp-api/` (plugin WP) e `android-app/` (Kotlin+Compose). REGRA DE FERRO §9.1: NÃO MEXER NO GESTOR v0.2.22 até Marcio liberar.**

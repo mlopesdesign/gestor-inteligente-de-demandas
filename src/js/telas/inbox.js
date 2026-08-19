@@ -27,7 +27,7 @@ export async function renderInbox() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.9');
+ document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
  });
@@ -63,7 +63,7 @@ async function carregar() {
  <span class="titulo">${escapeHtml(t.titulo)}</span>
  <button data-id="${t.id}" data-v="${t.versao}" data-acao="concluir"> Concluir</button>
  <button data-id="${t.id}" data-v="${t.versao}" data-acao="organizar">Organizar</button>
- <button data-id="${t.id}" data-v="${t.versao}" data-acao="excluir" class="danger"></button>
+ <button data-id="${t.id}" data-v="${t.versao}" data-acao="arquivar" class="ghost" title="Arquivar tarefa">📦 Arquivar</button>
  </li>`).join('') + '</ul>';
 
  el.querySelectorAll('[data-acao]').forEach(btn => {
@@ -107,9 +107,8 @@ async function carregar() {
  if (r2.ok) { toast({ tipo: 'sucesso', titulo: 'Organizada' }); carregar(); }
  else { toast({ tipo: 'erro', titulo: 'Erro', corpo: r2.erro?.mensagem || 'erro' }); }
  }
- } else if (ac === 'excluir') {
- // "excluir" aqui é arquivar (tarefa da inbox)
- if (confirm('Arquivar?')) { await window.api('tarefas:arquivar', { id, versao: v }); carregar(); }
+ } else if (ac === 'arquivar') {
+ if (confirm('Arquivar esta tarefa? (pode ser recuperada depois em Tarefas > Arquivadas)')) { await window.api('tarefas:arquivar', { id, versao: v }); carregar(); }
  }
  };
  });

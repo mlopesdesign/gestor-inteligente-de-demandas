@@ -35,7 +35,7 @@ export async function renderConfig(opts = {}) {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.11');
+ document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
  });
@@ -117,7 +117,7 @@ async function carregar() {
  <div class="card">
  <h3>Atualização do sistema</h3>
  <p style="margin:6px 0 12px;">
- Versão instalada: <strong id="atualizacao-versao">v${escapeHtml(window.__appVersion || document.querySelector('meta[name="app-version"]')?.content || '0.2.10')}</strong>
+ Versão instalada: <strong id="atualizacao-versao">v${escapeHtml(window.__appVersion || document.querySelector('meta[name="app-version"]')?.content || '0.2.23')}</strong>
  <span id="atualizacao-status" class="atualizacao-status ok" style="margin-left:8px;"><span class="dot"></span>—</span>
  </p>
  <p style="color:var(--fg-3); font-size:12px; margin-bottom:12px;">As atualizações são baixadas do GitHub e aplicadas automaticamente — sem reinstalar o sistema.</p>
