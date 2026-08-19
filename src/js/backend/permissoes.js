@@ -55,6 +55,9 @@ export const PERM_ROTA = {
   'recorrencias:tick':    'COBRANCA',
 
   // sync
+  'sync:login':           'SYNC',
+  'sync:logout':          'SYNC',
+  'sync:executar':        'SYNC',
   'sync:push':            'SYNC',
   'sync:pull':            'SYNC',
   'sync:conflitos':       'SYNC',

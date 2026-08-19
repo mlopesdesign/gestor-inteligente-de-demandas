@@ -13,7 +13,7 @@ let _releasesErro = null;
 
 export async function renderConfig(opts = {}) {
  // FIX v0.2.11: permite deep link via ?aba=atualizacao ou via sessionStorage
- if (opts.aba && ['geral','atualizacao','backup'].includes(opts.aba)) {
+ if (opts.aba && ['geral','atualizacao','backup','sync'].includes(opts.aba)) {
  _abaAtiva = opts.aba;
  } else {
  try {
@@ -50,6 +50,7 @@ async function carregar() {
  document.getElementById('config-content').innerHTML = `
  <nav class="tabs-bar" id="tabs-bar" role="tablist">
  <button data-aba="geral" class="${_abaAtiva==='geral'?'ativa':''}" role="tab">Geral</button>
+ <button data-aba="sync" class="${_abaAtiva==='sync'?'ativa':''}" role="tab">Sincronização</button>
  <button data-aba="backup" class="${_abaAtiva==='backup'?'ativa':''}" role="tab">Backup</button>
  <button data-aba="atualizacao" class="${_abaAtiva==='atualizacao'?'ativa':''}" role="tab">Atualização</button>
  </nav>
@@ -271,6 +272,7 @@ async function carregar() {
  const btnBackupManual = document.getElementById('btn-backup-manual');
  if (btnBackupManual) btnBackupManual.onclick = () => fazerBackupManual();
  salvarConfigBackupAuto();
+ await carregarSyncStatus();
 
  // Auto-verifica ao entrar na aba se nunca checou
  if (_abaAtiva === 'atualizacao') {
@@ -542,3 +544,106 @@ function salvarConfigBackupAuto() {
  };
 }
 
+
+
+// ============================================================================
+// Sync na nuvem (v0.2.24)
+// ============================================================================
+
+async function carregarSyncStatus() {
+ const area = document.getElementById('sync-status-area');
+ if (!area) return;
+ area.innerHTML = '<div class="sync-status">carregando...</div>';
+ const r = await window.api('sync:status');
+ if (!r.ok) { area.innerHTML = '<p style="color:var(--danger);">Erro: ' + escapeHtml(r.erro?.mensagem || '') + '</p>'; return; }
+ const d = r.dados;
+ area.innerHTML = `
+ <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin:8px 0 14px;">
+ <div><span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${d.conectado ? 'var(--success)' : 'var(--danger)'};"></span> ${d.conectado ? 'Conectado' : 'Desconectado'}</div>
+ <div style="color:var(--fg-3); font-size:12px;">URL: <code>${escapeHtml(d.wp_url || '\u2014')}</code></div>
+ </div>
+ ${d.conectado ? `
+ <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:10px; color:var(--fg-3); font-size:12px;">
+ <div>Email: <strong>${escapeHtml(d.email || '\u2014')}</strong></div>
+ <div>Dispositivo: <code>${escapeHtml((d.dispositivo_id || '\u2014').slice(0, 24))}</code></div>
+ <div>\u00daltimo sync: ${d.ultimo_sync ? escapeHtml(fmtDataHoraCurta(d.ultimo_sync)) : '\u2014'}</div>
+ <div>Mudan\u00e7as pendentes: <strong>${d.mudancas_pendentes || 0}</strong></div>
+ <div>Conflitos: <strong>${d.conflitos_pendentes || 0}</strong></div>
+ </div>
+ <div style="display:flex; gap:8px; flex-wrap:wrap;">
+ <button id="btn-sync-executar" class="primary">Sincronizar agora</button>
+ <button id="btn-sync-logout">Desconectar</button>
+ </div>
+ ` : `
+ <form id="form-sync-login" style="display:flex; flex-direction:column; gap:8px; max-width:340px;">
+ <p style="color:var(--fg-3); font-size:12px; margin:0;">Use as mesmas credenciais do app Android.</p>
+ <div class="campo"><label>E-mail</label><input type="email" name="email" required></div>
+ <div class="campo"><label>Senha</label><input type="password" name="senha" required></div>
+ <div class="acoes"><button type="submit" class="primary">Entrar</button></div>
+ <div id="sync-login-erro" style="color:var(--danger); font-size:12px;"></div>
+ </form>
+ `}
+ `;
+ if (d.conectado) {
+ const btnExec = document.getElementById('btn-sync-executar');
+ if (btnExec) btnExec.onclick = () => executarSync();
+ const btnOut = document.getElementById('btn-sync-logout');
+ if (btnOut) btnOut.onclick = () => desconectarSync();
+ } else {
+ const form = document.getElementById('form-sync-login');
+ if (form) {
+ form.onsubmit = async (e) => {
+ e.preventDefault();
+ const dados = Object.fromEntries(new FormData(e.target).entries());
+ const erroEl = document.getElementById('sync-login-erro');
+ erroEl.textContent = '';
+ const btn = e.target.querySelector('button[type=submit]');
+ btn.disabled = true; btn.textContent = 'Entrando...';
+ try {
+ const r2 = await window.api('sync:login', dados);
+ if (r2.ok) {
+ toast({ tipo: 'sucesso', titulo: 'Conectado', corpo: 'Sincroniza\u00e7\u00e3o habilitada.' });
+ await carregarSyncStatus();
+ } else {
+ erroEl.textContent = r2.erro?.mensagem || 'Falha no login.';
+ btn.disabled = false; btn.textContent = 'Entrar';
+ }
+ } catch (err) {
+ erroEl.textContent = err.message || 'erro';
+ btn.disabled = false; btn.textContent = 'Entrar';
+ }
+ };
+ }
+ }
+}
+
+async function executarSync() {
+ const slot = document.getElementById('sync-resultado');
+ const btn = document.getElementById('btn-sync-executar');
+ if (btn) { btn.disabled = true; btn.textContent = 'Sincronizando...'; }
+ if (slot) slot.innerHTML = '<p style="color:var(--fg-3); font-size:12px;">Puxando e enviando mudan\u00e7as...</p>';
+ try {
+ const r = await window.api('sync:executar');
+ if (r.ok) {
+ const d = r.dados;
+ const erros = (d.erros && d.erros.length) ? ' Erros: ' + escapeHtml(d.erros.join('; ')) : '';
+ if (slot) slot.innerHTML = '<p style="color:var(--success); font-size:13px;">OK: ' + (d.aplicadas||0) + ' enviadas, ' + (d.recebidas||0) + ' recebidas, ' + (d.conflitos||0) + ' conflitos.' + erros + '</p>';
+ toast({ tipo: 'sucesso', titulo: 'Sincronizado', corpo: (d.aplicadas||0) + ' enviadas, ' + (d.recebidas||0) + ' recebidas' });
+ } else {
+ if (slot) slot.innerHTML = '<p style="color:var(--danger); font-size:13px;">Erro: ' + escapeHtml(r.erro?.mensagem || '') + '</p>';
+ toast({ tipo: 'erro', titulo: 'Falha no sync', corpo: r.erro?.mensagem || '' });
+ }
+ } catch (e) {
+ if (slot) slot.innerHTML = '<p style="color:var(--danger); font-size:13px;">Erro: ' + escapeHtml(e.message) + '</p>';
+ } finally {
+ if (btn) { btn.disabled = false; btn.textContent = 'Sincronizar agora'; }
+ await carregarSyncStatus();
+ }
+}
+
+async function desconectarSync() {
+ if (!confirm('Desconectar do Gestor na nuvem?\n\nSeus dados continuam no desktop. Voc\u00ea pode reconectar a qualquer momento.')) return;
+ await window.api('sync:logout');
+ toast({ tipo: 'aviso', titulo: 'Desconectado' });
+ await carregarSyncStatus();
+}

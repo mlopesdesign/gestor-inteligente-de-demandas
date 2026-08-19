@@ -15,7 +15,8 @@ import * as recorrenciasCore from './core/recorrencias.js';
 import * as configCore from './core/config.js';
 import * as buscaCore from './core/busca.js';
 import * as backupCore from './core/backup.js';
-import { clientes as clientesStub, projetos as projetosStub, recorrencias as recorrenciasStub, sync as syncCore, ia as iaCore } from './core/stubs.js';
+import { clientes as clientesStub, projetos as projetosStub, recorrencias as recorrenciasStub, ia as iaCore } from './core/stubs.js';
+import * as syncCore from './core/sync.js';
 
 export const servidor = {
   async processar(canal, payload = {}, sessaoAlvo) {
@@ -77,7 +78,10 @@ export const servidor = {
         case 'cobranca:config':      return cobrancasCore.config(db, payload, s);
         case 'recorrencias:tick':    return recorrenciasCore.tick(db, payload, s);
 
-        // sync (stub)
+        // sync (v0.2.24: implementado)
+        case 'sync:login':           return syncCore.login(db, payload, s);
+        case 'sync:logout':          return syncCore.logout(db, payload, s);
+        case 'sync:executar':        return syncCore.executar(db, payload, s);
         case 'sync:push':            return syncCore.push(db, payload, s);
         case 'sync:pull':            return syncCore.pull(db, payload, s);
         case 'sync:conflitos':       return syncCore.listarConflitos(db, payload, s);

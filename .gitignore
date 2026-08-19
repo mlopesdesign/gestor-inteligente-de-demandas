@@ -88,3 +88,8 @@ docs/app-print-v0.1.1-14-criada-conta.png
 installer/*.bak.*
 installer/*.exe
 installer/GestorInteligenteDeDemandas-Setup-*.exe
+
+# Projetos irmaos (AGENTS §9.2): sao repos Git separados (gestor-android, gestor-api)
+# clonados localmente para desenvolvimento. NAO incluir no repo do Gestor desktop.
+android-app/
+wp-api/
