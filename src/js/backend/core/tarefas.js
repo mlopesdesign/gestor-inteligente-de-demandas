@@ -207,6 +207,20 @@ export function toggleSubtarefa(db, payload, sessao) {
   return { ok: true, dados: { id } };
 }
 
+// v0.2.25: exclusao de subtarefa individual
+export function excluirSubtarefa(db, payload, sessao) {
+  if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
+  const { id } = payload;
+  if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
+  const r = db.exec(
+    `DELETE FROM subtarefas WHERE id=? AND tarefa_id IN (SELECT id FROM tarefas WHERE usuario_id=?)`,
+    [id, sessao.usuario_id]
+  );
+  if (!r.ok) return r;
+  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'NAO_ENCONTRADO', mensagem: 'subtarefa nao encontrada' } };
+  return { ok: true, dados: { id } };
+}
+
 
 // FIX v0.2.18: exclusao real da tarefa (era só "concluir" antes)
 export function excluir(db, payload, sessao) {

@@ -57,16 +57,28 @@ async function carregar() {
  const el = document.getElementById('inbox-lista');
  if (!r.ok) { el.innerHTML = '<p class="vazia">Erro: ' + escapeHtml(r.erro?.mensagem || '') + '</p>'; return; }
  if (r.dados.length === 0) { el.innerHTML = '<p class="vazia">Caixa vazia. Digite algo acima e clique Capturar.</p>'; return; }
- el.innerHTML = '<ul class="lista">' + r.dados.map(t => `
+ el.innerHTML = `
+ <div class="bulk-bar" style="display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.08); flex-wrap:wrap; margin-bottom:6px;">
+ <label style="display:flex; align-items:center; gap:4px; font-size:12px;">
+ <input type="checkbox" id="bulk-todos"> <b>Selecionar todos</b>
+ </label>
+ <span id="bulk-contador" style="color:var(--fg-3); font-size:12px;">0 selecionados</span>
+ <span style="flex:1;"></span>
+ <button id="bulk-arquivar" class="ghost" disabled>📦 Arquivar</button>
+ <button id="bulk-excluir" class="danger" disabled>🗑 Excluir</button>
+ </div>
+ <ul class="lista">` + r.dados.map(t => `
  <li>
+ <input type="checkbox" class="sel-item" data-id="${t.id}" data-v="${t.versao}">
  <span class="pill prioridade-${t.prioridade}">${t.prioridade}</span>
  <span class="titulo">${escapeHtml(t.titulo)}</span>
  <button data-id="${t.id}" data-v="${t.versao}" data-acao="concluir"> Concluir</button>
  <button data-id="${t.id}" data-v="${t.versao}" data-acao="organizar">Organizar</button>
- <button data-id="${t.id}" data-v="${t.versao}" data-acao="arquivar" class="ghost" title="Arquivar tarefa">📦 Arquivar</button>
+ <button data-id="${t.id}" data-v="${t.versao}" data-acao="arquivar" class="ghost" title="Arquivar tarefa">📦</button>
+ <button data-id="${t.id}" data-v="${t.versao}" data-acao="excluir" class="danger" title="Excluir permanentemente">Excluir</button>
  </li>`).join('') + '</ul>';
 
- el.querySelectorAll('[data-acao]').forEach(btn => {
+ el.querySelectorAll('button[data-acao]').forEach(btn => {
  btn.onclick = async () => {
  const id = btn.dataset.id, v = Number(btn.dataset.v), ac = btn.dataset.acao;
  if (ac === 'concluir') {
@@ -109,7 +121,62 @@ async function carregar() {
  }
  } else if (ac === 'arquivar') {
  if (confirm('Arquivar esta tarefa? (pode ser recuperada depois em Tarefas > Arquivadas)')) { await window.api('tarefas:arquivar', { id, versao: v }); carregar(); }
+ } else if (ac === 'excluir') {
+ if (confirm('Excluir esta tarefa PERMANENTEMENTE? Esta acao nao pode ser desfeita.')) {
+ const r = await window.api('tarefas:excluir', { id, versao: v });
+ if (!r.ok) { toast({ tipo: 'erro', titulo: 'Erro', corpo: r.erro?.mensagem || 'erro' }); return; }
+ toast({ tipo: 'sucesso', titulo: 'Excluída' });
+ carregar();
+ }
  }
  };
  });
+ // Bulk select
+ const cbs = () => Array.from(el.querySelectorAll('.sel-item'));
+ const cont = () => el.querySelector('#bulk-contador');
+ const btnEx = () => el.querySelector('#bulk-excluir');
+ const btnArq = () => el.querySelector('#bulk-arquivar');
+ const cbTodos = el.querySelector('#bulk-todos');
+ const atualizar = () => {
+ const m = cbs().filter(c => c.checked);
+ const total = cbs().length;
+ cont().textContent = `${m.length} de ${total} selecionados`;
+ btnEx().disabled = m.length === 0;
+ btnArq().disabled = m.length === 0;
+ cbTodos.checked = m.length === total && total > 0;
+ cbTodos.indeterminate = m.length > 0 && m.length < total;
+ };
+ cbs().forEach(c => { c.onchange = atualizar; });
+ cbTodos.onchange = () => {
+ const alvo = cbTodos.checked;
+ cbs().forEach(c => { c.checked = alvo; });
+ atualizar();
+ };
+ btnEx().onclick = async () => {
+ const m = cbs().filter(c => c.checked);
+ if (m.length === 0) return;
+ if (!confirm(`Excluir ${m.length} tarefa(s) PERMANENTEMENTE? Esta acao nao pode ser desfeita.`)) return;
+ btnEx().disabled = true; btnArq().disabled = true;
+ let ok = 0, falha = 0;
+ for (const c of m) {
+ const r = await window.api('tarefas:excluir', { id: c.dataset.id, versao: Number(c.dataset.v) });
+ if (r.ok) ok++; else falha++;
+ }
+ toast({ tipo: falha ? 'erro' : 'sucesso', titulo: `Exclusão em massa`, corpo: `${ok} excluída(s), ${falha} falha(s)` });
+ carregar();
+ };
+ btnArq().onclick = async () => {
+ const m = cbs().filter(c => c.checked);
+ if (m.length === 0) return;
+ if (!confirm(`Arquivar ${m.length} tarefa(s)?`)) return;
+ btnEx().disabled = true; btnArq().disabled = true;
+ let ok = 0, falha = 0;
+ for (const c of m) {
+ const r = await window.api('tarefas:arquivar', { id: c.dataset.id, versao: Number(c.dataset.v) });
+ if (r.ok) ok++; else falha++;
+ }
+ toast({ tipo: falha ? 'erro' : 'sucesso', titulo: `Arquivamento em massa`, corpo: `${ok} arquivada(s), ${falha} falha(s)` });
+ carregar();
+ };
+ atualizar();
 }

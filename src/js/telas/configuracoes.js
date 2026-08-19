@@ -443,7 +443,16 @@ async function carregarHistoricoBackups() {
  host.innerHTML = '<div class="release-vazia">Nenhum backup ainda. Use o botão "Fazer backup agora" à esquerda.</div>';
  return;
  }
- host.innerHTML = r.dados.map(b => {
+ // v0.2.25: bulk bar + checkbox por item
+ const bar = `<div class="bulk-bar" style="display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.08); flex-wrap:wrap; margin-bottom:6px;">
+ <label style="display:flex; align-items:center; gap:4px; font-size:12px;">
+ <input type="checkbox" id="bulk-todos"> <b>Selecionar todos</b>
+ </label>
+ <span id="bulk-contador" style="color:var(--fg-3); font-size:12px;">0 selecionados</span>
+ <span style="flex:1;"></span>
+ <button id="bulk-excluir" class="danger" disabled>🗑 Excluir selecionados</button>
+ </div>`;
+ host.innerHTML = bar + r.dados.map(b => {
  const data = fmtDataHoraCurta(b.criado_em);
  const tam = fmtTamanho(b.tamanho_real || b.tamanho_bytes);
  const origem = b.origem === 'auto' ? 'auto' : (b.origem === 'pre-update' ? 'pre-restore' : 'manual');
@@ -452,7 +461,8 @@ async function carregarHistoricoBackups() {
  const faltando = b.arquivo_existe ? '' : ' <span style="color:var(--danger);">[arquivo faltando]</span>';
  return `
  <div class="release-item" data-id="${escapeHtml(b.id)}">
- <div class="release-cabecalho">
+ <div class="release-cabecalho" style="display:flex; align-items:center; gap:8px;">
+ <input type="checkbox" class="sel-item" data-id="${escapeHtml(b.id)}" style="flex:0;">
  <span class="release-versao">v${data.replace(/[/: ]/g, '').slice(0,8)}</span>
  <span class="release-titulo">${origem} · ${tam}${obs}${status}${faltando}</span>
  <span class="release-data">${escapeHtml(data.split(' ')[0])}</span>
@@ -468,7 +478,9 @@ async function carregarHistoricoBackups() {
  `;
  }).join('');
  host.querySelectorAll('.release-item').forEach(item => {
- item.onclick = () => {
+ // Click no item nao mexe no checkbox (deixa o user marcar sem querer ativar)
+ item.onclick = (ev) => {
+ if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'BUTTON') return;
  const estava = item.classList.contains('ativa');
  host.querySelectorAll('.release-item').forEach(x => x.classList.remove('ativa'));
  if (!estava) item.classList.add('ativa');
@@ -480,6 +492,35 @@ async function carregarHistoricoBackups() {
  host.querySelectorAll('.backup-excluir').forEach(btn => {
  btn.onclick = (e) => { e.stopPropagation(); excluirBackup(btn.dataset.id); };
  });
+ // Bulk select
+ const cbs = () => Array.from(host.querySelectorAll('.sel-item'));
+ const cont = () => host.querySelector('#bulk-contador');
+ const btnEx = () => host.querySelector('#bulk-excluir');
+ const cbTodos = host.querySelector('#bulk-todos');
+ const atualizar = () => {
+ const m = cbs().filter(c => c.checked);
+ const total = cbs().length;
+ cont().textContent = `${m.length} de ${total} selecionados`;
+ btnEx().disabled = m.length === 0;
+ cbTodos.checked = m.length === total && total > 0;
+ cbTodos.indeterminate = m.length > 0 && m.length < total;
+ };
+ cbs().forEach(c => { c.onchange = atualizar; });
+ cbTodos.onchange = () => { const alvo = cbTodos.checked; cbs().forEach(c => { c.checked = alvo; }); atualizar(); };
+ btnEx().onclick = async () => {
+ const m = cbs().filter(c => c.checked);
+ if (m.length === 0) return;
+ if (!confirm(`Excluir ${m.length} backup(s)? O(s) arquivo(s) sera(o) removido(s) do disco.`)) return;
+ btnEx().disabled = true;
+ let ok = 0, falha = 0;
+ for (const c of m) {
+ const r = await window.api('backup:excluir', { id: c.dataset.id });
+ if (r.ok) ok++; else falha++;
+ }
+ toast({ tipo: falha ? 'erro' : 'sucesso', titulo: 'Exclusão em massa', corpo: `${ok} excluído(s), ${falha} falha(s)` });
+ carregarHistoricoBackups();
+ };
+ atualizar();
 }
 
 async function fazerBackupManual() {

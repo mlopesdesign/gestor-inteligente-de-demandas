@@ -148,8 +148,8 @@ function renderLinha(t) {
  <span style="color:var(--fg-3); font-size:11px;">${vencida ? '<span style="color:var(--danger);">atrasada: </span>' : ''}${venc ? formatarVenc(venc) : 'sem data'}</span>
  <span style="display:flex; gap:4px;">
  <button data-id="${t.id}" data-v="${t.versao}" data-acao="editar">Editar</button>
- ${t.status !== 'CONCLUIDA' ? `<button data-id="${t.id}" data-v="${t.versao}" data-acao="concluir" class="success">Concluir</button>
-  <button data-id="${t.id}" data-v="${t.versao}" data-acao="excluir" class="danger" title="Excluir permanentemente">Excluir</button>` : ''}
+ ${t.status !== 'CONCLUIDA' ? `<button data-id="${t.id}" data-v="${t.versao}" data-acao="concluir" class="success">Concluir</button>` : ''}
+ <button data-id="${t.id}" data-v="${t.versao}" data-acao="excluir" class="danger" title="Excluir permanentemente">Excluir</button>
  </span>
  </li>`;
 }

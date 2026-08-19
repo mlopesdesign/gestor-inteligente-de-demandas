@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.22",
-  "notes": "v0.2.22 - FIX icone dos atalhos: o atalho do Gestor Inteligente de Demandas na Area de Trabalho e no Menu Iniciar estava com icone GENERICO do Windows (pagina com imagem) em vez da lampada MLOPES DEV. Causa: o installer/resources/icon.ico nao estava sendo copiado pro app-image, e o IconFilename do .iss apontava pro .exe (que tem icone generico do Neutralino). Agora: build.mjs copia o icon.ico pro dist, e o IconFilename aponta direto pro {app}\icon.ico.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.22/resources.neu",
-  "sha256": "B4C4FB0ECB6F9CD3B1B8C16AAFB15CE3F497FB0793FD8E4854B7A3123BAF9E18",
-  "size": 7254260
+  "version": "0.2.25",
+  "notes": "v0.2.25 - Excluir em TUDO + Bulk select + UI de subtarefas. 1) Botao Excluir onde faltava: Inbox, Busca global (4 tipos), modal de Tarefa, e em tarefas concluidas no Hoje. 2) UI de Subtarefas (nova) no modal: lista + adicionar (Enter) + toggle concluido + excluir. Modal atualiza in-place, NAO fecha+reabre (nunca trava em erro de inclusao). 3) Bulk select com Selecionar/Desmarcar + tri-state + contador 'N de M' + Excluir/Arquivar em massa em Tarefas, Inbox e Backup. 4) Backend novo: tarefas:excluirSubtarefa (DELETE direto, RLS). 5) Testes: 17/17 verde em test-tarefas (era 8).",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.25/resources.neu",
+  "sha256": "BE610F7C9332CBB8068091E733F2FEF66AF4DB509726CF34E15C97E58C6FB8C3",
+  "size": 7260671
 }

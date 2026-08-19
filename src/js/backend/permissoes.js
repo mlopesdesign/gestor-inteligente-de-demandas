@@ -24,6 +24,7 @@ export const PERM_ROTA = {
   'tarefas:excluir':      'TAREFAS',
   'tarefas:adicionarSubtarefa': 'TAREFAS',
   'tarefas:toggleSubtarefa':    'TAREFAS',
+  'tarefas:excluirSubtarefa':   'TAREFAS',
 
   // areas
   'areas:listar':         'AREAS',

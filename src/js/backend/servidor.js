@@ -48,6 +48,7 @@ export const servidor = {
         case 'tarefas:excluir':            return tarefasCore.excluir(db, payload, s);
         case 'tarefas:adicionarSubtarefa': return tarefasCore.adicionarSubtarefa(db, payload, s);
         case 'tarefas:toggleSubtarefa':    return tarefasCore.toggleSubtarefa(db, payload, s);
+        case 'tarefas:excluirSubtarefa':   return tarefasCore.excluirSubtarefa(db, payload, s);
 
         // areas
         case 'areas:listar':         return areasCore.listar(db, payload, s);
