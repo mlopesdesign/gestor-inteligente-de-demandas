@@ -4,6 +4,31 @@
 
 ---
 
+## v0.2.39 — 2026-08-20 — FIX login de sincronização mentia (2 dias quebrado)
+
+**Causa raiz:** `writeState` em `src/js/backend/core/sync.js:65-75` codificava o JSON em `Uint8Array` (`new TextEncoder().encode(...)`) e passava pra `Neutralino.filesystem.writeFile(path, data)`. Em Neutralino.js v6.3.0, esse padrão **grava 0 bytes silenciosamente** — mesmo bug que `db.js` teve em v0.2.10 com o SQLite (corrigido com certutil). O `try/catch` interno engolia a exceção, o `login()` retornava `ok: true`, o toast "Conectado" aparecia, e o `readState` seguinte não achava o arquivo → caía no `emptyState()` → UI renderizava "Desconectado" + bolinha vermelha. **Prova cruzada**: o arquivo `test-write.txt` (10 bytes, escrito com `writeFile(path, string)`) ESTAVA no disco. Nenhum `sync_state.json` foi criado em 2 dias. String funciona, Uint8Array não.
+
+**Correção (3 mudanças em `sync.js`):**
+1. `writeState` agora grava string UTF-8 direta (que `writeFile` aceita confiavelmente) em vez de `Uint8Array`. Cria o diretório `dados/` defensivamente antes (`createDirectory(dir).catch(()=>{})`).
+2. `readState` usa `readBinaryFile` + `TextDecoder` (binário cru, sem decodificação UTF-8 implícita) com fallback pra `readFile` se `readBinaryFile` não existir.
+3. `writeState` não engole mais exceções — o throw escapa. `login()` tem gate `if (!reloaded.wp_token) return erro` que falha explicitamente em vez de mentir com `ok: true`.
+
+**Validação esperada:** após clicar Entrar uma vez, `Test-Path 'C:\Users\mlope\AppData\Roaming\GestorInteligenteDeDemandas\dados\sync_state.json'` deve retornar `True` com o token gravado dentro. A aba Sincronização deve mostrar "Conectado" + bolinha verde **e continuar assim depois de fechar/reabrir o app**.
+
+**Lição operacional:** `Neutralino.filesystem.writeFile` é estritamente para TEXTO (string UTF-8). Para binário use `writeBinaryFile(path, Uint8Array)` que faz base64 internamente. **NUNCA** passe `Uint8Array` pra `writeFile` — em v6.3.0 grava 0 bytes silencioso. O `try/catch` que engole a exceção no writeState é a maior armadilha: o login "funciona" do ponto de vista do chamador, mas o estado nunca persiste. Adicionar defesa no caller (gate `if (!reloaded.X)`) é obrigatório — try/catch interno é placebo. Mesmo padrão do `db.js` v0.2.10, repetido 2 anos depois. **Regra nova**: o `bump-version.mjs` v2 sincroniza 6 lugares (config, package, app.js, index.html, nsi, update.json) mas NÃO toca `User-Agent` nem `app_versao` em `sync.js` — sempre conferir e ajustar manualmente antes de commitar.
+
+---
+
+## v0.2.37 — 2026-08-20 — FIX auto-update só substituía .neu (src/ ficava desatualizado)
+
+**Causa raiz:** `aplicarAtualizacao` em `src/js/app.js:593-680` sobrescrevia só `resources.neu` no disco. Mas Neutralino serve `src/` do disco (config `documentRoot: '/'` + `url: '/src/index.html'`), então o `src/` instalado ficava desatualizado até o usuário reinstalar via `INSTALAR-AGORA.exe`. Bug adicional: o `src/index.html` tinha `<meta name="app-version" content="0.2.25">` (meta tag desatualizada) — `app.js:121-123` lia meta PRIMEIRO, então o header mostrava "v0.2.25" mesmo rodando 0.2.36.
+
+**Correção:** `aplicarAtualizacao` agora extrai `src/` de dentro do `resources.neu` (formato ASAR-like: 4 bytes magic + 3 ints LE + JSON header + arquivos concatenados) e sobrescreve `src/` no disco via `execCommand` PowerShell. Meta tag `app-version` corrigida pra versão atual.
+
+**Lição:** auto-update DEVE atualizar `src/` junto com o `.neu`. O .neu é o source-of-truth do instalador; o src/ é o que o Neutralino serve em runtime. Esquecer do src/ = app fica inconsistente até reinstalar. **Regra nova**: `bump-version.mjs` DEVE atualizar `src/index.html` (meta tag) além de config/package/app.js — a meta tag é a fonte da verdade da versão mostrada pro usuário.
+
+---
+
 ## v0.2.36 — 2026-08-20 — FIX F3 (sync bidirecional)
 
 **Causa raiz:** `enviarPush` em `src/js/backend/core/sync.js` usava `st.ultimo_pull_id` como cursor do PUSH. Mas `ultimo_pull_id` é o cursor do PULL (último id de mudança recebida do servidor), não do PUSH. Resultado: qualquer pull com id alto (ex: 50) fazia o push ignorar mudanças locais com id menor que 50, mesmo nunca tendo sido enviadas.

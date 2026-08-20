@@ -97,10 +97,16 @@ wp-api/
 # Higiene 2026-08-20: instaladores antigos migrados pra obsoleto, auditoria local
 # e backup de dados do usuario. NAO versionar.
 installer/.obsoleto/
+tools/.obsoleto/
 tools/_audit-*.md
 tools/_backup-*/
 _backup-dados-app-*/
 _install-*.log
 /INSTALAR-AGORA.exe
 /INSTALAR-AGORA.neu
+
+# Higiene 2026-08-20 v0.2.39: lixeira tecnica de scripts de debug de build
+# (nao fazem parte do produto; foram usados pra inspecionar o .neu e o release).
+tests/.obsoleto/
+tests/_check-neu.py
 

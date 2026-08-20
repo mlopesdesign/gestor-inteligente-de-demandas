@@ -53,8 +53,14 @@ async function readState() {
   if (NO_APP) return emptyState();
   try {
     const Neutralino = window.Neutralino;
-    if (!Neutralino?.filesystem?.readFile) return emptyState();
-    const data = await Neutralino.filesystem.readFile(statePath());
+    if (!Neutralino?.filesystem?.readBinaryFile && !Neutralino?.filesystem?.readFile) return emptyState();
+    const p = statePath();
+    // readBinaryFile retorna Uint8Array; readFile retorna string. Caminho simetrico
+    // com writeState abaixo (que grava string). Usar readBinaryFile + TextDecoder e'
+    // mais robusto (sempre devolve bytes RAW, sem decodificacao UTF-8 implicita).
+    const data = Neutralino.filesystem.readBinaryFile
+      ? await Neutralino.filesystem.readBinaryFile(p)
+      : new TextEncoder().encode(await Neutralino.filesystem.readFile(p));
     const txt = new TextDecoder().decode(data);
     return { ...emptyState(), ...JSON.parse(txt) };
   } catch (_) {
@@ -64,14 +70,17 @@ async function readState() {
 
 async function writeState(s) {
   if (NO_APP) return;
-  try {
-    const Neutralino = window.Neutralino;
-    if (!Neutralino?.filesystem?.writeFile) return;
-    const data = new TextEncoder().encode(JSON.stringify(s, null, 2));
-    await Neutralino.filesystem.writeFile(statePath(), data);
-  } catch (e) {
-    console.error('[sync] writeState falhou:', e);
-  }
+  const Neutralino = window.Neutralino;
+  if (!Neutralino?.filesystem?.writeFile) return;
+  // FIX v0.2.39: gravar como STRING (nao Uint8Array). Em Neutralino 6.3.0,
+  // writeFile/writeBinaryFile com Uint8Array gravam 0 bytes silenciosamente
+  // (mesmo bug do db.js v0.2.10 — ver db.js:184-189). String UTF-8 funciona
+  // confiavelmente; como o JSON e' ASCII puro, nao ha perda.
+  // DEIXA o throw escapar — o caller (login) precisa saber se persistiu.
+  const json = JSON.stringify(s, null, 2);
+  const dir = statePath().substring(0, statePath().lastIndexOf('\\'));
+  try { await Neutralino.filesystem.createDirectory(dir).catch(() => {}); } catch (_) { /* pasta pode ja existir */ }
+  await Neutralino.filesystem.writeFile(statePath(), json);
 }
 
 function emptyState() {
@@ -115,7 +124,7 @@ async function wpFetch(method, path, body, token) {
   const headers = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    'User-Agent': 'GestorDesktop/0.2.34',
+    'User-Agent': 'GestorDesktop/0.2.39',
   };
   if (token) headers['Authorization'] = 'Bearer ' + token;
   const opts = { method, headers };
@@ -155,18 +164,22 @@ export async function login(db, p, s) {
   if (!p?.email || !p?.senha) return { ok: false, erro: { codigo: 'CREDENCIAIS_AUSENTES', mensagem: 'E-mail e senha obrigatorios.' } };
   if (NO_APP) return { ok: false, erro: { codigo: 'OFFLINE', mensagem: 'Recurso disponivel apenas no app.' } };
 
+  console.log('[sync:login] start email=' + p.email);
   const r = await wpFetch('POST', '/auth/login', {
     email: p.email,
     senha: p.senha,
     dispositivo_id: '', // backend WP gera se vazio
     sistema: 'DESKTOP',
-    app_versao: '0.2.34',
+    app_versao: '0.2.39',
   }, null);
+  console.log('[sync:login] wpFetch r.ok=' + r.ok + ' status=' + r.status + ' success=' + !!r.json?.success);
   if (!r.ok || !r.json?.success) {
     return { ok: false, erro: { codigo: 'LOGIN_FALHOU', mensagem: r.json?.data?.message || r.json?.message || ('HTTP ' + r.status) } };
   }
   const data = r.json.data;
+  console.log('[sync:login] data.token=' + (data?.token ? data.token.substring(0,12) + '...' : 'null') + ' data.usuario.id=' + data?.usuario?.id);
   const st = await readState();
+  console.log('[sync:login] readState st.wp_token (antes)=' + (st.wp_token ? st.wp_token.substring(0,12) + '...' : 'null'));
   st.wp_token = data.token;
   st.wp_email = p.email;
   st.wp_usuario_id = data.usuario?.id || null;
@@ -175,7 +188,23 @@ export async function login(db, p, s) {
   if (!st.wp_dispositivo_id) st.wp_dispositivo_id = newDispositivoId();
   // Garante cursor inicializado
   if (typeof st.ultimo_pull_id !== 'number') st.ultimo_pull_id = 0;
-  await writeState(st);
+  if (typeof st.ultimo_push_id !== 'number') st.ultimo_push_id = 0;
+  console.log('[sync:login] writeState statePath=' + statePath());
+  try {
+    await writeState(st);
+    console.log('[sync:login] writeState OK');
+  } catch (e) {
+    console.error('[sync:login] writeState ERRO:', e);
+    return { ok: false, erro: { codigo: 'SYNC_STATE_NAO_PERSISTIU', mensagem: 'Token obtido mas o estado local nao pode ser gravado. Tente novamente.' } };
+  }
+  // FIX v0.2.39: reler o state DEPOIS de escrever e FALHAR se nao persistiu.
+  // Antes logava e descartava — ai o toast "Conectado" aparecia sem
+  // ter salvado de verdade. Agora: se o reloaded nao tem token, retorna erro.
+  const reloaded = await readState();
+  console.log('[sync:login] readState st.wp_token (depois)=' + (reloaded.wp_token ? reloaded.wp_token.substring(0,12) + '...' : 'null'));
+  if (!reloaded.wp_token) {
+    return { ok: false, erro: { codigo: 'SYNC_STATE_NAO_PERSISTIU', mensagem: 'Estado local nao persistiu apos o login. Tente novamente.' } };
+  }
   return { ok: true, dados: { email: p.email, expira_em: st.wp_expira_em, dispositivo_id: st.wp_dispositivo_id } };
 }
 

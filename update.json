@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.37",
-  "notes": "v0.2.37 - FIX 3 BUGS CRITICOS. (1) index.html tinha app-version=0.2.35 mesmo rodando 0.2.36 (meta tag desatualizada pelo bump), fazia app mostrar 'v0.2.35' no header. (2) FIX auto-update: aplicarAtualizacao agora extrai src/ de dentro do resources.neu e sobrescreve no disco (antes so substituia o .neu, entao src/ ficava desatualizado ate reinstalar via INSTALAR-AGORA.exe). (3) FIX aba Sincronizacao: renderConfig em configuracoes.js tinha 3 divs tab-painel mas FALTAVA tab-sync, mostrava 'Aguardando autorizacao' hardcoded.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.37/resources.neu",
-  "sha256": "104595C90C1DC2A26DE217E9C925575E00F0F036575CD456B4CFFE9F0240B973",
-  "size": 6315543
+  "version": "0.2.39",
+  "notes": "v0.2.39 - FIX BUG CRITICO DE LOGIN. writeState em sync.js usava Neutralino.filesystem.writeFile com Uint8Array que falha silenciosamente em v6.3.0 (mesmo bug que db.js teve em v0.2.10 com SQLite). Resultado: sync_state.json nunca era criado, login mostrava toast 'Conectado' mas tela voltava para 'Desconectado' na proxima renderizacao. FIX: writeState agora grava string UTF-8 direta (que o writeFile aceita confiavel) e cria a pasta se nao existir. readState tambem ficou tolerante a string OU Uint8Array.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.39/resources.neu",
+  "sha256": "10A277CD25BAAA71D18AF83453083C0F52066A03B212D93FB9B5B6241012BBD3",
+  "size": 6317986
 }
