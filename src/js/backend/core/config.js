@@ -57,7 +57,7 @@ export function atualizar(db, payload, sessao) {
     if (ck.ok && ck.dados.length > 0) {
       db.exec(`UPDATE cobranca_config SET silenciar_fora_horario = ? WHERE usuario_id = ?`, [silenciar_fora_horario ? 1 : 0, sessao.usuario_id]);
     } else {
-      db.exec(`INSERT INTO cobranca_config(usuario_id, silenciar_fora_horario, politicas_json, versao) VALUES(?,?, '{}', 1)`, [sessao.usuario_id, silenciar_fora_horario ? 1 : 0]);
+      db.exec(`INSERT INTO cobranca_config(usuario_id, silenciar_fora_horario, politicas_json, versão) VALUES(?,?, '{}', 1)`, [sessao.usuario_id, silenciar_fora_horario ? 1 : 0]);
     }
   }
   return obter(db, {}, sessao);
@@ -66,7 +66,7 @@ export function atualizar(db, payload, sessao) {
 export function exportar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
   const tabelas = ['usuarios','areas','clientes','projetos','tarefas','recorrencias_ocorrencias','lembretes','cobranca_config','auditoria'];
-  const out = { exportado_em: new Date().toISOString(), versao_export: '1.0', dados: {} };
+  const out = { exportado_em: new Date().toISOString(), versão_export: '1.0', dados: {} };
   for (const t of tabelas) {
     const r = db.exec(`SELECT * FROM ${t} WHERE usuario_id = ?`, [sessao.usuario_id]);
     if (r.ok) out.dados[t] = r.dados;
@@ -87,7 +87,7 @@ export function apagar(db, payload, sessao) {
   // Auditoria: insere registro de "conta_apagada" e depois apaga o usuario
   try {
     db.exec(
-      `INSERT INTO conta_apagada(id, usuario_id, email, nome, apagada_em, motivo, versao) VALUES(?,?,?,?,?,?,1)`,
+      `INSERT INTO conta_apagada(id, usuario_id, email, nome, apagada_em, motivo, versão) VALUES(?,?,?,?,?,?,1)`,
       [UlidFactory.next(), sessao.usuario_id, sessao.email || '', sessao.nome || '', agora, payload?.motivo || 'usuario solicitou']
     );
   } catch (_) {}

@@ -529,7 +529,7 @@ a:hover { text-decoration: underline; }
     gap: 8px;
     flex-wrap: wrap;
 }
-.releases-lista .release-item .release-versao {
+.releases-lista .release-item .release-versão {
     color: var(--cor-marca);
     font-weight: 700;
     font-size: 14px;
@@ -589,19 +589,19 @@ a:hover { text-decoration: underline; }
 .atualizacao-status.erro { background: rgba(198, 40, 40, 0.15); color: var(--danger); }
 .atualizacao-status .dot { width: 6px; height: 6px; }
 
-.atualizacao-novaversao {
+.atualizacao-novaversão {
     border-left: 4px solid var(--cor-marca);
     background: var(--bg-3);
     padding: 14px 16px;
     border-radius: 0 var(--radius) var(--radius) 0;
     margin-top: 12px;
 }
-.atualizacao-novaversao .novaversao-titulo {
+.atualizacao-novaversão .novaversão-titulo {
     color: var(--cor-marca);
     font-weight: 600;
     margin-bottom: 6px;
 }
-.atualizacao-novaversao .novaversao-notes {
+.atualizacao-novaversão .novaversão-notes {
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -614,12 +614,12 @@ a:hover { text-decoration: underline; }
     white-space: pre-wrap;
     color: var(--fg-2);
 }
-.atualizacao-novaversao .novaversao-meta {
+.atualizacao-novaversão .novaversão-meta {
     font-size: 11px;
     color: var(--fg-3);
     margin: 6px 0;
 }
-.atualizacao-novaversao .novaversao-acoes {
+.atualizacao-novaversão .novaversão-acoes {
     display: flex;
     gap: 8px;
     margin-top: 8px;

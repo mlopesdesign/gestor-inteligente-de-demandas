@@ -1,6 +1,6 @@
 // src/js/app.js â€” gateway api() e bootstrap da UI
-// Conforme PADRAO-ML-LOPES-DESIGN.md Â§3.3 (a porta Ãºnica).
-// A tela nÃ£o sabe se estÃ¡ rodando no app Neutralino ou num terminal em rede.
+// Conforme PADRAO-ML-LOPES-DESIGN.md §3.3 (a porta única).
+// A tela não sabe se está rodando no app Neutralino ou num terminal em rede.
 
 import { db } from './backend/db.js';
 import { servidor } from './backend/servidor.js';
@@ -42,11 +42,11 @@ function D(...args) {
 }
 
 // ---------------------------------------------------------------------------
-// api() â€” porta Ãºnica entre tela e regra (PADRAO Â§3.3)
+// api() â€” porta única entre tela e regra (PADRAO §3.3)
 // ---------------------------------------------------------------------------
 export async function api(canal, payload = {}) {
   if (!sessao.token) {
-    // Pega a sessÃ£o atual (se o servidor tem)
+    // Pega a sessão atual (se o servidor tem)
     try {
       const s = await servidor.processar('sessao:atual', {});
       if (s.ok) Object.assign(sessao, s.dados);
@@ -116,30 +116,30 @@ async function bootstrap() {
   // 2. Carrega identidade.
   // FIX v0.2.9: meta tag app-version no index.html e' a fonte da verdade. Mais confiavel
   // que NEUTRALINO_GLOBALS (pode estar com cache do runtime) ou localStorage (desatualizado).
-  let versao = null;
+  let versão = null;
   try {
     const meta = document.querySelector('meta[name="app-version"]');
-    if (meta && meta.content) versao = meta.content;
+    if (meta && meta.content) versão = meta.content;
   } catch (_) {}
-  if (!versao) versao = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version;
-  if (!versao) {
+  if (!versão) versão = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version;
+  if (!versão) {
     try {
       const cached = localStorage.getItem('__app_version');
-      if (cached) versao = cached;
+      if (cached) versão = cached;
     } catch (_) {}
   }
-  if (!versao) versao = '0.2.26';
-  try { localStorage.setItem('__app_version', versao); } catch (_) {}
-  const versaoSpan = document.getElementById('versao-app');
-  if (versaoSpan) versaoSpan.textContent = 'v' + versao;
-  document.querySelectorAll('.brand-sub').forEach(el => { el.textContent = 'v' + versao; });
-  window.__appVersion = versao;
+  if (!versão) versão = '0.2.27';
+  try { localStorage.setItem('__app_version', versão); } catch (_) {}
+  const versãoSpan = document.getElementById('versão-app');
+  if (versãoSpan) versãoSpan.textContent = 'v' + versão;
+  document.querySelectorAll('.brand-sub').forEach(el => { el.textContent = 'v' + versão; });
+  window.__appVersion = versão;
 
-  // 2.5. FIX v0.2.9: auto-atualiza neutralino.config.json no disco se a versao do .neu for maior
-  // que a versao do disco. O auto-update do Neutralino NAO atualiza o config (so o .neu), entao
+  // 2.5. FIX v0.2.9: auto-atualiza neutralino.config.json no disco se a versão do .neu for maior
+  // que a versão do disco. O auto-update do Neutralino NAO atualiza o config (so o .neu), entao
   // sem isso o cliente fica preso com o config antigo. Faz com timeout pq as chamadas
   // Neutralino.filesystem penduram por causa do bug do init().
-  if (NO_APP && window.Neutralino?.filesystem && versao) {
+  if (NO_APP && window.Neutralino?.filesystem && versão) {
     try {
       const discoPath = (window.__appData ? window.__appData + '\\GestorInteligenteDeDemandas\\neutralino.config.json' : null);
       let discoVersao = null;
@@ -158,8 +158,8 @@ async function bootstrap() {
           }
         } catch (_) {}
       }
-      D('[app] config disco:', discoVersao, 'config .neu:', versao);
-      if (discoVersao && compararVersao(versao, discoVersao) > 0) {
+      D('[app] config disco:', discoVersao, 'config .neu:', versão);
+      if (discoVersao && compararVersao(versão, discoVersao) > 0) {
         D('[app] config do disco esta atrasado, atualizando...');
         // Busca o config novo do .neu
         try {
@@ -181,7 +181,7 @@ async function bootstrap() {
                   window.Neutralino.filesystem.writeFile(discoPath, novoCfg),
                   new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000)),
                 ]);
-                D('[app] config do disco atualizado pra v' + versao);
+                D('[app] config do disco atualizado pra v' + versão);
                 toast({ tipo: 'sucesso', titulo: 'Atualizacao', corpo: 'Configuracao atualizada. O app vai reiniciar.' });
                 setTimeout(() => {
                   try { window.Neutralino?.app?.exit?.(); } catch (_) {}
@@ -200,7 +200,7 @@ async function bootstrap() {
     }
   }
 
-  // 3. Tenta restaurar sessÃ£o (com timeout: o WebSocket pode nao estar pronto ainda)
+  // 3. Tenta restaurar sessão (com timeout: o WebSocket pode nao estar pronto ainda)
   // Primeiro: checa sessao gravada em localStorage ("Lembrar senha").
   // FIX v0.2.8: mesmo que tenha token no localStorage, valida via sessao:atual
   // (o token pode estar expirado ou a conta pode ter sido recadastrada depois).
@@ -314,7 +314,7 @@ const ROTAS = {
   clientes: { titulo: 'Clientes',         render: () => import('./telas/clientes.js').then(m => m.renderClientes()) },
   areas:    { titulo: 'Ãreas',             render: () => import('./telas/areas.js').then(m => m.renderAreas()) },
   busca:    { titulo: 'Buscar',            render: () => import('./telas/busca.js').then(m => m.renderBusca()) },
-  config:   { titulo: 'ConfiguraÃ§Ãµes',     render: () => import('./telas/configuracoes.js').then(m => m.renderConfig()) },
+  config:   { titulo: 'Configurações',     render: () => import('./telas/configuracoes.js').then(m => m.renderConfig()) },
 };
 
 export function irPara(nome, opts = {}) {
@@ -390,7 +390,7 @@ function renderLogin() {
           ${salvo ? '<button id="btn-sair-gravado" class="login-sair">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
         </div>
 
-        <div class="login-rodape">v${window.__appVersion || '0.2.26'}</div>
+        <div class="login-rodape">v${window.__appVersion || '0.2.27'}</div>
       </div>
     </div>
   `;
@@ -458,14 +458,14 @@ export async function verificarAtualizacao({ silencioso = true } = {}) {
   try {
     const r = await fetch(UPDATE_URL, { cache: 'no-store' });
     if (!r.ok) {
-      if (!silencioso) toast({ tipo: 'erro', titulo: 'AtualizaÃ§Ã£o', corpo: 'NÃ£o consegui verificar (' + r.status + ')' });
+      if (!silencioso) toast({ tipo: 'erro', titulo: 'Atualização', corpo: 'Não consegui verificar (' + r.status + ')' });
       return null;
     }
     const info = await r.json();
     if (!info.version) return null;
-    // FIX v0.2.9: pega a versao instalada de varias fontes. NEUTRALINO_GLOBALS
+    // FIX v0.2.9: pega a versão instalada de varias fontes. NEUTRALINO_GLOBALS
     // nao tem .neutralinoConfig populado (vendor nao popula), entao o fallback
-    // era 0.0.0 e SEMPRE mostrava "tem versao nova" mesmo ja estando na ultima.
+    // era 0.0.0 e SEMPRE mostrava "tem versão nova" mesmo ja estando na ultima.
     let atual = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version;
     if (!atual) atual = window.__appVersion;
     if (!atual) {
@@ -478,15 +478,15 @@ export async function verificarAtualizacao({ silencioso = true } = {}) {
     const cmp = compararVersao(info.version, atual);
     D('[update] info.version=' + info.version + ' atual=' + atual + ' cmp=' + cmp);
     if (cmp <= 0) {
-      D('[update] mesma versao, NAO mostra toast');
-      if (!silencioso) toast({ tipo: 'info', titulo: 'AtualizaÃ§Ã£o', corpo: 'VocÃª jÃ¡ estÃ¡ na versÃ£o mais recente (' + atual + ')' });
+      D('[update] mesma versão, NAO mostra toast');
+      if (!silencioso) toast({ tipo: 'info', titulo: 'Atualização', corpo: 'VocÃª já está na versão mais recente (' + atual + ')' });
       return null;
     }
-    // Nova versao disponivel!
+    // Nova versão disponivel!
     D('[update] NOVA VERSAO, mostra toast');
     return info;
   } catch (e) {
-    if (!silencioso) toast({ tipo: 'erro', titulo: 'AtualizaÃ§Ã£o', corpo: 'Erro: ' + e.message });
+    if (!silencioso) toast({ tipo: 'erro', titulo: 'Atualização', corpo: 'Erro: ' + e.message });
     return null;
   }
 }
@@ -575,7 +575,7 @@ export function mostrarAvisoAtualizacao(info) {
   const el = tpl.content.firstElementChild.cloneNode(true);
   el.classList.add('info', 'atualizacao');
   el.innerHTML = `
-    <div class="titulo">Nova versÃ£o disponÃ­vel: v${info.version}</div>
+    <div class="titulo">Nova versão disponível: v${info.version}</div>
     <div class="corpo">${(info.notes || '').substring(0, 200)}</div>
     <div style="display:flex; gap:8px; margin-top:8px;">
       <button class="btn-atualizar" style="flex:1; padding:6px 12px; background:var(--cor-marca); color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:600;">Atualizar agora</button>
@@ -614,7 +614,7 @@ bootstrap().catch(e => {
 setTimeout(async () => {
   const info = await verificarAtualizacao({ silencioso: true });
   if (info) {
-    D('[app] nova versao disponivel:', info.version);
+    D('[app] nova versão disponivel:', info.version);
     mostrarAvisoAtualizacao(info);
   }
   agendarVerificacaoAtualizacao();

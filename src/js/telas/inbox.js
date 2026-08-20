@@ -27,7 +27,7 @@ export async function renderInbox() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
+ document.getElementById('versão-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
  });
@@ -69,20 +69,20 @@ async function carregar() {
  </div>
  <ul class="lista">` + r.dados.map(t => `
  <li>
- <input type="checkbox" class="sel-item" data-id="${t.id}" data-v="${t.versao}">
+ <input type="checkbox" class="sel-item" data-id="${t.id}" data-v="${t.versão}">
  <span class="pill prioridade-${t.prioridade}">${t.prioridade}</span>
  <span class="titulo">${escapeHtml(t.titulo)}</span>
- <button data-id="${t.id}" data-v="${t.versao}" data-acao="concluir"> Concluir</button>
- <button data-id="${t.id}" data-v="${t.versao}" data-acao="organizar">Organizar</button>
- <button data-id="${t.id}" data-v="${t.versao}" data-acao="arquivar" class="ghost" title="Arquivar tarefa">📦</button>
- <button data-id="${t.id}" data-v="${t.versao}" data-acao="excluir" class="danger" title="Excluir permanentemente">Excluir</button>
+ <button data-id="${t.id}" data-v="${t.versão}" data-acao="concluir"> Concluir</button>
+ <button data-id="${t.id}" data-v="${t.versão}" data-acao="organizar">Organizar</button>
+ <button data-id="${t.id}" data-v="${t.versão}" data-acao="arquivar" class="ghost" title="Arquivar tarefa">📦</button>
+ <button data-id="${t.id}" data-v="${t.versão}" data-acao="excluir" class="danger" title="Excluir permanentemente">Excluir</button>
  </li>`).join('') + '</ul>';
 
  el.querySelectorAll('button[data-acao]').forEach(btn => {
  btn.onclick = async () => {
  const id = btn.dataset.id, v = Number(btn.dataset.v), ac = btn.dataset.acao;
  if (ac === 'concluir') {
- if (confirm('Concluir?')) { await window.api('tarefas:concluir', { id, versao: v }); carregar(); }
+ if (confirm('Concluir?')) { await window.api('tarefas:concluir', { id, versão: v }); carregar(); }
  } else if (ac === 'organizar') {
  const m = await modal({
  titulo: 'Organizar tarefa',
@@ -115,15 +115,15 @@ async function carregar() {
  if (!d.cliente_id) delete d.cliente_id;
  if (!d.vencimento_em) delete d.vencimento_em;
  d.status = 'PLANEJADA';
- const r2 = await window.api('tarefas:atualizar', { id, versao: v, ...d });
+ const r2 = await window.api('tarefas:atualizar', { id, versão: v, ...d });
  if (r2.ok) { toast({ tipo: 'sucesso', titulo: 'Organizada' }); carregar(); }
  else { toast({ tipo: 'erro', titulo: 'Erro', corpo: r2.erro?.mensagem || 'erro' }); }
  }
  } else if (ac === 'arquivar') {
- if (confirm('Arquivar esta tarefa? (pode ser recuperada depois em Tarefas > Arquivadas)')) { await window.api('tarefas:arquivar', { id, versao: v }); carregar(); }
+ if (confirm('Arquivar esta tarefa? (pode ser recuperada depois em Tarefas > Arquivadas)')) { await window.api('tarefas:arquivar', { id, versão: v }); carregar(); }
  } else if (ac === 'excluir') {
  if (confirm('Excluir esta tarefa PERMANENTEMENTE? Esta acao nao pode ser desfeita.')) {
- const r = await window.api('tarefas:excluir', { id, versao: v });
+ const r = await window.api('tarefas:excluir', { id, versão: v });
  if (!r.ok) { toast({ tipo: 'erro', titulo: 'Erro', corpo: r.erro?.mensagem || 'erro' }); return; }
  toast({ tipo: 'sucesso', titulo: 'Excluída' });
  carregar();
@@ -159,7 +159,7 @@ async function carregar() {
  btnEx().disabled = true; btnArq().disabled = true;
  let ok = 0, falha = 0;
  for (const c of m) {
- const r = await window.api('tarefas:excluir', { id: c.dataset.id, versao: Number(c.dataset.v) });
+ const r = await window.api('tarefas:excluir', { id: c.dataset.id, versão: Number(c.dataset.v) });
  if (r.ok) ok++; else falha++;
  }
  toast({ tipo: falha ? 'erro' : 'sucesso', titulo: `Exclusão em massa`, corpo: `${ok} excluída(s), ${falha} falha(s)` });
@@ -172,7 +172,7 @@ async function carregar() {
  btnEx().disabled = true; btnArq().disabled = true;
  let ok = 0, falha = 0;
  for (const c of m) {
- const r = await window.api('tarefas:arquivar', { id: c.dataset.id, versao: Number(c.dataset.v) });
+ const r = await window.api('tarefas:arquivar', { id: c.dataset.id, versão: Number(c.dataset.v) });
  if (r.ok) ok++; else falha++;
  }
  toast({ tipo: falha ? 'erro' : 'sucesso', titulo: `Arquivamento em massa`, corpo: `${ok} arquivada(s), ${falha} falha(s)` });

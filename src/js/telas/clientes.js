@@ -24,7 +24,7 @@ export async function renderClientes() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
+ document.getElementById('versão-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
  });
@@ -111,7 +111,7 @@ export function modalCliente(c, onClose) {
  if (!dados.telefone) delete dados.telefone;
  if (!dados.observacoes) delete dados.observacoes;
  let r;
- if (isEdit) { dados.id = t.id; dados.versao = t.versao; r = await window.api('clientes:atualizar', dados); }
+ if (isEdit) { dados.id = t.id; dados.versão = t.versão; r = await window.api('clientes:atualizar', dados); }
  else { r = await window.api('clientes:criar', dados); }
  if (r.ok) { host.remove(); if (onClose) onClose(); }
  else { alert(r.erro?.mensagem || 'erro'); }

@@ -35,7 +35,7 @@ export async function renderProjetos() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
+ document.getElementById('versão-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
  });
@@ -87,7 +87,7 @@ async function carregar() {
  window.irPara('tarefas');
  } else if (ac === 'excluir') {
  if (confirm('Excluir este projeto PERMANENTEMENTE? Esta acao nao pode ser desfeita.')) {
- const r = await window.api('projetos:excluir', { id, versao: v });
+ const r = await window.api('projetos:excluir', { id, versão: v });
  if (!r.ok) { alert(r.erro?.mensagem || 'erro'); return; }
  carregar();
  }
@@ -115,10 +115,10 @@ function cardProjeto(p) {
  ${p.tarefas_ativas || 0} tarefa(s) ativa(s) / ${p.tarefas_total || 0} total
  </div>
  <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">
- <button data-id="${p.id}" data-v="${p.versao}" data-acao="editar" title="Editar">✎</button>
- ${!p.arquivado && p.status !== 'CONCLUIDO' ? `<button data-id="${p.id}" data-v="${p.versao}" data-acao="concluir" class="success" title="Concluir projeto">✓</button>
-    <button data-id="${p.id}" data-v="${p.versao}" data-acao="excluir" class="danger" title="Excluir permanentemente">🗑</button>` : ''}
- ${!p.arquivado ? `<button data-id="${p.id}" data-v="${p.versao}" data-acao="arquivar" title="Arquivar">📦</button>` : ''}
+ <button data-id="${p.id}" data-v="${p.versão}" data-acao="editar" title="Editar">✎</button>
+ ${!p.arquivado && p.status !== 'CONCLUIDO' ? `<button data-id="${p.id}" data-v="${p.versão}" data-acao="concluir" class="success" title="Concluir projeto">✓</button>
+    <button data-id="${p.id}" data-v="${p.versão}" data-acao="excluir" class="danger" title="Excluir permanentemente">🗑</button>` : ''}
+ ${!p.arquivado ? `<button data-id="${p.id}" data-v="${p.versão}" data-acao="arquivar" title="Arquivar">📦</button>` : ''}
  <button data-id="${p.id}" data-acao="tarefas" title="Ver tarefas deste projeto">Tarefas</button>
  </div>
  </div>`;
@@ -176,7 +176,7 @@ export function modalProjeto(p, cache, onClose) {
  if (!dados.inicio_em) delete dados.inicio_em;
  if (!dados.fim_em) delete dados.fim_em;
  let r;
- if (isEdit) { dados.id = t.id; dados.versao = t.versao; r = await window.api('projetos:atualizar', dados); }
+ if (isEdit) { dados.id = t.id; dados.versão = t.versão; r = await window.api('projetos:atualizar', dados); }
  else { r = await window.api('projetos:criar', dados); }
  if (r.ok) { host.remove(); if (onClose) onClose(); }
  else { alert(r.erro?.mensagem || 'erro'); }

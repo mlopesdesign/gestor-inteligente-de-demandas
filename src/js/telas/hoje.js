@@ -21,7 +21,7 @@ export async function renderHoje() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
+ document.getElementById('versão-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
  document.getElementById('data-hoje').textContent = formatarHoje();
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
@@ -118,10 +118,10 @@ function renderBuckets(tarefas) {
  el.querySelectorAll('[data-acao]').forEach(b => {
  b.onclick = async () => {
  const id = b.dataset.id, v = Number(b.dataset.v), ac = b.dataset.acao;
- if (ac === 'concluir') { if (confirm('Concluir esta tarefa?')) { await window.api('tarefas:concluir', { id, versao: v }); carregar(); } }
+ if (ac === 'concluir') { if (confirm('Concluir esta tarefa?')) { await window.api('tarefas:concluir', { id, versão: v }); carregar(); } }
  else if (ac === 'excluir') {
     if (confirm('Excluir esta tarefa? Esta ação não pode ser desfeita.')) {
-      const r = await window.api('tarefas:excluir', { id, versao: v });
+      const r = await window.api('tarefas:excluir', { id, versão: v });
       if (!r.ok) { alert(r.erro?.mensagem || 'erro'); return; }
       carregar();
     }
@@ -147,9 +147,9 @@ function renderLinha(t) {
  <span style="color:var(--fg-3); font-size:11px;">${t.area_nome ? escapeHtml(t.area_nome) : ''}</span>
  <span style="color:var(--fg-3); font-size:11px;">${vencida ? '<span style="color:var(--danger);">atrasada: </span>' : ''}${venc ? formatarVenc(venc) : 'sem data'}</span>
  <span style="display:flex; gap:4px;">
- <button data-id="${t.id}" data-v="${t.versao}" data-acao="editar">Editar</button>
- ${t.status !== 'CONCLUIDA' ? `<button data-id="${t.id}" data-v="${t.versao}" data-acao="concluir" class="success">Concluir</button>` : ''}
- <button data-id="${t.id}" data-v="${t.versao}" data-acao="excluir" class="danger" title="Excluir permanentemente">Excluir</button>
+ <button data-id="${t.id}" data-v="${t.versão}" data-acao="editar">Editar</button>
+ ${t.status !== 'CONCLUIDA' ? `<button data-id="${t.id}" data-v="${t.versão}" data-acao="concluir" class="success">Concluir</button>` : ''}
+ <button data-id="${t.id}" data-v="${t.versão}" data-acao="excluir" class="danger" title="Excluir permanentemente">Excluir</button>
  </span>
  </li>`;
 }

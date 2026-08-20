@@ -8,7 +8,7 @@ export function listar(db, payload, sessao) {
   const busca = (payload?.busca || '').trim();
   // FIX v0.2.10: schema novo: clientes tem `status` ('ATIVO'/'INATIVO'/'ARQUIVADO'),
   // `contatos_json` (texto JSON com {email, telefone, ...}) em vez de colunas email/telefone/arquivado_em.
-  let sql = `SELECT c.id, c.nome, c.organizacao, c.contatos_json, c.observacoes, c.status, c.criado_em, c.atualizado_em, c.versao,
+  let sql = `SELECT c.id, c.nome, c.organizacao, c.contatos_json, c.observacoes, c.status, c.criado_em, c.atualizado_em, c.versão,
                     (SELECT COUNT(*) FROM tarefas t WHERE t.cliente_id = c.id AND t.status NOT IN ('CONCLUIDA','CANCELADA','ARQUIVADA')) AS tarefas_ativas,
                     (SELECT COUNT(*) FROM projetos p WHERE p.cliente_id = c.id AND p.status <> 'ARQUIVADO') AS projetos_ativos,
                     CASE WHEN c.status = 'ARQUIVADO' THEN 1 ELSE 0 END AS arquivado
@@ -66,7 +66,7 @@ export function criar(db, payload, sessao) {
     telefone: telefone ? String(telefone).trim().slice(0,40) : '',
   });
   const r = db.exec(
-    `INSERT INTO clientes(id, usuario_id, dono_id, nome, organizacao, contatos_json, observacoes, status, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,?,?,?,1)`,
+    `INSERT INTO clientes(id, usuario_id, dono_id, nome, organizacao, contatos_json, observacoes, status, criado_em, atualizado_em, versão) VALUES(?,?,?,?,?,?,?,?,?,?,1)`,
     [id, sessao.usuario_id, sessao.usuario_id, String(nome).trim().slice(0,120),
      organizacao ? String(organizacao).trim().slice(0,120) : null,
      contatos,
@@ -81,7 +81,7 @@ export function criar(db, payload, sessao) {
 
 export function atualizar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
-  const { id, versao, nome, organizacao, email, telefone, observacoes, status } = payload;
+  const { id, versão, nome, organizacao, email, telefone, observacoes, status } = payload;
   if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
   const sets = [];
   const vals = [];
@@ -102,14 +102,14 @@ export function atualizar(db, payload, sessao) {
   }
   if (sets.length === 0) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'nenhum campo para atualizar' } };
   sets.push('atualizado_em=?'); vals.push(new Date().toISOString());
-  sets.push('versao=versao+1');
-  vals.push(id, sessao.usuario_id, versao || 0);
+  sets.push('versão=versão+1');
+  vals.push(id, sessao.usuario_id, versão || 0);
   const r = db.exec(
-    `UPDATE clientes SET ${sets.join(', ')} WHERE id = ? AND usuario_id = ? AND versao = ?`,
+    `UPDATE clientes SET ${sets.join(', ')} WHERE id = ? AND usuario_id = ? AND versão = ?`,
     vals
   );
   if (!r.ok) return r;
-  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'cliente nao encontrado ou versao desatualizada' } };
+  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'cliente nao encontrado ou versão desatualizada' } };
   auditar(db, sessao, 'clientes', id, 'atualizado', { campos: sets });
   return { ok: true, dados: { id } };
 }
@@ -120,7 +120,7 @@ export function arquivar(db, payload, sessao) {
   if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
   // FIX v0.2.10: schema novo usa `status='ARQUIVADO'`
   const r = db.exec(
-    `UPDATE clientes SET status = 'ARQUIVADO', atualizado_em = ?, versao = versao + 1 WHERE id = ? AND usuario_id = ?`,
+    `UPDATE clientes SET status = 'ARQUIVADO', atualizado_em = ?, versão = versão + 1 WHERE id = ? AND usuario_id = ?`,
     [new Date().toISOString(), id, sessao.usuario_id]
   );
   if (!r.ok) return r;

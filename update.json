@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.26",
-  "notes": "v0.2.26 - HOTFIX: Aba Sincronizacao agora aparece (estava vazia). O menu de abas mostrava 4 (Geral, Sincronizacao, Backup, Atualizacao) mas faltava o painel HTML do sync (introduzido na v0.2.24 mas com bug). Sem isso, nao dava pra logar no plugin WP do app e fazer sync com a nuvem.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.26/resources.neu",
-  "sha256": "8CDB8706468DB67BD88D9A27570936E413EA71012B408999628702156FBF0900",
-  "size": 7260375
+  "version": "0.2.27",
+  "notes": "v0.2.27 - HOTFIX CRITICO: encoding UTF-8 double-encoded. Strings acentuadas (Sincronizacao, Configuracoes, etc) estavam aparecendo como 'SincronizaÃ§Ã£o' no app. Causa: edit tool gravou UTF-8 bytes que uma camada no meio interpretou como Latin-1, e re-gravou em UTF-8. Fix: script Python que decodifica uma camada Latin-1 e regrava UTF-8 (405 substituicoes em 28 arquivos). + Aba Sincronizacao que faltava (do v0.2.26).",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.27/resources.neu",
+  "sha256": "AB6700C6F355795F7CFFCD2E2509A47D4876BA7B33AD0F93F55547EF7846E4B3",
+  "size": 7260331
 }

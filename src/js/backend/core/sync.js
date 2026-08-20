@@ -22,22 +22,22 @@ const TABELAS_SYNC = {
     colunasSync: ['id','titulo','descricao','status','prioridade','nivel_cobranca',
       'area_id','projeto_id','cliente_id','inicio_em','vencimento_em',
       'duracao_estimada_min','duracao_realizada_min','etiquetas_json',
-      'responsavel','origem','concluida_em','entregue_em','criada_em','atualizada_em','versao'],
+      'responsavel','origem','concluida_em','entregue_em','criada_em','atualizada_em','versão'],
   },
   clientes: {
     colunaId: 'id',
     colunasSync: ['id','nome','documento','email','telefone','endereco_json',
-      'observacoes','arquivado','criado_em','atualizado_em','versao'],
+      'observacoes','arquivado','criado_em','atualizado_em','versão'],
   },
   projetos: {
     colunaId: 'id',
     colunasSync: ['id','nome','descricao','cliente_id','area_id','cor',
       'status','inicio_em','fim_previsto_em','concluido_em','arquivado',
-      'criado_em','atualizado_em','versao'],
+      'criado_em','atualizado_em','versão'],
   },
   areas: {
     colunaId: 'id',
-    colunasSync: ['id','nome','cor','descricao','criada_em','atualizada_em','versao'],
+    colunasSync: ['id','nome','cor','descricao','criada_em','atualizada_em','versão'],
   },
 };
 
@@ -109,7 +109,7 @@ async function wpFetch(method, path, body, token) {
   const headers = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    'User-Agent': 'GestorDesktop/0.2.26',
+    'User-Agent': 'GestorDesktop/0.2.27',
   };
   if (token) headers['Authorization'] = 'Bearer ' + token;
   const opts = { method, headers };
@@ -154,7 +154,7 @@ export async function login(db, p, s) {
     senha: p.senha,
     dispositivo_id: '', // backend WP gera se vazio
     sistema: 'DESKTOP',
-    app_versao: '0.2.26',
+    app_versão: '0.2.27',
   }, null);
   if (!r.ok || !r.json?.success) {
     return { ok: false, erro: { codigo: 'LOGIN_FALHOU', mensagem: r.json?.data?.message || r.json?.message || ('HTTP ' + r.status) } };
@@ -231,7 +231,7 @@ export async function pull(db, p, s) {
 export async function listarConflitos(db, p, s) {
   if (!s.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
   const r = db.exec(
-    `SELECT id, tabela, registro_id, versao_servidor, versao_cliente_a, dispositivo_a_id,
+    `SELECT id, tabela, registro_id, versão_servidor, versão_cliente_a, dispositivo_a_id,
             estado, criado_em FROM sync_conflitos WHERE usuario_id = ? AND estado = 'PENDENTE' ORDER BY criado_em DESC LIMIT 200`,
     [s.usuario_id]
   );
@@ -257,7 +257,7 @@ export async function resolver(db, p, s) {
 async function enviarPush(db, st, s) {
   // Coleta mudancas locais pendentes da sync_mudancas
   const r = db.exec(
-    `SELECT id, tabela, operacao, registro_id, versao, payload_json
+    `SELECT id, tabela, operacao, registro_id, versão, payload_json
      FROM sync_mudancas
      WHERE usuario_id = ? AND id > ?
      ORDER BY id ASC LIMIT 200`,
@@ -267,15 +267,15 @@ async function enviarPush(db, st, s) {
   if (r.dados.length === 0) return { ok: true, dados: { aplicadas: 0, conflitos: 0 } };
 
   const mutacoes = r.dados.map(row => {
-    // r = [id, tabela, operacao, registro_id, versao, payload_json]
-    const [mid, tabela, operacao, registroId, versao, payloadJson] = row;
+    // r = [id, tabela, operacao, registro_id, versão, payload_json]
+    const [mid, tabela, operacao, registroId, versão, payloadJson] = row;
     let payload = {};
     try { payload = JSON.parse(payloadJson); } catch (_) {}
     return {
       tabela: String(tabela),
       operacao: String(operacao),
       registro_id: String(registroId),
-      versao: Number(versao),
+      versão: Number(versão),
       payload,
     };
   });
@@ -354,7 +354,7 @@ async function receberPull(db, st, s) {
 
 /**
  * Aplica 1 mudanca do servidor no SQLite local.
- * Formato esperado: { id, tabela, operacao: 'UPSERT'|'DELETE', payload: {...}, versao }
+ * Formato esperado: { id, tabela, operacao: 'UPSERT'|'DELETE', payload: {...}, versão }
  */
 function aplicarMudanca(db, m, s) {
   const tabela = m.tabela || m.entity;
@@ -421,12 +421,12 @@ function countConflitos(db, s) {
  * Registra uma mudanca local na sync_mudancas para ser enviada no proximo push.
  * Outros core (tarefas, clientes, etc) devem chamar isto em suas operacoes de escrita.
  */
-export function enfileirarMudanca(db, sessao, tabela, operacao, registroId, versao, payload) {
+export function enfileirarMudanca(db, sessao, tabela, operacao, registroId, versão, payload) {
   if (!sessao?.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
   if (!TABELAS_SYNC[tabela]) return { ok: false, erro: { codigo: 'TABELA_NAO_SINCRONIZAVEL' } };
   const agora = new Date().toISOString();
   return db.exec(
-    `INSERT INTO sync_mudancas(usuario_id, dispositivo_id, tabela, registro_id, operacao, versao, payload_json, criado_em, aplicada)
+    `INSERT INTO sync_mudancas(usuario_id, dispositivo_id, tabela, registro_id, operacao, versão, payload_json, criado_em, aplicada)
      VALUES(?,?,?,?,?,?,?,?,0)`,
     [
       sessao.usuario_id,
@@ -434,7 +434,7 @@ export function enfileirarMudanca(db, sessao, tabela, operacao, registroId, vers
       tabela,
       String(registroId),
       operacao,
-      Number(versao || 1),
+      Number(versão || 1),
       JSON.stringify(payload || {}),
       agora,
     ]

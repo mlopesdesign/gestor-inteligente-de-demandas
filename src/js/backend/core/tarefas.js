@@ -14,7 +14,7 @@ export function listar(db, payload, sessao) {
   let sql = `SELECT t.id, t.titulo, t.descricao, t.status, t.prioridade, t.nivel_cobranca, t.area_id, t.projeto_id, t.cliente_id,
                     t.inicio_em, t.vencimento_em, t.concluida_em, t.motivo_cancelamento, t.motivo_adiamento,
                     t.cancelada_em, t.cancelada_motivo, t.adiada_ate, t.adiada_motivo,
-                    t.recorrencia_tipo, t.versao, t.atualizado_em, t.criado_em,
+                    t.recorrencia_tipo, t.versão, t.atualizado_em, t.criado_em,
                     a.nome AS area_nome, a.cor AS area_cor,
                     p.titulo AS projeto_titulo,
                     c.nome AS cliente_nome
@@ -74,7 +74,7 @@ export function criar(db, payload, sessao) {
   const prio = PRIORIDADE_VALIDAS.includes(prioridade) ? prioridade : 'NORMAL';
   const nivel = NIVEIS.includes(nivel_cobranca) ? nivel_cobranca : 'PERSISTENTE';
   const r = db.exec(
-    `INSERT INTO tarefas(id, usuario_id, dono_id, titulo, descricao, status, prioridade, nivel_cobranca, area_id, projeto_id, cliente_id, inicio_em, vencimento_em, recorrencia_tipo, recorrencia_data_base, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+    `INSERT INTO tarefas(id, usuario_id, dono_id, titulo, descricao, status, prioridade, nivel_cobranca, area_id, projeto_id, cliente_id, inicio_em, vencimento_em, recorrencia_tipo, recorrencia_data_base, criado_em, atualizado_em, versão) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
     [id, sessao.usuario_id, sessao.usuario_id, String(titulo).trim().slice(0,300),
      descricao ? String(descricao).trim().slice(0,5000) : null,
      STATUS_VALIDOS.includes(st) ? st : 'PLANEJADA',
@@ -91,7 +91,7 @@ export function criar(db, payload, sessao) {
 
 export function atualizar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
-  const { id, versao, ...rest } = payload;
+  const { id, versão, ...rest } = payload;
   if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
   const map = {
     titulo:'titulo', descricao:'descricao', area_id:'area_id', projeto_id:'projeto_id', cliente_id:'cliente_id',
@@ -113,22 +113,22 @@ export function atualizar(db, payload, sessao) {
     if (NIVEIS.includes(rest.nivel_cobranca)) { sets.push('nivel_cobranca=?'); vals.push(rest.nivel_cobranca); }
   }
   if (sets.length === 0) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'nenhum campo para atualizar' } };
-  sets.push('atualizado_em=?', 'versao=versao+1');
-  vals.push(new Date().toISOString(), id, sessao.usuario_id, versao || 0);
+  sets.push('atualizado_em=?', 'versão=versão+1');
+  vals.push(new Date().toISOString(), id, sessao.usuario_id, versão || 0);
   const r = db.exec(
-    `UPDATE tarefas SET ${sets.join(', ')} WHERE id = ? AND usuario_id = ? AND versao = ?`, vals
+    `UPDATE tarefas SET ${sets.join(', ')} WHERE id = ? AND usuario_id = ? AND versão = ?`, vals
   );
   if (!r.ok) return r;
-  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'tarefa nao encontrada ou versao desatualizada' } };
+  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'tarefa nao encontrada ou versão desatualizada' } };
   auditar(db, sessao, 'tarefas', id, 'atualizada', { campos: sets });
   return { ok: true, dados: { id } };
 }
 
 function _alterarStatus(db, payload, sessao, novoStatus, campos) {
-  const { id, versao, motivo } = payload;
+  const { id, versão, motivo } = payload;
   if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
   const agora = new Date().toISOString();
-  const sets = ['status=?', 'atualizado_em=?', 'versao=versao+1'];
+  const sets = ['status=?', 'atualizado_em=?', 'versão=versão+1'];
   const vals = [novoStatus, agora];
   if (campos.concluida_em) { sets.push('concluida_em=?'); vals.push(agora); }
   if (campos.cancelada_em) { sets.push('cancelada_em=?'); vals.push(agora); }
@@ -137,12 +137,12 @@ function _alterarStatus(db, payload, sessao, novoStatus, campos) {
   if (campos.adiada_ate) { sets.push('adiada_ate=?'); vals.push(payload.adiada_ate || null); }
   if (campos.adiada_motivo) { sets.push('adiada_motivo=?'); vals.push(motivo || ''); }
   if (campos.motivo_adiamento) { sets.push('motivo_adiamento=?'); vals.push(motivo || ''); }
-  vals.push(id, sessao.usuario_id, versao || 0);
+  vals.push(id, sessao.usuario_id, versão || 0);
   const r = db.exec(
-    `UPDATE tarefas SET ${sets.join(', ')} WHERE id = ? AND usuario_id = ? AND versao = ?`, vals
+    `UPDATE tarefas SET ${sets.join(', ')} WHERE id = ? AND usuario_id = ? AND versão = ?`, vals
   );
   if (!r.ok) return r;
-  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'tarefa nao encontrada ou versao desatualizada' } };
+  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'tarefa nao encontrada ou versão desatualizada' } };
   auditar(db, sessao, 'tarefas', id, 'status_alterado:' + novoStatus, { motivo });
   return { ok: true, dados: { id, status: novoStatus } };
 }
@@ -163,11 +163,11 @@ export function adiar(db, payload, sessao) {
     return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'vencimento_em obrigatorio para adiar' } };
   }
   const r1 = db.exec(
-    `UPDATE tarefas SET vencimento_em=?, adiada_ate=?, adiada_motivo=?, motivo_adiamento=?, status='ADIADA', atualizado_em=?, versao=versao+1 WHERE id=? AND usuario_id=? AND versao=?`,
-    [payload.vencimento_em, payload.vencimento_em, payload.motivo || null, payload.motivo || null, new Date().toISOString(), payload.id, sessao.usuario_id, payload.versao || 0]
+    `UPDATE tarefas SET vencimento_em=?, adiada_ate=?, adiada_motivo=?, motivo_adiamento=?, status='ADIADA', atualizado_em=?, versão=versão+1 WHERE id=? AND usuario_id=? AND versão=?`,
+    [payload.vencimento_em, payload.vencimento_em, payload.motivo || null, payload.motivo || null, new Date().toISOString(), payload.id, sessao.usuario_id, payload.versão || 0]
   );
   if (!r1.ok) return r1;
-  if (r1.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'tarefa nao encontrada ou versao desatualizada' } };
+  if (r1.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'tarefa nao encontrada ou versão desatualizada' } };
   auditar(db, sessao, 'tarefas', payload.id, 'adiada', { ate: payload.vencimento_em, motivo: payload.motivo });
   return { ok: true, dados: { id, status: 'ADIADA' } };
 }
@@ -189,7 +189,7 @@ export function adicionarSubtarefa(db, payload, sessao) {
   if (!tarefa_id || !titulo) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'tarefa_id e titulo obrigatorios' } };
   const id = UlidFactory.next();
   const r = db.exec(
-    `INSERT INTO subtarefas(id, tarefa_id, titulo, concluida, criado_em, versao) VALUES(?,?,?,0,?,1)`,
+    `INSERT INTO subtarefas(id, tarefa_id, titulo, concluida, criado_em, versão) VALUES(?,?,?,0,?,1)`,
     [id, tarefa_id, String(titulo).trim().slice(0,300), new Date().toISOString()]
   );
   if (!r.ok) return r;
@@ -200,7 +200,7 @@ export function toggleSubtarefa(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
   const { id, concluida } = payload;
   const r = db.exec(
-    `UPDATE subtarefas SET concluida=?, versao=versao+1 WHERE id=? AND tarefa_id IN (SELECT id FROM tarefas WHERE usuario_id=?)`,
+    `UPDATE subtarefas SET concluida=?, versão=versão+1 WHERE id=? AND tarefa_id IN (SELECT id FROM tarefas WHERE usuario_id=?)`,
     [concluida ? 1 : 0, id, sessao.usuario_id]
   );
   if (!r.ok) return r;

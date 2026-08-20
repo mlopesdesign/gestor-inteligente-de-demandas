@@ -436,7 +436,7 @@ export const db = {
 function semearDemo() {
   const agora = new Date().toISOString();
   const uid = '01DEMO' + Math.random().toString(36).slice(2, 12).toUpperCase();
-  dbInstance.exec("INSERT INTO usuarios(id, email, senha_hash, nome, criado_em, atualizado_em, versao, dono_id) VALUES(?,?,?,?,?,?,1,?)", [
+  dbInstance.exec("INSERT INTO usuarios(id, email, senha_hash, nome, criado_em, atualizado_em, versão, dono_id) VALUES(?,?,?,?,?,?,1,?)", [
     uid, 'demo@gestor.local', 'd75c96ac1f418d460d6da30f679a17ae9899cca27c154c43893ae112af74c7f5', 'Demo', agora, agora, uid
   ]);
   const areas = [
@@ -445,7 +445,7 @@ function semearDemo() {
     { id: '01AREAD1', nome: 'Desenvolvimento', cor: '#9c27b0' },
   ];
   for (const a of areas) {
-    dbInstance.exec("INSERT INTO areas(id, usuario_id, dono_id, nome, cor, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,1)", [a.id, uid, uid, a.nome, a.cor, agora, agora]);
+    dbInstance.exec("INSERT INTO areas(id, usuario_id, dono_id, nome, cor, criado_em, atualizado_em, versão) VALUES(?,?,?,?,?,?,?,1)", [a.id, uid, uid, a.nome, a.cor, agora, agora]);
   }
   const tarefas = [
     { titulo: 'Revisar proposta do cliente Cenário Alagoas',  status: 'CAIXA_ENTRADA', prioridade: 'ALTA',     nivel: 'PERSISTENTE', area: '01AREAT1', venc: null },
@@ -457,7 +457,7 @@ function semearDemo() {
   for (const t of tarefas) {
     const id = '01TASK' + Math.random().toString(36).slice(2, 12).toUpperCase();
     dbInstance.exec(
-      `INSERT INTO tarefas(id, usuario_id, dono_id, titulo, status, prioridade, nivel_cobranca, area_id, vencimento_em, criado_em, atualizado_em, versao)
+      `INSERT INTO tarefas(id, usuario_id, dono_id, titulo, status, prioridade, nivel_cobranca, area_id, vencimento_em, criado_em, atualizado_em, versão)
        VALUES(?,?,?,?,?,?,?,?,?,?,?,1)`,
       [id, uid, uid, t.titulo, t.status, t.prioridade, t.nivel, t.area, t.venc, agora, agora]
     );

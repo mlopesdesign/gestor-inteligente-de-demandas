@@ -120,22 +120,22 @@ export function tick(db, payload, sessao) {
     });
 
     if (d.bloquear && t.status !== 'BLOQUEADA') {
-      db.exec(`UPDATE tarefas SET status='BLOQUEADA', atualizado_em=?, versao=versao+1 WHERE id=?`, [agora, t.id]);
+      db.exec(`UPDATE tarefas SET status='BLOQUEADA', atualizado_em=?, versão=versão+1 WHERE id=?`, [agora, t.id]);
       auditar(db, sessao, 'tarefas', t.id, 'status_alterado:BLOQUEADA', { motivo: 'cobranca_critica' });
       bloqueadas++;
     }
     if (d.prioridadeAplicada !== t.prioridade) {
-      db.exec(`UPDATE tarefas SET prioridade=?, atualizado_em=?, versao=versao+1 WHERE id=?`, [d.prioridadeAplicada, agora, t.id]);
+      db.exec(`UPDATE tarefas SET prioridade=?, atualizado_em=?, versão=versão+1 WHERE id=?`, [d.prioridadeAplicada, agora, t.id]);
       escaladas++;
     }
     if (d.nivelAplicado !== t.nivel_cobranca) {
-      db.exec(`UPDATE tarefas SET nivel_cobranca=?, atualizado_em=?, versao=versao+1 WHERE id=?`, [d.nivelAplicado, agora, t.id]);
+      db.exec(`UPDATE tarefas SET nivel_cobranca=?, atualizado_em=?, versão=versão+1 WHERE id=?`, [d.nivelAplicado, agora, t.id]);
       escaladas++;
     }
     if (d.notificar) {
       const lid = UlidFactory.next();
       db.exec(
-        `INSERT INTO lembretes(id, tarefa_id, usuario_id, dono_id, momento, canal, estado, tentativas, criado_em, versao) VALUES(?,?,?,?,?,'WINDOWS_LOCAL','PENDENTE',0,?,1)`,
+        `INSERT INTO lembretes(id, tarefa_id, usuario_id, dono_id, momento, canal, estado, tentativas, criado_em, versão) VALUES(?,?,?,?,?,'WINDOWS_LOCAL','PENDENTE',0,?,1)`,
         [lid, t.id, sessao.usuario_id, sessao.usuario_id, agora, agora]
       );
       auditar(db, sessao, 'tarefas', t.id, 'lembrete_gerado', { nivel: d.nivelAplicado, motivo: d.motivo });

@@ -21,7 +21,7 @@ export async function renderBusca() {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.25');
+ document.getElementById('versão-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.25');
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
  });

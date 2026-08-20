@@ -9,7 +9,7 @@ export function listar(db, payload, sessao) {
   // FIX v0.2.10: schema novo usa `inicio_em`/`fim_em` (sem termino_previsto_em/termino_real_em/arquivado_em)
   // status='ARQUIVADO' substitui arquivado_em
   let sql = `SELECT p.id, p.titulo, p.descricao, p.cliente_id, p.area_id, p.status, p.prioridade,
-                    p.inicio_em, p.fim_em, p.progresso_calc, p.participantes_json, p.criado_em, p.atualizado_em, p.versao,
+                    p.inicio_em, p.fim_em, p.progresso_calc, p.participantes_json, p.criado_em, p.atualizado_em, p.versão,
                     c.nome AS cliente_nome, a.nome AS area_nome, a.cor AS area_cor,
                     (SELECT COUNT(*) FROM tarefas t WHERE t.projeto_id = p.id AND t.status NOT IN ('CONCLUIDA','CANCELADA','ARQUIVADA')) AS tarefas_ativas,
                     (SELECT COUNT(*) FROM tarefas t WHERE t.projeto_id = p.id) AS tarefas_total,
@@ -61,7 +61,7 @@ export function criar(db, payload, sessao) {
   const agora = new Date().toISOString();
   // FIX v0.2.10: schema novo usa `inicio_em`/`fim_em` (sem termino_previsto_em/termino_real_em)
   const r = db.exec(
-    `INSERT INTO projetos(id, usuario_id, dono_id, titulo, descricao, cliente_id, area_id, status, prioridade, inicio_em, fim_em, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+    `INSERT INTO projetos(id, usuario_id, dono_id, titulo, descricao, cliente_id, area_id, status, prioridade, inicio_em, fim_em, criado_em, atualizado_em, versão) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
     [id, sessao.usuario_id, sessao.usuario_id, String(titulo).trim().slice(0,200),
      descricao ? String(descricao).trim().slice(0,2000) : null,
      cliente_id || null, area_id || null,
@@ -77,7 +77,7 @@ export function criar(db, payload, sessao) {
 
 export function atualizar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
-  const { id, versao, titulo, descricao, cliente_id, area_id, status, prioridade, inicio_em, fim_em } = payload;
+  const { id, versão, titulo, descricao, cliente_id, area_id, status, prioridade, inicio_em, fim_em } = payload;
   if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
   const sets = []; const vals = [];
   // FIX v0.2.10: schema novo usa `inicio_em`/`fim_em` (sem termino_*)
@@ -86,13 +86,13 @@ export function atualizar(db, payload, sessao) {
     if (payload[k] !== undefined) { sets.push(`${map[k]}=?`); vals.push(payload[k]); }
   }
   if (sets.length === 0) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'nenhum campo para atualizar' } };
-  sets.push('atualizado_em=?', 'versao=versao+1');
-  vals.push(new Date().toISOString(), id, sessao.usuario_id, versao || 0);
+  sets.push('atualizado_em=?', 'versão=versão+1');
+  vals.push(new Date().toISOString(), id, sessao.usuario_id, versão || 0);
   const r = db.exec(
-    `UPDATE projetos SET ${sets.join(', ')} WHERE id = ? AND usuario_id = ? AND versao = ?`, vals
+    `UPDATE projetos SET ${sets.join(', ')} WHERE id = ? AND usuario_id = ? AND versão = ?`, vals
   );
   if (!r.ok) return r;
-  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'projeto nao encontrado ou versao desatualizada' } };
+  if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'projeto nao encontrado ou versão desatualizada' } };
   auditar(db, sessao, 'projetos', id, 'atualizado', { campos: Object.keys(map).filter(k => payload[k] !== undefined) });
   return { ok: true, dados: { id } };
 }
@@ -103,7 +103,7 @@ export function arquivar(db, payload, sessao) {
   if (!id) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'id obrigatorio' } };
   // FIX v0.2.10: schema novo usa `status='ARQUIVADO'` em vez de `arquivado_em`
   const r = db.exec(
-    `UPDATE projetos SET status = 'ARQUIVADO', atualizado_em = ?, versao = versao + 1 WHERE id = ? AND usuario_id = ?`,
+    `UPDATE projetos SET status = 'ARQUIVADO', atualizado_em = ?, versão = versão + 1 WHERE id = ? AND usuario_id = ?`,
     [new Date().toISOString(), id, sessao.usuario_id]
   );
   if (!r.ok) return r;
@@ -117,7 +117,7 @@ export function concluir(db, payload, sessao) {
   const agora = new Date().toISOString();
   // FIX v0.2.10: schema novo nao tem `termino_real_em`. Conclui via status.
   const r = db.exec(
-    `UPDATE projetos SET status='CONCLUIDO', fim_em=COALESCE(fim_em, ?), atualizado_em=?, versao=versao+1 WHERE id=? AND usuario_id=?`,
+    `UPDATE projetos SET status='CONCLUIDO', fim_em=COALESCE(fim_em, ?), atualizado_em=?, versão=versão+1 WHERE id=? AND usuario_id=?`,
     [agora, agora, id, sessao.usuario_id]
   );
   if (!r.ok) return r;

@@ -35,7 +35,7 @@ export async function renderConfig(opts = {}) {
  </main>
  </div>
  `;
- document.getElementById('versao-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
+ document.getElementById('versão-app').textContent = 'v' + (document.querySelector('meta[name="app-version"]')?.content || window.__appVersion || '0.2.23');
  main.querySelectorAll('.sidebar a[data-rota]').forEach(a => {
  a.onclick = (e) => { e.preventDefault(); window.irPara(a.dataset.rota); };
  });
@@ -130,12 +130,12 @@ async function carregar() {
  <div class="card">
  <h3>Atualização do sistema</h3>
  <p style="margin:6px 0 12px;">
- Versão instalada: <strong id="atualizacao-versao">v${escapeHtml(window.__appVersion || document.querySelector('meta[name="app-version"]')?.content || '0.2.23')}</strong>
+ Versão instalada: <strong id="atualizacao-versão">v${escapeHtml(window.__appVersion || document.querySelector('meta[name="app-version"]')?.content || '0.2.23')}</strong>
  <span id="atualizacao-status" class="atualizacao-status ok" style="margin-left:8px;"><span class="dot"></span>—</span>
  </p>
  <p style="color:var(--fg-3); font-size:12px; margin-bottom:12px;">As atualizações são baixadas do GitHub e aplicadas automaticamente — sem reinstalar o sistema.</p>
  <button id="btn-verificar-atualizacao" class="primary">Verificar agora</button>
- <div id="atualizacao-novaversao"></div>
+ <div id="atualizacao-novaversão"></div>
  </div>
  </div>
 
@@ -319,7 +319,7 @@ async function verificarAgora() {
  renderizarNovaVersao(info);
  } else {
  setStatusAtualizacao('você está na versão mais recente', 'ok');
- const slot = document.getElementById('atualizacao-novaversao');
+ const slot = document.getElementById('atualizacao-novaversão');
  if (slot) slot.innerHTML = '';
  }
  } catch (e) {
@@ -331,15 +331,15 @@ async function verificarAgora() {
 }
 
 function renderizarNovaVersao(info) {
- const slot = document.getElementById('atualizacao-novaversao');
+ const slot = document.getElementById('atualizacao-novaversão');
  if (!slot) return;
  const sizeMB = info.size ? (info.size / (1024*1024)).toFixed(2) + ' MB' : '';
  slot.innerHTML = `
- <div class="atualizacao-novaversao">
- <div class="novaversao-titulo">Nova versão disponível: v${escapeHtml(info.version)}</div>
- ${sizeMB || info.sha256 ? `<div class="novaversao-meta">${sizeMB}${sizeMB && info.sha256 ? ' • ' : ''}${info.sha256 ? 'SHA-256 ' + escapeHtml(info.sha256.substring(0, 16)) + '...' : ''}</div>` : ''}
- <div class="novaversao-notes">${escapeHtml(info.notes || '(sem notas)')}</div>
- <div class="novaversao-acoes">
+ <div class="atualizacao-novaversão">
+ <div class="novaversão-titulo">Nova versão disponível: v${escapeHtml(info.version)}</div>
+ ${sizeMB || info.sha256 ? `<div class="novaversão-meta">${sizeMB}${sizeMB && info.sha256 ? ' • ' : ''}${info.sha256 ? 'SHA-256 ' + escapeHtml(info.sha256.substring(0, 16)) + '...' : ''}</div>` : ''}
+ <div class="novaversão-notes">${escapeHtml(info.notes || '(sem notas)')}</div>
+ <div class="novaversão-acoes">
  <button id="btn-baixar-instalar" class="primary">Baixar e instalar</button>
  <button id="btn-depois">Depois</button>
  </div>
@@ -388,7 +388,7 @@ function renderizarReleases(lista) {
  return `
  <div class="release-item${isAtual ? ' ativa' : ''}" data-tag="${escapeHtml(tag)}">
  <div class="release-cabecalho">
- <span class="release-versao">v${escapeHtml(tag)}</span>
+ <span class="release-versão">v${escapeHtml(tag)}</span>
  <span class="release-titulo">${escapeHtml(titulo)}</span>
  ${isAtual ? '<span class="release-tag">instalada</span>' : ''}
  <span class="release-data">${escapeHtml(data)}</span>
@@ -475,7 +475,7 @@ async function carregarHistoricoBackups() {
  <div class="release-item" data-id="${escapeHtml(b.id)}">
  <div class="release-cabecalho" style="display:flex; align-items:center; gap:8px;">
  <input type="checkbox" class="sel-item" data-id="${escapeHtml(b.id)}" style="flex:0;">
- <span class="release-versao">v${data.replace(/[/: ]/g, '').slice(0,8)}</span>
+ <span class="release-versão">v${data.replace(/[/: ]/g, '').slice(0,8)}</span>
  <span class="release-titulo">${origem} · ${tam}${obs}${status}${faltando}</span>
  <span class="release-data">${escapeHtml(data.split(' ')[0])}</span>
  </div>
