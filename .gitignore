@@ -93,3 +93,14 @@ installer/GestorInteligenteDeDemandas-Setup-*.exe
 # clonados localmente para desenvolvimento. NAO incluir no repo do Gestor desktop.
 android-app/
 wp-api/
+
+# Higiene 2026-08-20: instaladores antigos migrados pra obsoleto, auditoria local
+# e backup de dados do usuario. NAO versionar.
+installer/.obsoleto/
+tools/_audit-*.md
+tools/_backup-*/
+_backup-dados-app-*/
+_install-*.log
+/INSTALAR-AGORA.exe
+/INSTALAR-AGORA.neu
+

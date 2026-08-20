@@ -93,7 +93,7 @@ function newDispositivoId() {
 }
 
 function detectNoApp() {
-  try { return typeof window === 'undefined' || !window.NL_CORS || !window.NL_PORT; }
+  try { return typeof window === 'undefined' || !window.NL_PORT; }
   catch (_) { return true; }
 }
 const NO_APP = detectNoApp();

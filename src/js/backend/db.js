@@ -131,12 +131,12 @@ async function carregarDoDisco() {
       try {
         const b64Tmp = caminho + '.load.b64';
         // Limpa o .load.b64 anterior
-        await withTimeout(window.Neutralino.filesystem.removeFile(b64Tmp).catch(() => {}), 1000, 'rmOldB64');
+        await withTimeout(window.Neutralino.filesystem.remove(b64Tmp).catch(() => {}), 1000, 'rmOldB64');
         const cmd = `certutil -encode "${caminho}" "${b64Tmp}"`;
         const r = await withTimeout(window.Neutralino.os.execCommand(cmd, { stdIn: '', stdOut: '', stdErr: '' }), 10000, 'certutil-encode');
-        if (r && r.stdOut && r.stdOut.includes('successfully')) {
+        if (r && (r.exitCode === 0 || (r.stdOut && (r.stdOut.includes('successfully') || r.stdOut.includes('êxito') || r.stdOut.includes('concluído'))))) {
           const b64Content = await withTimeout(window.Neutralino.filesystem.readFile(b64Tmp), 3000, 'readB64');
-          await withTimeout(window.Neutralino.filesystem.removeFile(b64Tmp).catch(() => {}), 1000, 'rmB64Tmp');
+          await withTimeout(window.Neutralino.filesystem.remove(b64Tmp).catch(() => {}), 1000, 'rmB64Tmp');
           if (b64Content && b64Content.length > 0) {
             // Converte para string e remove header/footer do certutil
             let b64 = '';
@@ -198,9 +198,9 @@ async function gravarNoDisco(dados) {
       const tmp = caminho + '.tmp';
       const b64File = caminho + '.tmp.b64';
       // Limpa arquivos stale primeiro
-      await withTimeout(window.Neutralino.filesystem.removeFile(tmp).catch(() => {}), 500, 'rmTmp');
-      await withTimeout(window.Neutralino.filesystem.removeFile(b64File).catch(() => {}), 500, 'rmB64');
-      await withTimeout(window.Neutralino.filesystem.removeFile(caminho + '.old').catch(() => {}), 500, 'rmOld');
+      await withTimeout(window.Neutralino.filesystem.remove(tmp).catch(() => {}), 500, 'rmTmp');
+      await withTimeout(window.Neutralino.filesystem.remove(b64File).catch(() => {}), 500, 'rmB64');
+      await withTimeout(window.Neutralino.filesystem.remove(caminho + '.old').catch(() => {}), 500, 'rmOld');
       // Converte os bytes pra base64 (Latin-1 safe)
       let bin = '';
       for (let i = 0; i < dados.length; i++) bin += String.fromCharCode(dados[i]);
@@ -210,14 +210,14 @@ async function gravarNoDisco(dados) {
       // certutil -decode b64 -> binario
       const cmd = `certutil -decode "${b64File}" "${tmp}"`;
       const r = await withTimeout(window.Neutralino.os.execCommand(cmd, { stdIn: '', stdOut: '', stdErr: '' }), 10000, 'certutil-decode');
-      if (r && r.stdOut && r.stdOut.includes('successfully')) {
+      if (r && (r.exitCode === 0 || (r.stdOut && (r.stdOut.includes('successfully') || r.stdOut.includes('êxito') || r.stdOut.includes('concluído'))))) {
         const check2 = await withTimeout(window.Neutralino.filesystem.getStats(tmp).catch(() => null), 1500, 'check2');
         if (check2 && check2.size > 0) {
           // Substitui main. Tenta move direto, se falhar tenta moveOld fallback
-          try { await withTimeout(window.Neutralino.filesystem.removeFile(caminho).catch(() => {}), 1000, 'rmMain'); } catch (_) {}
+          try { await withTimeout(window.Neutralino.filesystem.remove(caminho).catch(() => {}), 1000, 'rmMain'); } catch (_) {}
           try {
             await withTimeout(window.Neutralino.filesystem.move(tmp, caminho), 3000, 'moveNew');
-            await withTimeout(window.Neutralino.filesystem.removeFile(b64File).catch(() => {}), 500, 'rmB64');
+            await withTimeout(window.Neutralino.filesystem.remove(b64File).catch(() => {}), 500, 'rmB64');
             console.log('[db.gravar] SUCESSO via certutil+move, size=', check2.size);
             diag('gravarNoDisco: SUCESSO via certutil+move, size=' + check2.size);
             return;
@@ -226,8 +226,8 @@ async function gravarNoDisco(dados) {
             try {
               await withTimeout(window.Neutralino.filesystem.move(caminho, caminho + '.old').catch(() => {}), 1000, 'moveOld');
               await withTimeout(window.Neutralino.filesystem.move(tmp, caminho), 1000, 'moveNew');
-              await withTimeout(window.Neutralino.filesystem.removeFile(caminho + '.old').catch(() => {}), 500, 'rmOld');
-              await withTimeout(window.Neutralino.filesystem.removeFile(b64File).catch(() => {}), 500, 'rmB64');
+              await withTimeout(window.Neutralino.filesystem.remove(caminho + '.old').catch(() => {}), 500, 'rmOld');
+              await withTimeout(window.Neutralino.filesystem.remove(b64File).catch(() => {}), 500, 'rmB64');
               console.log('[db.gravar] SUCESSO via certutil+moveOld, size=', check2.size);
               diag('gravarNoDisco: SUCESSO via certutil+moveOld, size=' + check2.size);
               return;

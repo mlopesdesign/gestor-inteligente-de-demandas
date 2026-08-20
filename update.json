@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.25",
-  "notes": "v0.2.25 - Excluir em TUDO + Bulk select + UI de subtarefas. 1) Botao Excluir onde faltava: Inbox, Busca global (4 tipos), modal de Tarefa, e em tarefas concluidas no Hoje. 2) UI de Subtarefas (nova) no modal: lista + adicionar (Enter) + toggle concluido + excluir. Modal atualiza in-place, NAO fecha+reabre (nunca trava em erro de inclusao). 3) Bulk select com Selecionar/Desmarcar + tri-state + contador 'N de M' + Excluir/Arquivar em massa em Tarefas, Inbox e Backup. 4) Backend novo: tarefas:excluirSubtarefa (DELETE direto, RLS). 5) Testes: 17/17 verde em test-tarefas (era 8).",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.25/resources.neu",
-  "sha256": "BE610F7C9332CBB8068091E733F2FEF66AF4DB509726CF34E15C97E58C6FB8C3",
-  "size": 7260671
+  "version": "0.2.31",
+  "notes": "v0.2.31 - Limpeza pos hotfix cascade (v0.2.26-30 quebrados). 1) FIX critico: db.js gravava em disco usando API inexistente (removeFile is not a function) - corrigido para remove() da v6.3.0. Banco agora PERSISTE em disco via certutil+move. 2) FIX critico: certutil em Windows PT-BR retorna 'concluido com exito' (nao 'successfully'); db.js aceitava so o termo ingles, entao caia no fallback localStorage. Agora detecta PT-BR (e exitCode). 3) FIX critico: sync.js usava window.NL_CORS (nao existe) - corrigido para NL_PORT. 4) Higiene: 9 instaladores antigos (v0.2.20-30) -> installer/.obsoleto/. 5) Banco local do desktop zerado + cache WebView2 limpo.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.31/resources.neu",
+  "sha256": "04E9A3BA94E0E8E7A81F83AA69E19C49D7F3552B80BBB7B93218F7B862AC0C00",
+  "size": 6303313
 }
