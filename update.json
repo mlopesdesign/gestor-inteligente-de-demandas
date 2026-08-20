@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.34",
-  "notes": "v0.2.34 - FIX versao exibida errada (mostrava 0.2.25 mesmo rodando 0.2.33). A meta tag `app-version` no src/index.html nunca era atualizada pelo bump-version.mjs. O app.js lia essa meta tag PRIMEIRO (antes do localStorage e NEUTRALINO_GLOBALS), entao sempre mostrava 0.2.25 e o auto-update achava que precisava atualizar. FIX: bump-version.mjs agora atualiza 6 lugares (config, package, app.js, index.html, nsi, update.json). Em paralelo, app_versao e User-Agent do sync.js tambem foram pra 0.2.34 (sincronizacao com WP mostrava a versao antiga).",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.34/resources.neu",
-  "sha256": "24F6EFCD401C86718B87BB97CF42178A32FFDB86507793D080586158EE79C5DA",
-  "size": 6308478
+  "version": "0.2.35",
+  "notes": "v0.2.35 - FIX aba Sincronizacao vazia. O template do renderConfig em configuracoes.js tinha 3 divs tab-painel (geral, atualizacao, backup) mas FALTAVA a tab-sync. A funcao carregarSyncStatus() existia mas o #sync-status-area nao existia no DOM. Resultado: clicar na aba Sincronizacao mostrava tela em branco. Agora exibe uma mensagem 'Aguardando autorizacao (F3 bloqueada)' explicando o que vai ter quando o Marcio liberar.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.35/resources.neu",
+  "sha256": "AF244C7EB2D0450D1535F70D658F81C1B576A28DE5CDA5BCCE54EC0D72865BBF",
+  "size": 6309554
 }

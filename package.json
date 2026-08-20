@@ -1,6 +1,6 @@
 {
   "name": "gestor-inteligente-de-demandas",
-  "version": "0.2.34",
+  "version": "0.2.35",
   "private": true,
   "description": "Gestor pessoal de tarefas, compromissos, projetos e entregas. Multi-dispositivo, offline-first. Stack: JavaScript + Neutralino + sql.js + NSIS.",
   "type": "module",
