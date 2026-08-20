@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.32",
-  "notes": "v0.2.32 - FIX minimiza e some. 1) window.center() + window.setSize(1200,760) no boot do app.js garante que a janela sempre comeca em posicao visivel e no tamanho certo. Antes o WebView2 salvava a pos em -32000,-32000 (void do Windows) quando o monitor onde o app estava era desconectado, e o Neutralino 6.3.0 ignorava width/height na 1a abertura usando minWidth/minHeight. 2) Removido o app.exit()+app.restartProcess() do auto-att do config (era agressivo demais e matava o app do nada). Agora so atualiza o config em disco; passa a valer na proxima abertura.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.32/resources.neu",
-  "sha256": "47E1813B4593495E764B4FF1E4611DF8D0A988165157248E8E8ED488CDABA57E",
-  "size": 6304861
+  "version": "0.2.33",
+  "notes": "v0.2.33 - FIX maximizar/restore vai pro limbo + auto-update fecha o app. 1) WebView2 restaurava a janela em estado maximized mas com tamanho NAO-maximizado (1200x760 em vez de 1920x1080). Ao clicar no botao maximizar, o SW_RESTORE tentava ir pro rcNormalPosition salvo em MAX_INT (32767) - a janela ia pro limbo. Agora o app.js detecta isMaximized+size<1500 no boot e forca restaurar+centralizar. 2) Listener de resize que captura posicoes invalidas (|x|>10000 ou |y|>10000) em runtime e recentraliza. 3) Auto-update usava app.exit() em vez de app.restartProcess() - app fechava e usuario tinha que abrir manual. Agora reinicia sozinho.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.33/resources.neu",
+  "sha256": "DDCA7C70F8CF16EC33D9D602DC94602B9896B43ACA001458D6AA47A91103F3B5",
+  "size": 6308478
 }

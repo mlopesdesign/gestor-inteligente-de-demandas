@@ -129,6 +129,74 @@ async function bootstrap() {
     }
   }
 
+  // FIX v0.2.33: detecta "falso maximized" e forca restaurar.
+  // O WebView2 tem bug que restaura a janela em estado maximized mas com
+  // tamanho NAO-maximizado (ex: IsZoomed: True mas W=1200 H=760 em vez de
+  // 1920x1080). Quando o user clica no botao de maximizar, o Windows
+  // restaura o rcNormalPosition que pode estar em MAX_INT (32767/-32768) -
+  // a "outra dimensao" do void do Windows. Resultado: a janela vai pro limbo
+  // e nao volta. Solucao: detectar isso no boot e forcar saida do maximized
+  // com tamanho/posicao normais.
+  if (NO_APP && typeof window.Neutralino?.window?.isMaximized === 'function') {
+    try {
+      const isMax = await Promise.race([
+        window.Neutralino.window.isMaximized(),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('isMaximized timeout')), 1500)),
+      ]);
+      if (isMax && typeof window.Neutralino?.window?.getSize === 'function') {
+        const sz = await Promise.race([
+          window.Neutralino.window.getSize(),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('getSize timeout')), 1500)),
+        ]);
+        // Monitor primary do Marcio e 1920x1080. Se maximized, deveria ter
+        // pelo menos 1900x1000. Se tiver tamanho "normal" (1200x760), e
+        // porque o WebView2 restaurou com WINDOWPLACEMENT corrompido.
+        if (sz && (sz.width < 1500 || sz.height < 800)) {
+          D('[app] detectado falso-maximized (W=' + sz.width + ' H=' + sz.height + '), forcando restaurar');
+          // setSize tira o maximized e centraliza
+          if (typeof window.Neutralino.window.setSize === 'function') {
+            await window.Neutralino.window.setSize({ width: 1200, height: 760 });
+            await window.Neutralino.window.center();
+            D('[app] falso-maximized corrigido');
+          }
+        }
+      }
+    } catch (e) {
+      D('[app] check isMaximized falhou:', e.message);
+    }
+  }
+
+  // FIX v0.2.33: listener de resize pra capturar posicoes invalidas em runtime.
+  // O botao maximizar/restaurar do WebView2 pode jogar a janela pro limbo
+  // (32767, -32768) a qualquer momento. Quando o DOM dispara resize,
+  // checamos a posicao e recentralizamos se for absurda.
+  if (NO_APP && typeof window.Neutralino?.window?.getPosition === 'function') {
+    let _lastPos = null;
+    const checkAndCenter = async () => {
+      try {
+        const pos = await window.Neutralino.window.getPosition();
+        if (!pos) return;
+        // 32767, -32768, -32000 = sentinelas de posicao invalida
+        if (pos.x < -10000 || pos.x > 10000 || pos.y < -10000 || pos.y > 10000) {
+          D('[app] posicao invalida detectada (x=' + pos.x + ' y=' + pos.y + '), recentralizando');
+          if (typeof window.Neutralino.window.center === 'function') {
+            await window.Neutralino.window.center();
+          }
+          if (typeof window.Neutralino.window.setSize === 'function') {
+            await window.Neutralino.window.setSize({ width: 1200, height: 760 });
+          }
+        }
+        _lastPos = pos;
+      } catch (_) {}
+    };
+    // Disparar quando a janela for redimensionada pelo OS/WebView2
+    window.addEventListener('resize', () => {
+      // Debounce: re-checar 200ms depois do resize
+      clearTimeout(window.__resizeCheckTO);
+      window.__resizeCheckTO = setTimeout(checkAndCenter, 200);
+    });
+  }
+
   // 1. Abre o banco (sql.js, sql-wasm.wasm) - com timeout de 60s pra debug
   try {
     D('[app] abrindo banco...');
@@ -158,7 +226,7 @@ async function bootstrap() {
       if (cached) versao = cached;
     } catch (_) {}
   }
-  if (!versao) versao = '0.2.32';
+  if (!versao) versao = '0.2.33';
   try { localStorage.setItem('__app_version', versao); } catch (_) {}
   const versaoSpan = document.getElementById('versao-app');
   if (versaoSpan) versaoSpan.textContent = 'v' + versao;
@@ -421,7 +489,7 @@ function renderLogin() {
           ${salvo ? '<button id="btn-sair-gravado" class="login-sair">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
         </div>
 
-        <div class="login-rodape">v${window.__appVersion || '0.2.32'}</div>
+        <div class="login-rodape">v${window.__appVersion || '0.2.33'}</div>
       </div>
     </div>
   `;
@@ -570,7 +638,10 @@ export async function aplicarAtualizacao(info) {
     const r = await window.Neutralino.os.execCommand('powershell -NoProfile -NonInteractive -Command "' + psCmd.replace(/"/g, '\\"') + '"');
     if (r.exitCode === 0) {
       toast({ tipo: 'sucesso', titulo: 'Atualização', corpo: 'v' + info.version + ' instalada! Reiniciando...' });
-      setTimeout(() => window.Neutralino?.app?.exit?.(), 1500);
+      // FIX v0.2.33: usa restartProcess() em vez de exit() pra abrir o app
+      // automaticamente apos o auto-update. Antes o app fechava e o usuario
+      // tinha que abrir manualmente.
+      setTimeout(() => window.Neutralino?.app?.restartProcess?.(), 1500);
       return true;
     }
     throw new Error((r.stdErr || r.stdOut || 'PowerShell exit ' + r.exitCode).trim());
