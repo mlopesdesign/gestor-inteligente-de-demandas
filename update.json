@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.35",
-  "notes": "v0.2.35 - FIX aba Sincronizacao vazia. O template do renderConfig em configuracoes.js tinha 3 divs tab-painel (geral, atualizacao, backup) mas FALTAVA a tab-sync. A funcao carregarSyncStatus() existia mas o #sync-status-area nao existia no DOM. Resultado: clicar na aba Sincronizacao mostrava tela em branco. Agora exibe uma mensagem 'Aguardando autorizacao (F3 bloqueada)' explicando o que vai ter quando o Marcio liberar.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.35/resources.neu",
-  "sha256": "AF244C7EB2D0450D1535F70D658F81C1B576A28DE5CDA5BCCE54EC0D72865BBF",
-  "size": 6309554
+  "version": "0.2.36",
+  "notes": "v0.2.36 - FIX F3 (sync bidirecional). O push usava ultimo_pull_id como cursor e filtrava errado (qualquer mudanca local com id < ultimo_pull_id era ignorada). Agora ultimo_push_id e proprio do push. Tambem normaliza r.dados pra aceitar array de objetos (better-sqlite3 / testes) e array de arrays (sql.js / producao). Adicionado enfileirarMudanca() em TODAS as escritas dos core (tarefas, projetos, clientes, areas). 9 testes novos de sync.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.36/resources.neu",
+  "sha256": "FBE390EEFEFE0326496D6CC4D89176E780B4525E9B65483C75A925942E93771B",
+  "size": 6313637
 }
