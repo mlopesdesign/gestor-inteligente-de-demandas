@@ -226,7 +226,7 @@ async function bootstrap() {
       if (cached) versao = cached;
     } catch (_) {}
   }
-  if (!versao) versao = '0.2.36';
+  if (!versao) versao = '0.2.37';
   try { localStorage.setItem('__app_version', versao); } catch (_) {}
   const versaoSpan = document.getElementById('versao-app');
   if (versaoSpan) versaoSpan.textContent = 'v' + versao;
@@ -489,7 +489,7 @@ function renderLogin() {
           ${salvo ? '<button id="btn-sair-gravado" class="login-sair">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
         </div>
 
-        <div class="login-rodape">v${window.__appVersion || '0.2.36'}</div>
+        <div class="login-rodape">v${window.__appVersion || '0.2.37'}</div>
       </div>
     </div>
   `;
@@ -601,6 +601,11 @@ export async function aplicarAtualizacao(info) {
     // o .neu via Invoke-WebRequest (nativo do Windows 10/11), validar tamanho,
     // e mover pra lugar do resources.neu atual. Em caso de falha, mostra erro
     // claro e pede download manual — SEM abrir navegador, SEM fallback externo.
+    //
+    // FIX v0.2.37: tambem extrai os arquivos do .neu e sobrescreve src/.
+    // O Neutralino serve src/ do disco (NÃO do .neu), entao trocar so o .neu
+    // NAO atualiza o app ate o usuario reinstalar via INSTALAR-AGORA.exe.
+    // O auto-update agora substitui o .neu E extrai src/ de dentro dele.
     if (!window.Neutralino?.os?.execCommand) {
       toast({ tipo: 'erro', titulo: 'Atualização', corpo: 'Auto-update indisponível. Baixe manualmente em: ' + info.resourcesURL });
       return false;
@@ -618,6 +623,8 @@ export async function aplicarAtualizacao(info) {
     const escTmp = tmpPath.replace(/'/g, "''");
     const escDst = dstPath.replace(/'/g, "''");
     const escOld = oldPath.replace(/'/g, "''");
+    // v0.2.37: PowerShell agora (1) baixa o .neu, (2) extrai src/ do .neu,
+    // (3) substitui o .neu atual. Tudo num unico execCommand.
     const psCmd = [
       "$ErrorActionPreference='Stop'",
       '[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12',
@@ -626,9 +633,34 @@ export async function aplicarAtualizacao(info) {
       "  Invoke-WebRequest -Uri '" + escUrl + "' -OutFile '" + escTmp + "' -UseBasicParsing",
       "  $sz = (Get-Item '" + escTmp + "').Length",
       "  if ($sz -lt 100000) { throw ('arquivo muito pequeno: ' + $sz + ' bytes') }",
+      // Extrai src/ do .neu (formato ASAR-like: 4 ints LE + JSON header + arquivos concatenados)
+      "  $fs = [System.IO.File]::OpenRead('" + escTmp + "')",
+      "  $br = New-Object System.IO.BinaryReader($fs)",
+      "  $magic = $br.ReadUInt32(); if ($magic -ne 4) { throw ('formato .neu invalido (magic=' + $magic + ')') }",
+      "  $field1 = $br.ReadUInt32(); $field2 = $br.ReadUInt32(); $jsonSize = $br.ReadUInt32()",
+      "  $jsonBytes = $br.ReadBytes($jsonSize)",
+      "  $header = [System.Text.Encoding]::UTF8.GetString($jsonBytes) | ConvertFrom-Json",
+      "  $dataStart = 16 + $jsonSize",
+      "  $srcDir = '" + escDst.replace('\\resources.neu', '\\src') + "'",
+      // Flatten recursivo do header.files: lista de paths com offset+size
+      "  function Flat($node, $prefix) {",
+      "    $out = @()",
+      "    if ($node.files) { foreach ($p in $node.files.PSObject.Properties) { $full = if ($prefix) { $prefix + '/' + $p.Name } else { $p.Name }; $v = $p.Value; if ($v.files) { $out += Flat $v $full } else { $out += [PSCustomObject]@{ Path = $full; Offset = [int]$v.offset; Size = [int]$v.size } } }",
+      "    $out",
+      "  }",
+      "  $entries = Flat $header.files ''",
+      "  foreach ($e in $entries) {",
+      "    $fs.Position = $dataStart + $e.Offset",
+      "    $bytes = $br.ReadBytes($e.Size)",
+      "    $outPath = Join-Path $srcDir ($e.Path -replace '/', '\\\\')",
+      "    $outDir = Split-Path $outPath -Parent",
+      "    if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir -Force | Out-Null }",
+      "    [System.IO.File]::WriteAllBytes($outPath, $bytes)",
+      "  }",
+      "  $br.Close(); $fs.Close()",
       "  if (Test-Path '" + escDst + "') { Move-Item -Force '" + escDst + "' '" + escOld + "' }",
       "  Move-Item -Force '" + escTmp + "' '" + escDst + "'",
-      "  Write-Output ('OK ' + $sz)",
+      "  Write-Output ('OK ' + $sz + ' extraidos ' + $entries.Count)",
       '} catch {',
       "  if (Test-Path '" + escTmp + "') { Remove-Item -Force '" + escTmp + "' -ErrorAction SilentlyContinue }",
       '  Write-Error $_.Exception.Message',
@@ -638,9 +670,6 @@ export async function aplicarAtualizacao(info) {
     const r = await window.Neutralino.os.execCommand('powershell -NoProfile -NonInteractive -Command "' + psCmd.replace(/"/g, '\\"') + '"');
     if (r.exitCode === 0) {
       toast({ tipo: 'sucesso', titulo: 'Atualização', corpo: 'v' + info.version + ' instalada! Reiniciando...' });
-      // FIX v0.2.33: usa restartProcess() em vez de exit() pra abrir o app
-      // automaticamente apos o auto-update. Antes o app fechava e o usuario
-      // tinha que abrir manualmente.
       setTimeout(() => window.Neutralino?.app?.restartProcess?.(), 1500);
       return true;
     }
