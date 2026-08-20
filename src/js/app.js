@@ -99,6 +99,36 @@ async function bootstrap() {
   D('[app] Neutralino?', typeof window.Neutralino, window.Neutralino?.app?.isNative);
   D('[app] logPath=', window.__logPath);
 
+  // FIX v0.2.32: garante que a janela comeca em posicao visivel e no tamanho certo.
+  // O WebView2 as vezes salva a posicao em -32000,-32000 (void do Windows)
+  // quando o monitor onde o app estava e desconectado ou o config de video
+  // mudou. Neutralino nao corrige sozinho, entao o app fica off-screen
+  // e invisivel ("minimiza e some"). Alem disso, o Neutralino 6.3.0 tem bug
+  // que ignora width/height do config na 1a abertura (usa minWidth/minHeight).
+  // window.center() e window.setSize() expoe as APIs do runtime.
+  if (NO_APP && typeof window.Neutralino?.window?.center === 'function') {
+    try {
+      await Promise.race([
+        window.Neutralino.window.center(),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('center timeout')), 1500)),
+      ]);
+      D('[app] window.center() OK');
+    } catch (e) {
+      D('[app] window.center() falhou:', e.message);
+    }
+    if (typeof window.Neutralino?.window?.setSize === 'function') {
+      try {
+        await Promise.race([
+          window.Neutralino.window.setSize({ width: 1200, height: 760 }),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('setSize timeout')), 1500)),
+        ]);
+        D('[app] window.setSize(1200, 760) OK');
+      } catch (e) {
+        D('[app] window.setSize falhou:', e.message);
+      }
+    }
+  }
+
   // 1. Abre o banco (sql.js, sql-wasm.wasm) - com timeout de 60s pra debug
   try {
     D('[app] abrindo banco...');
@@ -128,7 +158,7 @@ async function bootstrap() {
       if (cached) versao = cached;
     } catch (_) {}
   }
-  if (!versao) versao = '0.2.31';
+  if (!versao) versao = '0.2.32';
   try { localStorage.setItem('__app_version', versao); } catch (_) {}
   const versaoSpan = document.getElementById('versao-app');
   if (versaoSpan) versaoSpan.textContent = 'v' + versao;
@@ -182,12 +212,13 @@ async function bootstrap() {
                   new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000)),
                 ]);
                 D('[app] config do disco atualizado pra v' + versao);
-                toast({ tipo: 'sucesso', titulo: 'Atualizacao', corpo: 'Configuracao atualizada. O app vai reiniciar.' });
-                setTimeout(() => {
-                  try { window.Neutralino?.app?.exit?.(); } catch (_) {}
-                  setTimeout(() => { try { window.Neutralino?.app?.restartProcess?.(); } catch (_) {} }, 500);
-                }, 1500);
-                return; // nao continua o bootstrap
+                // FIX v0.2.32: NAO chama app.exit()/app.restartProcess() aqui.
+                // O restart agressivo matava o app do nada ("minimiza e some")
+                // e o usuario perdia a sessao. O config novo sera usado na
+                // proxima abertura do app, e o app atual continua funcionando
+                // com o config em memoria que ja foi carregado no boot.
+                toast({ tipo: 'sucesso', titulo: 'Atualizacao', corpo: 'Configuracao atualizada para v' + versao + '. Aplica no proximo reinicio.' });
+                // nao retorna: continua o bootstrap normalmente
               } catch (e) {
                 D('[app] falhou ao gravar config no disco:', e.message);
               }
@@ -390,7 +421,7 @@ function renderLogin() {
           ${salvo ? '<button id="btn-sair-gravado" class="login-sair">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
         </div>
 
-        <div class="login-rodape">v${window.__appVersion || '0.2.31'}</div>
+        <div class="login-rodape">v${window.__appVersion || '0.2.32'}</div>
       </div>
     </div>
   `;
