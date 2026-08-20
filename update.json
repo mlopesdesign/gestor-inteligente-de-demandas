@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.31",
-  "notes": "v0.2.31 - Limpeza pos hotfix cascade (v0.2.26-30 quebrados). 1) FIX critico: db.js gravava em disco usando API inexistente (removeFile is not a function) - corrigido para remove() da v6.3.0. Banco agora PERSISTE em disco via certutil+move. 2) FIX critico: certutil em Windows PT-BR retorna 'concluido com exito' (nao 'successfully'); db.js aceitava so o termo ingles, entao caia no fallback localStorage. Agora detecta PT-BR (e exitCode). 3) FIX critico: sync.js usava window.NL_CORS (nao existe) - corrigido para NL_PORT. 4) Higiene: 9 instaladores antigos (v0.2.20-30) -> installer/.obsoleto/. 5) Banco local do desktop zerado + cache WebView2 limpo.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.31/resources.neu",
-  "sha256": "04E9A3BA94E0E8E7A81F83AA69E19C49D7F3552B80BBB7B93218F7B862AC0C00",
-  "size": 6303313
+  "version": "0.2.32",
+  "notes": "v0.2.32 - FIX minimiza e some. 1) window.center() + window.setSize(1200,760) no boot do app.js garante que a janela sempre comeca em posicao visivel e no tamanho certo. Antes o WebView2 salvava a pos em -32000,-32000 (void do Windows) quando o monitor onde o app estava era desconectado, e o Neutralino 6.3.0 ignorava width/height na 1a abertura usando minWidth/minHeight. 2) Removido o app.exit()+app.restartProcess() do auto-att do config (era agressivo demais e matava o app do nada). Agora so atualiza o config em disco; passa a valer na proxima abertura.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.32/resources.neu",
+  "sha256": "47E1813B4593495E764B4FF1E4611DF8D0A988165157248E8E8ED488CDABA57E",
+  "size": 6304861
 }
