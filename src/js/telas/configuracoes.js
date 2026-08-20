@@ -112,6 +112,18 @@ async function carregar() {
  </div>
  </div>
 
+ <div class="tab-painel ${_abaAtiva==='sync'?'ativa':''}" id="tab-sync" role="tabpanel">
+ <div class="card">
+ <h3>Sincronização com a nuvem (plugin WordPress)</h3>
+ <p style="color:var(--fg-3); font-size:12px; margin:6px 0 12px;">
+ Conecte o Gestor desktop ao plugin <code>gestor-api</code> instalado em <code>tools.mlopesdesign.com.br</code> pra sincronizar tarefas, projetos, clientes e áreas entre este app, o site WP e o app Android.
+ Use as mesmas credenciais do <b>admin do WordPress</b> (a partir da v0.1.4 do plugin, o login é via <code>wp_users</code> nativo).
+ </p>
+ <div id="sync-status-area"><div class="sync-status">carregando...</div></div>
+ <div id="sync-resultado" style="margin-top:10px;"></div>
+ </div>
+ </div>
+
  <div class="tab-painel ${_abaAtiva==='atualizacao'?'ativa':''}" id="tab-atualizacao" role="tabpanel">
  <div class="tab-grid">
  <div>

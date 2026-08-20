@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.25",
-  "notes": "v0.2.25 - Excluir em TUDO + Bulk select + UI de subtarefas. 1) Botao Excluir onde faltava: Inbox, Busca global (4 tipos), modal de Tarefa, e em tarefas concluidas no Hoje. 2) UI de Subtarefas (nova) no modal: lista + adicionar (Enter) + toggle concluido + excluir. Modal atualiza in-place, NAO fecha+reabre (nunca trava em erro de inclusao). 3) Bulk select com Selecionar/Desmarcar + tri-state + contador 'N de M' + Excluir/Arquivar em massa em Tarefas, Inbox e Backup. 4) Backend novo: tarefas:excluirSubtarefa (DELETE direto, RLS). 5) Testes: 17/17 verde em test-tarefas (era 8).",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.25/resources.neu",
-  "sha256": "BE610F7C9332CBB8068091E733F2FEF66AF4DB509726CF34E15C97E58C6FB8C3",
-  "size": 7260671
+  "version": "0.2.26",
+  "notes": "v0.2.26 - HOTFIX: Aba Sincronizacao agora aparece (estava vazia). O menu de abas mostrava 4 (Geral, Sincronizacao, Backup, Atualizacao) mas faltava o painel HTML do sync (introduzido na v0.2.24 mas com bug). Sem isso, nao dava pra logar no plugin WP do app e fazer sync com a nuvem.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.26/resources.neu",
+  "sha256": "8CDB8706468DB67BD88D9A27570936E413EA71012B408999628702156FBF0900",
+  "size": 7260375
 }
