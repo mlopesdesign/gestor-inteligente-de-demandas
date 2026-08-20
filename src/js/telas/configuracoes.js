@@ -315,11 +315,11 @@ async function verificarAgora() {
  try {
  const info = await verificarAtualizacao({ silencioso: true });
  if (info) {
- setStatusAtualizacao('nova versão ' + info.version, 'aviso');
+ setStatusAtualizacao('nova versao ' + info.version, 'aviso');
  renderizarNovaVersao(info);
  } else {
- setStatusAtualizacao('você está na versão mais recente', 'ok');
- const slot = document.getElementById('atualizacao-novaversão');
+ setStatusAtualizacao('você está na versao mais recente', 'ok');
+ const slot = document.getElementById('atualizacao-novaversao');
  if (slot) slot.innerHTML = '';
  }
  } catch (e) {
@@ -331,12 +331,12 @@ async function verificarAgora() {
 }
 
 function renderizarNovaVersao(info) {
- const slot = document.getElementById('atualizacao-novaversão');
+ const slot = document.getElementById('atualizacao-novaversao');
  if (!slot) return;
  const sizeMB = info.size ? (info.size / (1024*1024)).toFixed(2) + ' MB' : '';
  slot.innerHTML = `
- <div class="atualizacao-novaversão">
- <div class="novaversão-titulo">Nova versão disponível: v${escapeHtml(info.version)}</div>
+ <div class="atualizacao-novaversao">
+ <div class="novaversao-titulo">Nova versao disponível: v${escapeHtml(info.version)}</div>
  ${sizeMB || info.sha256 ? `<div class="novaversão-meta">${sizeMB}${sizeMB && info.sha256 ? ' • ' : ''}${info.sha256 ? 'SHA-256 ' + escapeHtml(info.sha256.substring(0, 16)) + '...' : ''}</div>` : ''}
  <div class="novaversão-notes">${escapeHtml(info.notes || '(sem notas)')}</div>
  <div class="novaversão-acoes">

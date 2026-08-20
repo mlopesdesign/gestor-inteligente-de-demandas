@@ -108,7 +108,7 @@ export async function criar(db, payload, sessao) {
     const tamanho = await tamanhoArquivo(caminho);
     const criadoEm = new Date().toISOString();
     const ins = db.exec(
-      `INSERT INTO backups(id, criado_em, caminho, tamanho_bytes, origem, observacao, status, versão)
+      `INSERT INTO backups(id, criado_em, caminho, tamanho_bytes, origem, observacao, status, versao)
        VALUES(?,?,?,?,?,?,'ok',1)`,
       [id, criadoEm, caminho, tamanho, origem, observacao]
     );

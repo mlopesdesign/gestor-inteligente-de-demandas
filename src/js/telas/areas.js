@@ -98,7 +98,7 @@ export function modalArea(a, onClose) {
  const dados = Object.fromEntries(new FormData(e.target).entries());
  if (!dados.cor) dados.cor = CORES[0];
  let r;
- if (isEdit) { dados.id = t.id; dados.versão = t.versão; r = await window.api('areas:atualizar', dados); }
+ if (isEdit) { dados.id = t.id; dados.versao = t.versao; r = await window.api('areas:atualizar', dados); }
  else { r = await window.api('areas:criar', dados); }
  if (r.ok) { host.remove(); if (onClose) onClose(); }
  else { alert(r.erro?.mensagem || 'erro'); }

@@ -7,7 +7,7 @@ export function topbar() {
  <div class="topbar">
  <img src="/src/resources/images/logo.png" alt="Gestor" class="brand-logo">
  <span class="brand">Gestor</span>
- <span class="brand-sub" id="versão-app"></span>
+ <span class="brand-sub" id="versao-app"></span>
  <span class="spacer"></span>
  <span class="status" id="status-topo"></span>
  </div>`;

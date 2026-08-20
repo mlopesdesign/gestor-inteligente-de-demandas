@@ -35,7 +35,7 @@ export async function cadastro(db, payload, sessao) {
   const agora = new Date().toISOString();
   const senhaHash = await hashSenha(senha);
   const r2 = db.exec(
-    `INSERT INTO usuarios(id, email, senha_hash, nome, criado_em, atualizado_em, versão, dono_id)
+    `INSERT INTO usuarios(id, email, senha_hash, nome, criado_em, atualizado_em, versao, dono_id)
      VALUES(?,?,?,?,?,?,1,?)`,
     [id, emailNorm, senhaHash, nome, agora, agora, id]
   );
@@ -146,7 +146,7 @@ async function upsertDispositivo(db, usuarioId, nome, sistema, appVersao) {
   }
   const id = UlidFactory.next();
   db.exec(
-    `INSERT INTO dispositivos(id, usuario_id, nome, sistema, app_versão, ultimo_acesso_em, criado_em, versão) VALUES(?,?,?,?,?,?,?,1)`,
+    `INSERT INTO dispositivos(id, usuario_id, nome, sistema, app_versao, ultimo_acesso_em, criado_em, versao) VALUES(?,?,?,?,?,?,?,1)`,
     [id, usuarioId, nome, sistema, appVersao, agora, agora]
   );
   return id;

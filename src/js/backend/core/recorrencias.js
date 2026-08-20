@@ -40,7 +40,7 @@ export function tick(db, payload, sessao) {
     // Cria nova tarefa
     const novoId = UlidFactory.next();
     const r2 = db.exec(
-      `INSERT INTO tarefas(id, usuario_id, dono_id, titulo, descricao, status, prioridade, nivel_cobranca, area_id, projeto_id, cliente_id, recorrencia_tipo, recorrencia_data_base, criado_em, atualizado_em, versão) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+      `INSERT INTO tarefas(id, usuario_id, dono_id, titulo, descricao, status, prioridade, nivel_cobranca, area_id, projeto_id, cliente_id, recorrencia_tipo, recorrencia_data_base, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
       [novoId, r.usuario_id, r.dono_id, r.titulo, r.descricao, 'PLANEJADA', r.prioridade, r.nivel_cobranca, r.area_id, r.projeto_id, r.cliente_id, r.recorrencia_tipo, prox, agora, agora]
     );
     if (r2.ok) {

@@ -105,16 +105,16 @@ async function carregar() {
  const t = (await window.api('tarefas:obter', { id })).dados;
  modalTarefa(t, _cache, carregar);
  } else if (ac === 'concluir') {
- if (confirm('Concluir esta tarefa?')) { await window.api('tarefas:concluir', { id, versão: v }); carregar(); }
+ if (confirm('Concluir esta tarefa?')) { await window.api('tarefas:concluir', { id, versao: v }); carregar(); }
  } else if (ac === 'cancelar') {
- const motivo = prompt('Motivo do cancelamento:'); if (motivo) { await window.api('tarefas:cancelar', { id, versão: v, motivo }); carregar(); }
+ const motivo = prompt('Motivo do cancelamento:'); if (motivo) { await window.api('tarefas:cancelar', { id, versao: v, motivo }); carregar(); }
  } else if (ac === 'adiar') {
- const nova = prompt('Nova data de vencimento (YYYY-MM-DD):'); if (nova) { await window.api('tarefas:adiar', { id, versão: v, vencimento_em: new Date(nova).toISOString(), motivo: 'adiada manualmente' }); carregar(); }
+ const nova = prompt('Nova data de vencimento (YYYY-MM-DD):'); if (nova) { await window.api('tarefas:adiar', { id, versao: v, vencimento_em: new Date(nova).toISOString(), motivo: 'adiada manualmente' }); carregar(); }
  } else if (ac === 'arquivar') {
- if (confirm('Arquivar?')) { await window.api('tarefas:arquivar', { id, versão: v }); carregar(); }
+ if (confirm('Arquivar?')) { await window.api('tarefas:arquivar', { id, versao: v }); carregar(); }
  } else if (ac === 'excluir') {
  if (confirm('Excluir esta tarefa PERMANENTEMENTE? Esta acao nao pode ser desfeita.')) {
- const r = await window.api('tarefas:excluir', { id, versão: v });
+ const r = await window.api('tarefas:excluir', { id, versao: v });
  if (!r.ok) alert('Erro ao excluir: ' + (r.erro?.mensagem || ''));
  carregar();
  }
@@ -154,7 +154,7 @@ function bindBulk(items) {
  btnEx().disabled = true; btnArq().disabled = true;
  let ok = 0, falha = 0;
  for (const c of marcados) {
- const r = await window.api('tarefas:excluir', { id: c.dataset.id, versão: Number(c.dataset.v) });
+ const r = await window.api('tarefas:excluir', { id: c.dataset.id, versao: Number(c.dataset.v) });
  if (r.ok) ok++; else falha++;
  }
  toast({ tipo: falha ? 'erro' : 'sucesso', titulo: `Exclusão em massa`, corpo: `${ok} excluída(s), ${falha} falha(s)` });
@@ -168,7 +168,7 @@ function bindBulk(items) {
  btnEx().disabled = true; btnArq().disabled = true;
  let ok = 0, falha = 0;
  for (const c of marcados) {
- const r = await window.api('tarefas:arquivar', { id: c.dataset.id, versão: Number(c.dataset.v) });
+ const r = await window.api('tarefas:arquivar', { id: c.dataset.id, versao: Number(c.dataset.v) });
  if (r.ok) ok++; else falha++;
  }
  toast({ tipo: falha ? 'erro' : 'sucesso', titulo: `Arquivamento em massa`, corpo: `${ok} arquivada(s), ${falha} falha(s)` });
@@ -181,7 +181,7 @@ function linhaTarefa(t) {
  const venc = t.vencimento_em ? new Date(t.vencimento_em) : null;
  const vencida = venc && venc < new Date() && !['CONCLUIDA','CANCELADA','ARQUIVADA'].includes(t.status);
  return `<tr>
- <td><input type="checkbox" class="sel-item" data-id="${t.id}" data-v="${t.versão}"></td>
+ <td><input type="checkbox" class="sel-item" data-id="${t.id}" data-v="${t.versao}"></td>
  <td><span class="dot" style="background:${t.area_cor || '#888'}"></span></td>
  <td><strong>${escapeHtml(t.titulo)}</strong>${t.descricao ? `<br><span style="color:var(--fg-3); font-size:11px;">${escapeHtml(t.descricao.slice(0,80))}</span>` : ''}</td>
  <td><span class="pill status-${t.status}">${t.status}</span></td>
@@ -190,11 +190,11 @@ function linhaTarefa(t) {
  <td>${t.projeto_titulo ? escapeHtml(t.projeto_titulo) : '—'}</td>
  <td>${vencida ? '<span style="color:var(--danger);"> ' : ''}${venc ? formatarData(venc) : '—'}</td>
  <td style="text-align:right; white-space:nowrap;">
- <button data-id="${t.id}" data-v="${t.versão}" data-acao="editar" title="Editar">✎</button>
- ${t.status !== 'CONCLUIDA' ? `<button data-id="${t.id}" data-v="${t.versão}" data-acao="concluir" class="success" title="Marcar como concluída">✓</button>` : ''}
- ${t.status !== 'CANCELADA' && t.status !== 'ARQUIVADA' ? `<button data-id="${t.id}" data-v="${t.versão}" data-acao="adiar" title="Adiar vencimento">⏰</button><button data-id="${t.id}" data-v="${t.versão}" data-acao="cancelar" class="danger" title="Cancelar tarefa">✕</button>` : ''}
- ${t.status !== 'ARQUIVADA' ? `<button data-id="${t.id}" data-v="${t.versão}" data-acao="arquivar" title="Arquivar">📦</button>` : ''}
- <button data-id="${t.id}" data-v="${t.versão}" data-acao="excluir" class="danger" title="Excluir permanentemente">🗑</button>
+ <button data-id="${t.id}" data-v="${t.versao}" data-acao="editar" title="Editar">✎</button>
+ ${t.status !== 'CONCLUIDA' ? `<button data-id="${t.id}" data-v="${t.versao}" data-acao="concluir" class="success" title="Marcar como concluída">✓</button>` : ''}
+ ${t.status !== 'CANCELADA' && t.status !== 'ARQUIVADA' ? `<button data-id="${t.id}" data-v="${t.versao}" data-acao="adiar" title="Adiar vencimento">⏰</button><button data-id="${t.id}" data-v="${t.versao}" data-acao="cancelar" class="danger" title="Cancelar tarefa">✕</button>` : ''}
+ ${t.status !== 'ARQUIVADA' ? `<button data-id="${t.id}" data-v="${t.versao}" data-acao="arquivar" title="Arquivar">📦</button>` : ''}
+ <button data-id="${t.id}" data-v="${t.versao}" data-acao="excluir" class="danger" title="Excluir permanentemente">🗑</button>
  </td>
  </tr>`;
 }
@@ -349,7 +349,7 @@ export function modalTarefa(tarefa, cache, onClose) {
  const btnExcluir = host.querySelector('[data-acao="excluir"]');
  if (btnExcluir) btnExcluir.onclick = async () => {
  if (!confirm('Excluir esta tarefa PERMANENTEMENTE? Esta acao nao pode ser desfeita.')) return;
- const r = await window.api('tarefas:excluir', { id: t.id, versão: t.versão });
+ const r = await window.api('tarefas:excluir', { id: t.id, versao: t.versao });
  if (!r.ok) { alert(r.erro?.mensagem || 'erro'); return; }
  host.remove();
  if (onClose) onClose();
@@ -367,7 +367,7 @@ export function modalTarefa(tarefa, cache, onClose) {
  if (!dados.vencimento_em) delete dados.vencimento_em;
  let r;
  if (isEdit) {
- dados.id = t.id; dados.versão = t.versão;
+ dados.id = t.id; dados.versao = t.versao;
  r = await window.api('tarefas:atualizar', dados);
  } else {
  r = await window.api('tarefas:criar', dados);

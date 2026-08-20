@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.27",
-  "notes": "v0.2.27 - HOTFIX CRITICO: encoding UTF-8 double-encoded. Strings acentuadas (Sincronizacao, Configuracoes, etc) estavam aparecendo como 'SincronizaÃ§Ã£o' no app. Causa: edit tool gravou UTF-8 bytes que uma camada no meio interpretou como Latin-1, e re-gravou em UTF-8. Fix: script Python que decodifica uma camada Latin-1 e regrava UTF-8 (405 substituicoes em 28 arquivos). + Aba Sincronizacao que faltava (do v0.2.26).",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.27/resources.neu",
-  "sha256": "AB6700C6F355795F7CFFCD2E2509A47D4876BA7B33AD0F93F55547EF7846E4B3",
-  "size": 7260331
+  "version": "0.2.28",
+  "notes": "v0.2.28 - HOTFIX CRITICO: v0.2.27 tinha bug introduzido pelo fix-utf8-double-encoded.py, que converteu 'versao' (nome de coluna SQL) em 'versão' (com acento). Resultado: SQL falhava com 'no such column: t.versão' e o app não carregava tarefas. Revertido em 5 arquivos de backend (areas, clientes, projetos, sync, tarefas) + 20 nas telas. 17/17 testes verde.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.28/resources.neu",
+  "sha256": "FAB6A4AB196859BCA93EE2203BE8FA21F2550080853DAFA84E58B739B5636C2D",
+  "size": 7260448
 }

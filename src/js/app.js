@@ -119,20 +119,20 @@ async function bootstrap() {
   let versão = null;
   try {
     const meta = document.querySelector('meta[name="app-version"]');
-    if (meta && meta.content) versão = meta.content;
+    if (meta && meta.content) versao = meta.content;
   } catch (_) {}
   if (!versão) versão = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version;
   if (!versão) {
     try {
       const cached = localStorage.getItem('__app_version');
-      if (cached) versão = cached;
+      if (cached) versao = cached;
     } catch (_) {}
   }
-  if (!versão) versão = '0.2.27';
-  try { localStorage.setItem('__app_version', versão); } catch (_) {}
+  if (!versão) versão = '0.2.28';
+  try { localStorage.setItem('__app_version', versao); } catch (_) {}
   const versãoSpan = document.getElementById('versão-app');
   if (versãoSpan) versãoSpan.textContent = 'v' + versão;
-  document.querySelectorAll('.brand-sub').forEach(el => { el.textContent = 'v' + versão; });
+  document.querySelectorAll('.brand-sub').forEach(el => { el.textContent = 'v' + versao; });
   window.__appVersion = versão;
 
   // 2.5. FIX v0.2.9: auto-atualiza neutralino.config.json no disco se a versão do .neu for maior
@@ -390,7 +390,7 @@ function renderLogin() {
           ${salvo ? '<button id="btn-sair-gravado" class="login-sair">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
         </div>
 
-        <div class="login-rodape">v${window.__appVersion || '0.2.27'}</div>
+        <div class="login-rodape">v${window.__appVersion || '0.2.28'}</div>
       </div>
     </div>
   `;
@@ -478,8 +478,8 @@ export async function verificarAtualizacao({ silencioso = true } = {}) {
     const cmp = compararVersao(info.version, atual);
     D('[update] info.version=' + info.version + ' atual=' + atual + ' cmp=' + cmp);
     if (cmp <= 0) {
-      D('[update] mesma versão, NAO mostra toast');
-      if (!silencioso) toast({ tipo: 'info', titulo: 'Atualização', corpo: 'VocÃª já está na versão mais recente (' + atual + ')' });
+      D('[update] mesma versao, NAO mostra toast');
+      if (!silencioso) toast({ tipo: 'info', titulo: 'Atualização', corpo: 'VocÃª já está na versao mais recente (' + atual + ')' });
       return null;
     }
     // Nova versão disponivel!
@@ -511,7 +511,7 @@ export async function aplicarAtualizacao(info) {
       toast({ tipo: 'erro', titulo: 'Atualização', corpo: 'Caminho do app não resolvido. Baixe manualmente em: ' + info.resourcesURL });
       return false;
     }
-    toast({ tipo: 'info', titulo: 'Atualização', corpo: 'Baixando versão ' + info.version + '...' });
+    toast({ tipo: 'info', titulo: 'Atualização', corpo: 'Baixando versao ' + info.version + '...' });
     const tmpPath = appPath + '\\resources.neu.tmp';
     const dstPath = appPath + '\\resources.neu';
     const oldPath = appPath + '\\resources.neu.old';
@@ -614,7 +614,7 @@ bootstrap().catch(e => {
 setTimeout(async () => {
   const info = await verificarAtualizacao({ silencioso: true });
   if (info) {
-    D('[app] nova versão disponivel:', info.version);
+    D('[app] nova versao disponivel:', info.version);
     mostrarAvisoAtualizacao(info);
   }
   agendarVerificacaoAtualizacao();
