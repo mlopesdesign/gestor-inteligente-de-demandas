@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.28",
-  "notes": "v0.2.28 - HOTFIX CRITICO: v0.2.27 tinha bug introduzido pelo fix-utf8-double-encoded.py, que converteu 'versao' (nome de coluna SQL) em 'versão' (com acento). Resultado: SQL falhava com 'no such column: t.versão' e o app não carregava tarefas. Revertido em 5 arquivos de backend (areas, clientes, projetos, sync, tarefas) + 20 nas telas. 17/17 testes verde.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.28/resources.neu",
-  "sha256": "FAB6A4AB196859BCA93EE2203BE8FA21F2550080853DAFA84E58B739B5636C2D",
-  "size": 7260448
+  "version": "0.2.29",
+  "notes": "v0.2.29 - HOTFIX: sync.js nao detectava que estava rodando no app. Causa: detectNoApp() checava window.NL_CORS/NL_PORT (injetados tarde pelo __neutralino_globals.js), mas o sync.js eh importado antes dessas globais existirem. Resultado: 'Recurso disponivel apenas no app' mesmo dentro do app. Fix: usar a mesma deteccao do ambiente.js (typeof window.Neutralino).",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.29/resources.neu",
+  "sha256": "2B65102ECB32F885521D10C51240390196CE7966A3D92E6A1E778E0E718946BC",
+  "size": 7260515
 }

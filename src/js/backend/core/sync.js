@@ -93,7 +93,11 @@ function newDispositivoId() {
 }
 
 function detectNoApp() {
-  try { return typeof window === 'undefined' || !window.NL_CORS || !window.NL_PORT; }
+  // FIX v0.2.28: mesma deteccao do ambiente.js. A anterior (NL_CORS / NL_PORT)
+  // falhava mesmo dentro do app porque o sync.js eh importado antes do
+  // __neutralino_globals.js ter tempo de definir essas globais. Resultado:
+  // 'Recurso disponivel apenas no app' mesmo dentro do app rodando.
+  try { return typeof window === 'undefined' || typeof window.Neutralino === 'undefined'; }
   catch (_) { return true; }
 }
 const NO_APP = detectNoApp();
