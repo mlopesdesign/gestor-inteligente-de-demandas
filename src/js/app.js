@@ -119,20 +119,20 @@ async function bootstrap() {
   let versão = null;
   try {
     const meta = document.querySelector('meta[name="app-version"]');
-    if (meta && meta.content) versao = meta.content;
+    if (meta && meta.content) versão = meta.content;
   } catch (_) {}
   if (!versão) versão = window.NEUTRALINO_GLOBALS?.neutralinoConfig?.version;
   if (!versão) {
     try {
       const cached = localStorage.getItem('__app_version');
-      if (cached) versao = cached;
+      if (cached) versão = cached;
     } catch (_) {}
   }
-  if (!versão) versão = '0.2.29';
-  try { localStorage.setItem('__app_version', versao); } catch (_) {}
+  if (!versão) versão = '0.2.30';
+  try { localStorage.setItem('__app_version', versão); } catch (_) {}
   const versãoSpan = document.getElementById('versão-app');
   if (versãoSpan) versãoSpan.textContent = 'v' + versão;
-  document.querySelectorAll('.brand-sub').forEach(el => { el.textContent = 'v' + versao; });
+  document.querySelectorAll('.brand-sub').forEach(el => { el.textContent = 'v' + versão; });
   window.__appVersion = versão;
 
   // 2.5. FIX v0.2.9: auto-atualiza neutralino.config.json no disco se a versão do .neu for maior
@@ -390,7 +390,7 @@ function renderLogin() {
           ${salvo ? '<button id="btn-sair-gravado" class="login-sair">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
         </div>
 
-        <div class="login-rodape">v${window.__appVersion || '0.2.29'}</div>
+        <div class="login-rodape">v${window.__appVersion || '0.2.30'}</div>
       </div>
     </div>
   `;

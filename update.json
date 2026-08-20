@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.29",
-  "notes": "v0.2.29 - HOTFIX: sync.js nao detectava que estava rodando no app. Causa: detectNoApp() checava window.NL_CORS/NL_PORT (injetados tarde pelo __neutralino_globals.js), mas o sync.js eh importado antes dessas globais existirem. Resultado: 'Recurso disponivel apenas no app' mesmo dentro do app. Fix: usar a mesma deteccao do ambiente.js (typeof window.Neutralino).",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.29/resources.neu",
-  "sha256": "2B65102ECB32F885521D10C51240390196CE7966A3D92E6A1E778E0E718946BC",
-  "size": 7260515
+  "version": "0.2.30",
+  "notes": "v0.2.30 - HOTFIX CRITICO: bootstrap crashava com ReferenceError. Causa: o fix-versao converteu 'versao' -> 'versão' em ALGUMAS atribuicoes (linhas 122, 128, 132, 135 do app.js) mas NAO na declaracao 'let versão' (linha 119). Resultado: 'versao' (sem acento) virou ReferenceError porque a variavel declarada era 'versão' (com acento). App crashava no boot, nada do menu abria. Fix: reverter 'versao' -> 'versão' nos 4 lugares para bater com a declaracao.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.30/resources.neu",
+  "sha256": "BE67B612616CA63D1D35500553DA524FD6F524C958A041B459A7AA5FC31905FD",
+  "size": 7260419
 }
