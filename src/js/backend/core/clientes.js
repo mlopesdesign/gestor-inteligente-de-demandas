@@ -2,6 +2,7 @@
 // Conforme PROJETO §7.3.
 import { UlidFactory } from '../ulid.js';
 import { auditar } from './auditoria.js';
+import { enfileirarMudanca } from './sync.js';
 
 export function listar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
@@ -76,6 +77,7 @@ export function criar(db, payload, sessao) {
   );
   if (!r.ok) return r;
   auditar(db, sessao, 'clientes', id, 'criado', { nome });
+  enfileirarMudanca(db, sessao, 'clientes', 'UPSERT', id, 1, { id, nome, organizacao, contatos_json: contatos, observacoes, status: status || 'ATIVO', criado_em: agora, atualizado_em: agora, versao: 1 });
   return { ok: true, dados: { id, nome, criado_em: agora } };
 }
 
@@ -111,6 +113,8 @@ export function atualizar(db, payload, sessao) {
   if (!r.ok) return r;
   if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'cliente nao encontrado ou versao desatualizada' } };
   auditar(db, sessao, 'clientes', id, 'atualizado', { campos: sets });
+  const versaoNova = (Number(versao) || 0) + 1;
+  enfileirarMudanca(db, sessao, 'clientes', 'UPSERT', id, versaoNova, { id, ...payload, versao: versaoNova, atualizado_em: new Date().toISOString() });
   return { ok: true, dados: { id } };
 }
 
@@ -125,6 +129,7 @@ export function arquivar(db, payload, sessao) {
   );
   if (!r.ok) return r;
   auditar(db, sessao, 'clientes', id, 'arquivado', {});
+  enfileirarMudanca(db, sessao, 'clientes', 'UPSERT', id, 0, { id, status: 'ARQUIVADO', arquivado: 1 });
   return { ok: true, dados: { id } };
 }
 
@@ -151,5 +156,6 @@ export function excluir(db, payload, sessao) {
   if (!r.ok) return r;
   if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'NAO_ENCONTRADO', mensagem: 'cliente nao encontrado' } };
   auditar(db, sessao, 'clientes', id, 'excluido', {});
+  enfileirarMudanca(db, sessao, 'clientes', 'DELETE', id, 0, { id });
   return { ok: true, dados: { id } };
 }

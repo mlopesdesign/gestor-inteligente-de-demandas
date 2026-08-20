@@ -2,6 +2,7 @@
 // Conforme PROJETO §7.4.
 import { UlidFactory } from '../ulid.js';
 import { auditar } from './auditoria.js';
+import { enfileirarMudanca } from './sync.js';
 
 export function listar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
@@ -72,6 +73,7 @@ export function criar(db, payload, sessao) {
   );
   if (!r.ok) return r;
   auditar(db, sessao, 'projetos', id, 'criado', { titulo });
+  enfileirarMudanca(db, sessao, 'projetos', 'UPSERT', id, 1, { id, titulo, descricao, cliente_id, area_id, status: status || 'PLANEJADO', prioridade: prioridade || 'NORMAL', inicio_em, fim_em, criado_em: agora, atualizado_em: agora, versao: 1 });
   return { ok: true, dados: { id, titulo, criado_em: agora } };
 }
 
@@ -94,6 +96,8 @@ export function atualizar(db, payload, sessao) {
   if (!r.ok) return r;
   if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'projeto nao encontrado ou versao desatualizada' } };
   auditar(db, sessao, 'projetos', id, 'atualizado', { campos: Object.keys(map).filter(k => payload[k] !== undefined) });
+  const versaoNova = (Number(versao) || 0) + 1;
+  enfileirarMudanca(db, sessao, 'projetos', 'UPSERT', id, versaoNova, { id, ...payload, versao: versaoNova, atualizado_em: new Date().toISOString() });
   return { ok: true, dados: { id } };
 }
 
@@ -108,6 +112,7 @@ export function arquivar(db, payload, sessao) {
   );
   if (!r.ok) return r;
   auditar(db, sessao, 'projetos', id, 'arquivado', {});
+  enfileirarMudanca(db, sessao, 'projetos', 'UPSERT', id, 0, { id, status: 'ARQUIVADO', arquivado: 1 });
   return { ok: true, dados: { id } };
 }
 
@@ -122,6 +127,7 @@ export function concluir(db, payload, sessao) {
   );
   if (!r.ok) return r;
   auditar(db, sessao, 'projetos', id, 'concluido', {});
+  enfileirarMudanca(db, sessao, 'projetos', 'UPSERT', id, 0, { id, status: 'CONCLUIDO', fim_em: agora });
   return { ok: true, dados: { id } };
 }
 
@@ -142,5 +148,6 @@ export function excluir(db, payload, sessao) {
   if (!r.ok) return r;
   if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'NAO_ENCONTRADO', mensagem: 'projeto nao encontrado' } };
   auditar(db, sessao, 'projetos', id, 'excluido', {});
+  enfileirarMudanca(db, sessao, 'projetos', 'DELETE', id, 0, { id });
   return { ok: true, dados: { id } };
 }

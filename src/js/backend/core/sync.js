@@ -83,7 +83,13 @@ function emptyState() {
     wp_dispositivo_id: null,
     wp_expira_em: null,
     ultimo_sync: null,
+    // FIX v0.2.36: cursores separados. ultimo_pull_id = ultimo id de mudanca
+    // recebida do servidor (nao usado em mais lugar nenhum — sync_cursores cuida).
+    // ultimo_push_id = ultimo id de mudanca local ENVIADA ao servidor.
+    // Antes o push reusava ultimo_pull_id, o que filtrava errado: se um pull
+    // tinha trazido id 50, o push ignorava qualquer mudanca local com id < 50.
     ultimo_pull_id: 0,
+    ultimo_push_id: 0,
   };
 }
 
@@ -256,25 +262,33 @@ export async function resolver(db, p, s) {
 
 async function enviarPush(db, st, s) {
   // Coleta mudancas locais pendentes da sync_mudancas
+  // FIX v0.2.36: cursor proprio (ultimo_push_id) — nao reusa ultimo_pull_id.
   const r = db.exec(
     `SELECT id, tabela, operacao, registro_id, versao, payload_json
      FROM sync_mudancas
      WHERE usuario_id = ? AND id > ?
      ORDER BY id ASC LIMIT 200`,
-    [s.usuario_id, st.ultimo_pull_id || 0]
+    [s.usuario_id, st.ultimo_push_id || 0]
   );
   if (!r.ok) return r;
   if (r.dados.length === 0) return { ok: true, dados: { aplicadas: 0, conflitos: 0 } };
 
   const mutacoes = r.dados.map(row => {
-    // r = [id, tabela, operacao, registro_id, versao, payload_json]
-    const [mid, tabela, operacao, registroId, versao, payloadJson] = row;
+    // FIX v0.2.36: aceita array de objetos (better-sqlite3 / setup de teste)
+    // e array de arrays (sql.js / producao). Normaliza via checagem.
+    const isTuple = Array.isArray(row);
+    const id       = isTuple ? row[0] : row.id;
+    const tabela   = isTuple ? row[1] : row.tabela;
+    const operacao = isTuple ? row[2] : row.operacao;
+    const regId    = isTuple ? row[3] : row.registro_id;
+    const versao   = isTuple ? row[4] : row.versao;
+    const payloadJ = isTuple ? row[5] : row.payload_json;
     let payload = {};
-    try { payload = JSON.parse(payloadJson); } catch (_) {}
+    try { payload = JSON.parse(payloadJ); } catch (_) {}
     return {
       tabela: String(tabela),
       operacao: String(operacao),
-      registro_id: String(registroId),
+      registro_id: String(regId),
       versao: Number(versao),
       payload,
     };
@@ -293,12 +307,14 @@ async function enviarPush(db, st, s) {
   }
 
   // Marca mudancas como aplicadas e atualiza cursor local
-  const maxId = Number(r.dados[r.dados.length - 1][0]);
+  const lastRow = r.dados[r.dados.length - 1];
+  const maxId = Number(Array.isArray(lastRow) ? lastRow[0] : lastRow.id);
   db.exec(
     `UPDATE sync_mudancas SET aplicada = 1 WHERE id <= ? AND usuario_id = ?`,
     [maxId, s.usuario_id]
   );
-  st.ultimo_pull_id = maxId;
+  // FIX v0.2.36: cursor proprio do push, separado do pull
+  st.ultimo_push_id = maxId;
   await writeState(st);
 
   return {

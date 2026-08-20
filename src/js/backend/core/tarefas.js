@@ -2,6 +2,7 @@
 // Conforme PROJETO §7.5.
 import { UlidFactory } from '../ulid.js';
 import { auditar } from './auditoria.js';
+import { enfileirarMudanca } from './sync.js';
 
 const STATUS_VALIDOS = ['CAIXA_ENTRADA','PLANEJADA','EM_ANDAMENTO','AGUARDANDO_TERCEIRO','EM_REVISAO','BLOQUEADA','CONCLUIDA','CANCELADA','ARQUIVADA','ADIADA'];
 const PRIORIDADE_VALIDAS = ['BAIXA','NORMAL','ALTA','URGENTE','CRITICA'];
@@ -86,6 +87,7 @@ export function criar(db, payload, sessao) {
   );
   if (!r.ok) return r;
   auditar(db, sessao, 'tarefas', id, 'criada', { titulo, origem: origem || 'manual' });
+  enfileirarMudanca(db, sessao, 'tarefas', 'UPSERT', id, 1, { id, titulo, descricao, status: st, prioridade: prio, nivel_cobranca: nivel, area_id, projeto_id, cliente_id, inicio_em, vencimento_em, recorrencia_tipo, recorrencia_data_base, criado_em: agora, atualizado_em: agora, versao: 1, origem: origem || 'manual' });
   return { ok: true, dados: { id, titulo, criado_em: agora } };
 }
 
@@ -121,6 +123,9 @@ export function atualizar(db, payload, sessao) {
   if (!r.ok) return r;
   if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'tarefa nao encontrada ou versao desatualizada' } };
   auditar(db, sessao, 'tarefas', id, 'atualizada', { campos: sets });
+  // FIX v0.2.36: enfileira mudanca pra sync delta. Payload inclui os campos alterados + ID + versao nova.
+  const versaoNova = (Number(versao) || 0) + 1;
+  enfileirarMudanca(db, sessao, 'tarefas', 'UPSERT', id, versaoNova, { id, ...rest, versao: versaoNova, atualizado_em: new Date().toISOString() });
   return { ok: true, dados: { id } };
 }
 
@@ -144,6 +149,9 @@ function _alterarStatus(db, payload, sessao, novoStatus, campos) {
   if (!r.ok) return r;
   if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'tarefa nao encontrada ou versao desatualizada' } };
   auditar(db, sessao, 'tarefas', id, 'status_alterado:' + novoStatus, { motivo });
+  // FIX v0.2.36: enfileira mudanca de status pro sync
+  const versaoNova = (Number(versao) || 0) + 1;
+  enfileirarMudanca(db, sessao, 'tarefas', 'UPSERT', id, versaoNova, { id, status: novoStatus, atualizado_em: agora, versao: versaoNova, ...campos });
   return { ok: true, dados: { id, status: novoStatus } };
 }
 
@@ -169,6 +177,9 @@ export function adiar(db, payload, sessao) {
   if (!r1.ok) return r1;
   if (r1.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'tarefa nao encontrada ou versao desatualizada' } };
   auditar(db, sessao, 'tarefas', payload.id, 'adiada', { ate: payload.vencimento_em, motivo: payload.motivo });
+  // FIX v0.2.36: enfileira mudanca pro sync
+  const versaoNova = (Number(payload.versao) || 0) + 1;
+  enfileirarMudanca(db, sessao, 'tarefas', 'UPSERT', payload.id, versaoNova, { id: payload.id, status: 'ADIADA', vencimento_em: payload.vencimento_em, adiada_ate: payload.vencimento_em, adiada_motivo: payload.motivo || null, motivo_adiamento: payload.motivo || null, versao: versaoNova });
   return { ok: true, dados: { id, status: 'ADIADA' } };
 }
 
@@ -234,5 +245,7 @@ export function excluir(db, payload, sessao) {
   if (!r.ok) return r;
   if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'NAO_ENCONTRADO', mensagem: 'tarefa nao encontrada' } };
   auditar(db, sessao, 'tarefas', id, 'excluida', {});
+  // FIX v0.2.36: enfileira DELETE pro sync
+  enfileirarMudanca(db, sessao, 'tarefas', 'DELETE', id, 0, { id });
   return { ok: true, dados: { id } };
 }

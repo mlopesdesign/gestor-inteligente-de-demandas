@@ -2,6 +2,7 @@
 // Conforme PROJETO §7.2.
 import { UlidFactory } from '../ulid.js';
 import { auditar } from './auditoria.js';
+import { enfileirarMudanca } from './sync.js';
 
 export function listar(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
@@ -27,6 +28,7 @@ export function criar(db, payload, sessao) {
   );
   if (!r.ok) return r;
   auditar(db, sessao, 'areas', id, 'criada', { nome, cor });
+  enfileirarMudanca(db, sessao, 'areas', 'UPSERT', id, 1, { id, nome, cor: cor || '#888888', criado_em: agora, atualizado_em: agora, versao: 1 });
   return { ok: true, dados: { id, nome, cor, criado_em: agora } };
 }
 
@@ -41,6 +43,8 @@ export function atualizar(db, payload, sessao) {
   if (!r.ok) return r;
   if (r.dados.changes === 0) return { ok: false, erro: { codigo: 'CONFLITO_VERSAO', mensagem: 'area nao encontrada ou versao desatualizada' } };
   auditar(db, sessao, 'areas', id, 'atualizada', { nome, cor });
+  const versaoNova = (Number(versao) || 0) + 1;
+  enfileirarMudanca(db, sessao, 'areas', 'UPSERT', id, versaoNova, { id, nome, cor, versao: versaoNova, atualizado_em: new Date().toISOString() });
   return { ok: true, dados: { id } };
 }
 
@@ -56,5 +60,6 @@ export function excluir(db, payload, sessao) {
   const r = db.exec(`DELETE FROM areas WHERE id = ? AND usuario_id = ?`, [id, sessao.usuario_id]);
   if (!r.ok) return r;
   auditar(db, sessao, 'areas', id, 'excluida', {});
+  enfileirarMudanca(db, sessao, 'areas', 'DELETE', id, 0, { id });
   return { ok: true, dados: { id } };
 }

@@ -112,6 +112,15 @@ async function carregar() {
  </div>
  </div>
 
+ <div class="tab-painel ${_abaAtiva==='sync'?'ativa':''}" id="tab-sync" role="tabpanel">
+ <div class="card">
+ <h3>Sincronização com a nuvem</h3>
+ <p style="color:var(--fg-3); font-size:13px;">Esta aba conecta o Gestor desktop à API WordPress (<code>tools.mlopesdesign.com.br</code>) pra sincronizar tarefas entre dispositivos (incluindo o app Android).</p>
+ <p style="color:var(--fg-3); font-size:12px;">Sync é <strong>delta bidirecional</strong>: pull recebe o que mudou no servidor desde o último cursor; push envia só as mudanças locais desde o último push. Conflitos são detectados por <em>versão otimista</em>.</p>
+ <div id="sync-status-area"><div class="sync-status">carregando...</div></div>
+ </div>
+ </div>
+
  <div class="tab-painel ${_abaAtiva==='atualizacao'?'ativa':''}" id="tab-atualizacao" role="tabpanel">
  <div class="tab-grid">
  <div>
@@ -215,6 +224,10 @@ async function carregar() {
  document.querySelectorAll('.tab-painel').forEach(p => p.classList.toggle('ativa', p.id === 'tab-' + _abaAtiva));
  if (_abaAtiva === 'atualizacao' && !_releasesCache && !_releasesErro) {
  carregarHistoricoReleases();
+ }
+ // FIX v0.2.36: ativar sync ao trocar pra aba sync
+ if (_abaAtiva === 'sync') {
+ carregarSyncStatus();
  }
  if (_abaAtiva === 'backup') {
  carregarConfigBackupAuto();

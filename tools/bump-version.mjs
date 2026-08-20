@@ -63,11 +63,12 @@ h = h.replace(/(<meta name="app-build" content=")\d+\.\d+\.\d+-\d{4}-\d{2}-\d{2}
 writeFileSync(hPath, h);
 console.log(`[bump] src/index.html: v${versao}-${data}`);
 
-// 5. installer/gestor.nsi
+// 5. installer/gestor.nsi (FIX v0.2.36: ler/escrever em latin1 pra preservar
+//    CP1252 do NSIS — antes lia em UTF-8 e corrompia PT-BR virando '?')
 const nPath = join(root, 'installer', 'gestor.nsi');
-let n = readFileSync(nPath, 'utf-8');
+let n = readFileSync(nPath, 'latin1');
 n = n.replace(/(!define APP_VERSION ")\d+\.\d+\.\d+(")/, '$1' + versao + '$2');
-writeFileSync(nPath, n);
+writeFileSync(nPath, n, 'latin1');
 console.log(`[bump] installer/gestor.nsi: v${versao}`);
 
 // 6. update.json (raiz) - so atualiza version, NAO mexe em sha256/size
