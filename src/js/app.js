@@ -226,7 +226,7 @@ async function bootstrap() {
       if (cached) versao = cached;
     } catch (_) {}
   }
-  if (!versao) versao = '0.2.33';
+  if (!versao) versao = '0.2.34';
   try { localStorage.setItem('__app_version', versao); } catch (_) {}
   const versaoSpan = document.getElementById('versao-app');
   if (versaoSpan) versaoSpan.textContent = 'v' + versao;
@@ -489,7 +489,7 @@ function renderLogin() {
           ${salvo ? '<button id="btn-sair-gravado" class="login-sair">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
         </div>
 
-        <div class="login-rodape">v${window.__appVersion || '0.2.33'}</div>
+        <div class="login-rodape">v${window.__appVersion || '0.2.34'}</div>
       </div>
     </div>
   `;

@@ -1,8 +1,8 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.33",
-  "notes": "v0.2.33 - FIX maximizar/restore vai pro limbo + auto-update fecha o app. 1) WebView2 restaurava a janela em estado maximized mas com tamanho NAO-maximizado (1200x760 em vez de 1920x1080). Ao clicar no botao maximizar, o SW_RESTORE tentava ir pro rcNormalPosition salvo em MAX_INT (32767) - a janela ia pro limbo. Agora o app.js detecta isMaximized+size<1500 no boot e forca restaurar+centralizar. 2) Listener de resize que captura posicoes invalidas (|x|>10000 ou |y|>10000) em runtime e recentraliza. 3) Auto-update usava app.exit() em vez de app.restartProcess() - app fechava e usuario tinha que abrir manual. Agora reinicia sozinho.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.33/resources.neu",
-  "sha256": "DDCA7C70F8CF16EC33D9D602DC94602B9896B43ACA001458D6AA47A91103F3B5",
+  "version": "0.2.34",
+  "notes": "v0.2.34 - FIX versao exibida errada (mostrava 0.2.25 mesmo rodando 0.2.33). A meta tag `app-version` no src/index.html nunca era atualizada pelo bump-version.mjs. O app.js lia essa meta tag PRIMEIRO (antes do localStorage e NEUTRALINO_GLOBALS), entao sempre mostrava 0.2.25 e o auto-update achava que precisava atualizar. FIX: bump-version.mjs agora atualiza 6 lugares (config, package, app.js, index.html, nsi, update.json). Em paralelo, app_versao e User-Agent do sync.js tambem foram pra 0.2.34 (sincronizacao com WP mostrava a versao antiga).",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.34/resources.neu",
+  "sha256": "24F6EFCD401C86718B87BB97CF42178A32FFDB86507793D080586158EE79C5DA",
   "size": 6308478
 }

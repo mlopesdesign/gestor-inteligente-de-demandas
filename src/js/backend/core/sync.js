@@ -109,7 +109,7 @@ async function wpFetch(method, path, body, token) {
   const headers = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    'User-Agent': 'GestorDesktop/0.2.25',
+    'User-Agent': 'GestorDesktop/0.2.34',
   };
   if (token) headers['Authorization'] = 'Bearer ' + token;
   const opts = { method, headers };
@@ -154,7 +154,7 @@ export async function login(db, p, s) {
     senha: p.senha,
     dispositivo_id: '', // backend WP gera se vazio
     sistema: 'DESKTOP',
-    app_versao: '0.2.25',
+    app_versao: '0.2.34',
   }, null);
   if (!r.ok || !r.json?.success) {
     return { ok: false, erro: { codigo: 'LOGIN_FALHOU', mensagem: r.json?.data?.message || r.json?.message || ('HTTP ' + r.status) } };
