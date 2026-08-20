@@ -145,6 +145,7 @@ E:\Projetos\LOPES FOCUS\
 │   ├── test-tarefas.mjs
 │   ├── test-cobrancas.mjs
 │   ├── test-recorrencias.mjs
+│   ├── test-sync.mjs                          ← NOVO v0.2.36: cobre enfileirarMudanca + enviarPush
 │   └── ...
 │
 ├── docs/
@@ -160,6 +161,7 @@ E:\Projetos\LOPES FOCUS\
 │   ├── MANUAL-DO-USUARIO.md
 │   ├── MANUAL-INSTALACAO.md
 │   ├── MANUAL-BACKUP-RECUPERACAO.md
+│   ├── HISTORICO-VERSOES.md                   ← NOVO v0.2.36: causa raiz + correção + lição
 │   ├── MATRIZ-RASTREABILIDADE.md
 │   └── adr/
 │
@@ -210,7 +212,7 @@ E:\Projetos\LOPES FOCUS\
 ├── tools/
 │   ├── setup-env.ps1                           ← carrega PATH do Node + Neutralino + NSIS
 │   ├── build.mjs                               ← neu build + empacota
-│   ├── bump-version.mjs                        ← bumpa em 3 lugares sincronizados
+│   ├── bump-version.mjs                        ← bumpa em 6 lugares sincronizados
 │   ├── run-tests.mjs                           ← roda `node tests/`
 │   ├── graphify.mjs                            ← gera GRAPHIFY.md (mapa técnico)
 │   ├── download-neutralino.mjs                 ← baixa Neutralino SDK portátil
@@ -239,7 +241,7 @@ node tools/run-tests.mjs
 # Build Neutralino (gera resources.neu + binário)
 node tools/build.mjs
 
-# Bump de versão (3 lugares: neutralino.config.json + src/js/app.js + src/js/backend/ambiente.js)
+# Bump de versão (6 lugares: neutralino.config.json + package.json + src/js/app.js + src/index.html + installer/gestor.nsi + update.json)
 node tools/bump-version.mjs 0.1.0
 
 # Gerar GRAPHIFY.md (mapa técnico)
@@ -262,7 +264,9 @@ ADRs já registrados:
 
 ## 8. Histórico de versões (do projeto)
 
-Será mantido em `docs/HISTORICO-VERSOES.md` no formato do padrão — causa raiz + correção + lição, não changelog de marketing.
+Mantido em `docs/HISTORICO-VERSOES.md` no formato do padrão — causa raiz + correção + lição, não changelog de marketing.
+
+Última versão publicada: **v0.2.36** (2026-08-20) — FIX F3 sync bidirecional. Cursor `ultimo_pull_id` (que era do PULL) estava sendo usado como filtro do PUSH, ignorando mudanças locais. Corrigido com `ultimo_push_id` próprio + `enfileirarMudanca()` em todos os core (tarefas, projetos, clientes, areas) + 9 testes de regressão.
 
 ---
 
@@ -277,12 +281,14 @@ A partir de 17/08/2026, o Marcio quer **conversar com o Gestor (desktop)** a par
 >
 > Fases de sync (que mexem no Gestor) ficam **bloqueadas** até liberação.
 
+**LIBERADO em 20/08/2026** (pergunta explícita respondida "Sim, libera F3 + F4"). F3 (sync desktop) implementado em v0.2.36. F4 (validação end-to-end Android) em andamento.
+
 ### 9.2 Os 2 novos projetos
 
 | Projeto | Diretório | Stack | Agente responsável | Status |
 |---|---|---|---|---|
-| **Plugin WP da API** | `wp-api/` | PHP 8.x + WordPress 6.x + WP REST API + MySQL | `wp-architect` | Aguardando briefing detalhado |
-| **App Android** | `android-app/` | Kotlin + Jetpack Compose + Material 3 + Room (offline) + Retrofit + Hilt | `coder` | Aguardando briefing detalhado (DEPOIS da API estar pronta) |
+| **Plugin WP da API** | `wp-api/` | PHP 8.x + WordPress 6.x + WP REST API + MySQL | `wp-architect` | ✅ Concluído v0.1.4 (20/08/2026) |
+| **App Android** | `android-app/` | Kotlin + Jetpack Compose + Material 3 + Room (offline) + Retrofit + Hilt | `coder` | ✅ Concluído v0.1.1 (20/08/2026) — falta validação end-to-end (F4) |
 
 ### 9.3 Domínio e URL
 
@@ -302,13 +308,13 @@ A partir de 17/08/2026, o Marcio quer **conversar com o Gestor (desktop)** a par
 
 ### 9.5 Fases de execução (ordem)
 
-| Fase | Entrega | Bloqueio |
-|---|---|---|
-| **F1** | Plugin WP completo: schema MySQL, REST endpoints, auth, sync, PHPUnit | — |
-| **F2** | App Android: esqueleto Android Studio, telas Compose, Retrofit+Room, login, CRUD básico | Depende de F1 |
-| **F3** | Sync bidirecional no Gestor desktop (v0.2.23+) | **BLOQUEADO** até Marcio liberar |
-| **F4** | Validação end-to-end (cria tarefa no Android → aparece no WP admin) | Depende de F2 |
-| **F5** | Docs: `MANUAL-ANDROID.md`/`.pdf` + `GUIA-API.md`/`.pdf` | Depende de F4 |
+| Fase | Entrega | Bloqueio | Status |
+|---|---|---|---|
+| **F1** | Plugin WP completo: schema MySQL, REST endpoints, auth, sync, PHPUnit | — | ✅ Concluído v0.1.4 |
+| **F2** | App Android: esqueleto Android Studio, telas Compose, Retrofit+Room, login, CRUD básico | Depende de F1 | ✅ Concluído v0.1.1 |
+| **F3** | Sync bidirecional no Gestor desktop (v0.2.23+) | Liberado em 20/08/2026 | ✅ Concluído v0.2.36 — `ultimo_push_id` (cursor próprio) + `enfileirarMudanca()` em todos os core. Release: https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/tag/v0.2.36 |
+| **F4** | Validação end-to-end (cria tarefa no Android → aparece no WP admin) | Depende de F3 | 🟡 Em validação — precisa de logcat do APK 0.1.1 + criar tarefa no Android e ver se chega no WP admin |
+| **F5** | Docs: `MANUAL-ANDROID.md`/`.pdf` + `GUIA-API.md`/`.pdf` | Depende de F4 | ⏸ Pendente |
 
 ### 9.6 Comandos rápidos dos 2 projetos
 
@@ -329,3 +335,4 @@ cd E:\Projetos\LOPES FOCUS\android-app
 *ML Lopes Design · Marcio · mlopesdesign@gmail.com · mlopesdesign.com.br · tools.mlopesdesign.com.br*
 *Gerado em 14/08/2026 — refeito em 14/08/2026 22:25 BRT após reprovação da entrega em Java. Stack agora: JavaScript + Neutralino + sql.js + WebView2 + NSIS.*
 **Atualizado em 17/08/2026 — adicionados projetos irmãos `wp-api/` (plugin WP) e `android-app/` (Kotlin+Compose). REGRA DE FERRO §9.1: NÃO MEXER NO GESTOR v0.2.22 até Marcio liberar.**
+**Atualizado em 20/08/2026 — Marcio liberou F3+F4. F3 (sync bidirecional) entregue em v0.2.36. F4 (validação end-to-end Android) em validação.**
