@@ -188,3 +188,34 @@ Total WP agora: 4 tarefas, 2 vindas do PUSH Android, 2 do desktop.
 
 **Não validado:** áreas/projetos aparecerem na UI do Android (depende de o user logado ter dados). A confirmar com Marcio logando com user `mlopesdesign@gmail.com` ou criando áreas pra `apps@`.
 
+---
+
+## v0.2.40 — 2026-08-21 — FIX SYNC areas/projetos/clientes (3 bugs criticos)
+
+**Causa raiz (auditoria do verifier 2026-08-21):** Marcio reportou "sincronismo tá uma merda" e mostrou que áreas/projetos do desktop nunca chegavam no Android (mesmo user logado). 3 bugs descobertos:
+
+1. **🔴 CRÍTICO — `semearDemo()` em `src/js/backend/db.js:436-468`** inseria as 3 áreas (Trabalho, Pessoal, Desenvolvimento) e o 1 projeto via `dbInstance.exec("INSERT INTO areas...")` **DIRETO**, sem chamar `enfileirarMudanca()`. Resultado: a tabela `sync_mudancas` ficava vazia para essas entidades, o PUSH não tinha o que enviar, e o Android nunca via áreas/projetos.
+
+2. **🟠 MÉDIO — `enviarPush` em `src/js/backend/core/sync.js:295-301`** não filtrava `aplicada=0`. Pegava registros já aplicados (cursor `ultimo_push_id` cresce monotonicamente), mascarando o problema do bug #1.
+
+3. **🟠 MÉDIO — `window.__syncDispositivoId`** era lido em `sync.js:481` mas nunca setado em nenhum lugar. Caía sempre no fallback `'desktop-local'`. Inconsistência que morderia quando 2 desktops sincronizassem (pareceriam o mesmo device).
+
+**Correção (3 fixes cirúrgicos):**
+
+1. `db.js:447-463` — cada `INSERT` do `semearDemo()` agora chama `enfileirarMudanca(dbInstance, sessao, tabela, 'UPSERT', id, 1, payload)` logo após.
+
+2. `sync.js:295-301` — query do `enviarPush` agora tem `AND aplicada = 0` no WHERE.
+
+3. `sync.js:188-189` — `window.__syncDispositivoId = st.wp_dispositivo_id` setado no login.
+
+**Migration one-shot (CRÍTICO pro Marcio):** Adicionada em `migrar()` (`db.js:304-352`). Detecta se o `sessao.usuario_id` logado tem dados locais (areas/projetos/clientes/tarefas) sem mudanças enfileiradas e enfileira UPSERT pra todos. Idempotente (checa `COUNT(*) FROM sync_mudancas WHERE operacao='UPSERT' AND registro_id IN (...)`). Resolve o problema do Marcio sem ele precisar apagar o banco.
+
+**Lição (do verifier):**
+
+- TODA escrita em `core/*.js` (incluindo seed/migration) DEVE chamar `enfileirarMudanca()` — esquecer 1 lugar = bug silencioso que só aparece quando o user tenta sincronizar pela primeira vez.
+- SEMPRE chamar o verifier antes de declarar "sync funcionando". Eu declarei vitória em v0.1.4 sem perceber que o desktop nunca tinha enfileirado áreas/projetos.
+- Cursor próprio de PUSH (`ultimo_push_id`) sem filtro `aplicada=0` mascara bugs — sempre filtrar pra pegar só o que ainda precisa subir.
+- Quando um user reporta "sincronismo tá uma merda", SEMPRE investigar o caminho **PUSH** (não só PULL) — o PULL pode estar 100% mas o PUSH tá vazio por bug em seed/migration.
+
+**Validado:** SHA `21DFC0220F8405E48BB7B10D679216741CAB742499CD6DB06A76BEDFD54B2CE3` (resources.neu), SHA `A237C71F197E5A25AF1B74297A838659EF9C9DD37BB6D39FAAB9A19D241C9AA4` (Setup-0.2.40.exe), commit `7bcc35a`, tag `v0.2.40` pushed, release criada.
+
