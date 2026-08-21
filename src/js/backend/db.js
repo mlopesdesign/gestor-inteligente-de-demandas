@@ -7,6 +7,7 @@
 // em index.html, fica em window.initSqlJs. NÃO usar `import` — o módulo é UMD,
 // não ES module, e o import quebra o grafo de módulos do app.
 import { env, resolverAppdataAsync } from './ambiente.js';
+import { enfileirarMudanca } from './core/sync.js';
 
 let SQL = null;
 let dbInstance = null;
@@ -301,6 +302,60 @@ async function migrar() {
       // coluna ja existe - ignora
     }
   }
+  // FIX v0.2.40: migration one-shot que enfileira dados existentes do usuario
+  // logado pra enviar no proximo PUSH. Idempotente: checa se ja enfileirou.
+  // Resolve o problema do Marcio: areas/projetos/tarefas/clientes criados
+  // ANTES do fix (via seed ou manualmente) nunca chegaram no WP porque
+  // foram gravados direto no banco sem chamar enfileirarMudanca().
+  if (window.__sessao?.usuario_id) {
+    const uid = window.__sessao.usuario_id;
+    const jah = dbInstance.exec(
+      "SELECT COUNT(*) AS n FROM sync_mudancas WHERE usuario_id = ? AND operacao = 'UPSERT' AND registro_id IN (SELECT id FROM areas WHERE usuario_id = ? UNION SELECT id FROM projetos WHERE usuario_id = ? UNION SELECT id FROM clientes WHERE usuario_id = ? UNION SELECT id FROM tarefas WHERE usuario_id = ?)",
+      [uid, uid, uid, uid, uid]
+    );
+    const temSync = jah.ok && (jah.dados[0]?.n ?? jah.dados[0]?.[0] ?? 0) > 0;
+    if (!temSync) {
+      console.log('[db.migrar] v0.2.40: enfileirando dados locais existentes do usuario', uid);
+      const agora = new Date().toISOString();
+      const tabelas = ['areas', 'projetos', 'clientes', 'tarefas'];
+      for (const tabela of tabelas) {
+        const r = dbInstance.exec(
+          `SELECT * FROM ${tabela} WHERE usuario_id = ? AND deleted_at IS NULL`,
+          [uid]
+        );
+        if (!r.ok || r.dados.length === 0) continue;
+        for (const row of r.dados) {
+          const isTuple = Array.isArray(row);
+          const registro = {};
+          // Mapear colunas — pra simplicidade, joga o row inteiro como payload
+          // O servidor ignora campos extras via Validator
+          if (isTuple) {
+            // formato tuple: nao temos header aqui, entao usar SELECT com nomes
+            // Re-SELECT abaixo pra simplicidade
+          }
+        }
+      }
+      // Re-faz com SELECT * pra ter colunas nomeadas
+      for (const tabela of tabelas) {
+        const r = dbInstance.exec(
+          `SELECT * FROM ${tabela} WHERE usuario_id = ? AND deleted_at IS NULL`,
+          [uid]
+        );
+        if (!r.ok || r.dados.length === 0) continue;
+        // Pegar colunas
+        const colsRes = dbInstance.exec(`PRAGMA table_info(${tabela})`);
+        if (!colsRes.ok) continue;
+        const colunas = colsRes.dados.map(c => c[1]);
+        for (const row of r.dados) {
+          const obj = {};
+          colunas.forEach((c, i) => { obj[c] = row[i]; });
+          enfileirarMudanca(dbInstance, { usuario_id: uid }, tabela, 'UPSERT', obj.id, obj.versao || 1, obj);
+        }
+      }
+    } else {
+      console.log('[db.migrar] v0.2.40: ja ha mudancas enfileiradas, pulando migration one-shot');
+    }
+  }
   schemaAplicado = true;
 }
 
@@ -446,6 +501,10 @@ function semearDemo() {
   ];
   for (const a of areas) {
     dbInstance.exec("INSERT INTO areas(id, usuario_id, dono_id, nome, cor, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,1)", [a.id, uid, uid, a.nome, a.cor, agora, agora]);
+    // FIX v0.2.40: enfileirar mudanca pro sync enviar pro WP
+    enfileirarMudanca(dbInstance, { usuario_id: uid }, 'areas', 'UPSERT', a.id, 1, {
+      id: a.id, nome: a.nome, cor: a.cor, criado_em: agora, atualizado_em: agora, versao: 1
+    });
   }
   const tarefas = [
     { titulo: 'Revisar proposta do cliente Cenário Alagoas',  status: 'CAIXA_ENTRADA', prioridade: 'ALTA',     nivel: 'PERSISTENTE', area: '01AREAT1', venc: null },
@@ -461,6 +520,12 @@ function semearDemo() {
        VALUES(?,?,?,?,?,?,?,?,?,?,?,1)`,
       [id, uid, uid, t.titulo, t.status, t.prioridade, t.nivel, t.area, t.venc, agora, agora]
     );
+    // FIX v0.2.40: enfileirar mudanca pro sync enviar pro WP
+    enfileirarMudanca(dbInstance, { usuario_id: uid }, 'tarefas', 'UPSERT', id, 1, {
+      id, titulo: t.titulo, status: t.status, prioridade: t.prioridade,
+      nivel_cobranca: t.nivel, area_id: t.area, vencimento_em: t.venc,
+      criado_em: agora, atualizado_em: agora, versao: 1
+    });
   }
   console.log('[db] dados de demo semeados para', uid);
   // Salva imediatamente pra que o demo persista

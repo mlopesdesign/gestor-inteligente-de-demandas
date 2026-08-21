@@ -186,6 +186,8 @@ export async function login(db, p, s) {
   st.wp_expira_em = data.expira_em || null;
   // Garante dispositivo_id estavel
   if (!st.wp_dispositivo_id) st.wp_dispositivo_id = newDispositivoId();
+  // FIX v0.2.40: expõe dispositivo_id globalmente pra consistência entre telas
+  window.__syncDispositivoId = st.wp_dispositivo_id;
   // Garante cursor inicializado
   if (typeof st.ultimo_pull_id !== 'number') st.ultimo_pull_id = 0;
   if (typeof st.ultimo_push_id !== 'number') st.ultimo_push_id = 0;
@@ -292,10 +294,11 @@ export async function resolver(db, p, s) {
 async function enviarPush(db, st, s) {
   // Coleta mudancas locais pendentes da sync_mudancas
   // FIX v0.2.36: cursor proprio (ultimo_push_id) — nao reusa ultimo_pull_id.
+  // FIX v0.2.40: filtra aplicada=0 pra nao reenviar ja aplicados.
   const r = db.exec(
     `SELECT id, tabela, operacao, registro_id, versao, payload_json
      FROM sync_mudancas
-     WHERE usuario_id = ? AND id > ?
+     WHERE usuario_id = ? AND id > ? AND aplicada = 0
      ORDER BY id ASC LIMIT 200`,
     [s.usuario_id, st.ultimo_push_id || 0]
   );
