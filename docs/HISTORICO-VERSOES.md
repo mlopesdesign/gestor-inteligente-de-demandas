@@ -165,3 +165,26 @@ Total WP agora: 4 tarefas, 2 vindas do PUSH Android, 2 do desktop.
 
 **Não validado:** PUSH pelo app Android (tap em "Sincronizar agora" não disparou via adb no emulador). Provavelmente problema do `input tap` em Compose Material 3 Button, não do app. Endpoint provado funcionando — próxima validação manual do Marcio no emulador/celular real deve confirmar.
 
+---
+
+## v0.1.5 Android (versionCode=7) — 2026-08-21 — FIX sync centralizado processa TODAS as tabelas
+
+**Causa raiz:** `SyncRepository.sincronizarTudo()` em `data/repository/SyncRepository.kt:60-66` tinha `when (m.tabela) { "tarefas" -> aplicarTarefa(...) }` — só processava "tarefas". Áreas, clientes e projetos vinham no payload do `/sync/pull` mas eram **DESCARTADOS**, e os cursores eram salvos sem processar. Resultado: telas `Areas/Clientes/Projetos` ficavam VAZIAS no Android, mesmo com dados no WP. Marcio reportou "sincronismo tá uma merda" e mostrou print com `Areas → Nenhuma área cadastrada` e `Projetos → Nenhum projeto cadastrado`, enquanto o desktop tinha 3 áreas e 1 projeto.
+
+**Correção:** reescrito `SyncRepository.sincronizarTudo()` inteiro:
+- Adicionado `aplicarArea()`, `aplicarCliente()`, `aplicarProjeto()` com mesma lógica de `aplicarTarefa()` (REPLACE por id, sem wipe destrutivo — diferente do `dao.limpar() + dao.inserirTodos()` legado dos Repository.refresh() individuais)
+- SyncRepository agora injeta `AreaDao`, `ClienteDao`, `ProjetoDao` além de `TarefaDao`
+- `TarefaDto.toEntity()` já seta `pendenteSync = false` (estado vindo do servidor é sempre sincronizado)
+- Removido TODO sobre reaproveitar `Repository.refresh()` — agora tudo é centralizado no SyncRepository
+
+**Validação:**
+- APK v0.1.5 (20.9 MB) instalado no emulador
+- Sincronização retornou "Sincronização concluída."
+- `gestor_sync_cursor.xml` atualizado: `ultimo_pull_at_areas/projetos/clientes/tarefas` todos com timestamps reais
+- PULL via curl com token `apps@...` retorna 5 mudanças: 4 tarefas + 1 cliente. **0 áreas e 0 projetos** porque o usuário `apps@mlopesdesign.com.br` (capability `gestor_api_use`) **NÃO TEM áreas/projetos cadastrados no WP**. Cada user tem dados isolados por `usuario_id`.
+- Conclusão: sincronismo centralizado funciona. Pra ver áreas/projetos no Android, ou (a) Marcio loga com o user `mlopesdesign@gmail.com` (mesmo do desktop), ou (b) cria áreas pra `apps@`.
+
+**Lição:** TODA função de sync tem que ser centralizada num único lugar e processar TODAS as tabelas do payload. Quando você descobre "essa tabela não tá aparecendo na UI", a primeira coisa a verificar é se a tabela tá no `when` do sync. Defaults de "só processa tarefas" são armadilha mortal. Além disso, **isolamento por usuário no WP é correto e intencional** — bug visual no Android não significa bug no sync, pode ser que o user logado simplesmente não tem dados daquela tabela.
+
+**Não validado:** áreas/projetos aparecerem na UI do Android (depende de o user logado ter dados). A confirmar com Marcio logando com user `mlopesdesign@gmail.com` ou criando áreas pra `apps@`.
+
