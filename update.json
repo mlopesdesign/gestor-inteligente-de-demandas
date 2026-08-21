@@ -1,8 +1,8 @@
 {
-  "applicationId": "app.mllopes.gestor",
-  "version": "0.2.39",
-  "notes": "v0.2.39 - FIX BUG CRITICO DE LOGIN. writeState em sync.js usava Neutralino.filesystem.writeFile com Uint8Array que falha silenciosamente em v6.3.0 (mesmo bug que db.js teve em v0.2.10 com SQLite). Resultado: sync_state.json nunca era criado, login mostrava toast 'Conectado' mas tela voltava para 'Desconectado' na proxima renderizacao. FIX: writeState agora grava string UTF-8 direta (que o writeFile aceita confiavel) e cria a pasta se nao existir. readState tambem ficou tolerante a string OU Uint8Array.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.39/resources.neu",
-  "sha256": "10A277CD25BAAA71D18AF83453083C0F52066A03B212D93FB9B5B6241012BBD3",
-  "size": 6317986
+    "applicationId":  "app.mllopes.gestor",
+    "version":  "0.2.40",
+    "notes":  "v0.2.40 - FIX sync de areas/projetos/clientes. 3 bugs: (1) semearDemo() em db.js inseria dados direto sem enfileirar pro sync. (2) enviarPush nao filtrava aplicada=0. (3) __syncDispositivoId nunca setado. Migration one-shot em migrar() enfileira dados existentes do usuario logado.",
+    "resourcesURL":  "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.40/resources.neu",
+    "sha256":  "21DFC0220F8405E48BB7B10D679216741CAB742499CD6DB06A76BEDFD54B2CE3",
+    "size":  6321589
 }
