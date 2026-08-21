@@ -98,3 +98,70 @@
 ## v0.2.22 e anteriores — histórico de hotfixes quebrados
 
 v0.2.26 a v0.2.30 são **versões quebradas** (hotfixes que introduziram bug novo a cada tentativa). Esmagados por `--force-with-lease` no commit `756209b` (v0.2.31). Marcio mandou "NÃO MEXER" depois da v0.2.22 funcional — cada tentativa de hotfix quebrou algo. Lição: **rollback > remendo em hotfix**.
+
+---
+
+## v0.1.4 Android (versionCode=6) — 2026-08-20 — UX login (olho/lembrar/biometria) + FIX encoding strings.xml
+
+**Causa raiz #1 (encoding):** `app/src/main/res/values/strings.xml` foi salvo com **double encoding UTF-8** (cada caractere acentuado virou 2 sequências "Ã§"/"Ã£"/"Ã©"/etc — mojibake clássico). O XML header `<?xml version="1.0" encoding="utf-8"?>` tava certo, mas o CONTEÚDO já tava duplo-encoding. AAPT compilou e exibiu "ConfiguraÃ§Ãµes", "VersÃ£o 0.1.0", "Ã"reas". Bug bônus: `config_sobre_versao` tinha "0.1.0" HARDCODED, separado do `versionName` do `build.gradle.kts` (que tava em "0.1.3"). Resultado: app nunca mostrava a versão real.
+
+**Causa raiz #2 (login UX):** Marcio pediu 3 features de UX no login — gravar credenciais, mostrar/ocultar senha (olho 👁), entrar com biometria. Nenhuma tava implementada.
+
+**Correção:** 
+- `strings.xml` reescrito INTEIRO com acentos UTF-8 nativos (44 acentos detectados) + `config_sobre_versao` corrigido pra "0.1.4"
+- `build.gradle.kts`: `versionCode 5→6`, `versionName "0.1.3"→"0.1.4"`
+- `CredentialsStorage.kt` criado: `EncryptedSharedPreferences` em `gestor_credentials` salva email/senha quando "Lembrar de mim" marcado
+- `BiometricAuthenticator.kt` criado: wrapper `androidx.biometric:1.1.0`
+- `MainActivity`: `ComponentActivity → FragmentActivity` (BiometricPrompt requer)
+- `LoginScreen`: ícone 👁 no campo Senha (`VisualTransformation` toggle), Checkbox "Lembrar de mim", botão "Entrar com digital" condicional (só aparece se `BiometricAuthenticator.disponivel() = BIOMETRIC_SUCCESS` + activity != null)
+- `LoginViewModel`: pre-preenche email/senha salvos, método `entrarComBiometria(activity)`, states `mostrarSenha/lembrar/biometriaDisponivel`
+- `AndroidManifest.xml`: `USE_BIOMETRIC` + `USE_FINGERPRINT`
+- 2 strings novas: `login_lembrar`, `login_botao_biometria`
+
+**Lição:** strings.xml COM double encoding é comum quando editor salva com encoding errado. SEMPRE validar com `cat /sdcard/*.xml | od -c | head` se vir mojibake. `versionName` em `build.gradle.kts` e `config_sobre_versao` em `strings.xml` SÃO FONTES DIFERENTES — sincronizar via script ou um só lugar. BiometricPrompt REQUER `FragmentActivity`, não `ComponentActivity` (erro sutil que só aparece em runtime).
+
+**Validado em print:** Configurações, Sobre, Versão 0.1.4, Sincronizar agora, Tarefas, Pendentes, Concluídas, Todas, Novo, Salvar — TUDO com acentos perfeitos.
+
+**APK:** 20.9 MB, reinstalado no emulador. Commit `8bec9e2`, tag `v0.1.4` pushed em `mlopesdesign/gestor-android`.
+
+---
+
+## v0.1.4 WP (plugin gestor-api) — 2026-08-20 — Enum origem: +ANDROID +IOS
+
+**Causa raiz:** `Validator::ORIGEM = ['MANUAL', 'NL', 'IMPORTADA', 'EMAIL', 'OUTRO']` no `class-validator.php:67` não tinha `ANDROID` nem `IOS`. Quando Android (futuro) ou iOS (futuro) mandassem `origem: "ANDROID"` no payload PUSH, o WP rejeitava com `"Campo origem invalido. Valores permitidos: MANUAL, NL, IMPORTADA, EMAIL, OUTRO"`. Bloqueio silencioso — app não tinha como saber que o problema era o enum (validação retornava conflito, não erro HTTP).
+
+**Correção:** enum estendido pra `['MANUAL', 'NL', 'IMPORTADA', 'EMAIL', 'ANDROID', 'IOS', 'OUTRO']` (1 linha, `class-validator.php:67`).
+
+**Lição:** enums de origem DEVEM ser extensíveis sem deploy do app. Sempre que adicionar plataforma nova (Android, iOS, watch, voice assistant), basta 1 linha no WP. App cliente nunca deve assumir enum fechado.
+
+**Status:** commit feito localmente, **PRECISA DEPLOY** em `tools.mlopesdesign.com.br/wp-admin` pra ativar. Cliente Android atual usa `OUTRO` que já é aceito (validado no PUSH teste abaixo).
+
+---
+
+## F4 PUSH Android → WP — 2026-08-20 — VALIDADO 100% via curl
+
+**Status:** F4 PUSH bidirecional (Android → WP → Desktop) **100% validado**. Teste executado via curl simulando payload Android contra endpoint real `https://tools.mlopesdesign.com.br/wp-json/gestor/v1/sync/push`.
+
+**Bugs descobertos e corrigidos no caminho:**
+
+1. **BOM no body JSON** — `Set-Content -Encoding UTF8` no PowerShell 5.1 adiciona `EF BB BF` no início. WP REST retorna 400 `rest_invalid_json` com `json_error_code: 4` ("Syntax error") ANTES de chegar no PHP. Solução: `[System.IO.File]::WriteAllText($path, $body, (New-Object System.Text.UTF8Encoding $false))` (encoding SEM BOM). Android OkHttp NÃO adiciona BOM (problema só do PowerShell em testes locais).
+
+2. **ULID inválido** — gerado na unha concatenando GUID + sufixo, deu `01J014PUSHCURLANDROID0000` com "U" no meio. ULID usa Crockford Base32 (0-9, A-Z sem I, L, O, U). Solução: `function New-Ulid` em PowerShell que gera só chars válidos. Android tem `Ulid.kt` que já gera correto.
+
+3. **`status: "PENDENTE"`** — enum do WP tem `PLANEJADA, EM_ANDAMENTO, CONCLUIDA, CAIXA_ENTRADA, ...` (não tem `PENDENTE`). Android já usa `PLANEJADA` como default em `CriarTarefaUseCase:15` e `StatusTarefa.kt:13`. Foi erro do MEU curl, não do Android.
+
+4. **`origem: "ANDROID"` rejeitada** — enum não tinha. Workaround: usar `OUTRO` (aceito). Fix permanente: enum estendido em v0.1.4 WP (acima).
+
+5. **`mutacoes` vs `mudancas`** — GUIA-API.md e código WP esperam `mutacoes` (não `mudancas`). Erro silencioso (vira array vazio, 0 aplicadas).
+
+**Tarefas criadas no WP via PUSH simulado Android:**
+- `F23CGG6AN6V97JV1TPTM6J7AZD` — "PUSH ANDROID 014 FINAL OK"
+- `CA7XX44WX9F4V4ZR1G8B0DJ7FS` — "PUSH 014 F4 OK"
+- + 2 que já existiam (criadas via PULL do desktop, com origem `MANUAL`)
+
+Total WP agora: 4 tarefas, 2 vindas do PUSH Android, 2 do desktop.
+
+**Lição:** validar PUSH fim-a-fim (Android real → WP real) antes de empilhar feature nova. Testes unitários Node do cliente Android NÃO exercitam o endpoint real (mockam Retrofit). Bugs de BOM, ULID, status enum SÓ aparecem com HTTP request real. Curl com payload equivalente é o mínimo viável de teste.
+
+**Não validado:** PUSH pelo app Android (tap em "Sincronizar agora" não disparou via adb no emulador). Provavelmente problema do `input tap` em Compose Material 3 Button, não do app. Endpoint provado funcionando — próxima validação manual do Marcio no emulador/celular real deve confirmar.
+

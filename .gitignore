@@ -110,3 +110,9 @@ _install-*.log
 tests/.obsoleto/
 tests/_check-neu.py
 
+
+# Lixeira tecnica de debug de sync
+tools/ui-*.xml
+tools/gestor.db*
+tools/gestor.b64
+tools/check-db*.py
