@@ -124,7 +124,7 @@ async function wpFetch(method, path, body, token) {
   const headers = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    'User-Agent': 'GestorDesktop/0.2.39',
+    'User-Agent': 'GestorDesktop/0.2.47',
   };
   if (token) headers['Authorization'] = 'Bearer ' + token;
   const opts = { method, headers };

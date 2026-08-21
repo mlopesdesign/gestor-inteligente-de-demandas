@@ -1,8 +1,8 @@
 {
-    "applicationId":  "app.mllopes.gestor",
-    "version":  "0.2.40",
-    "notes":  "v0.2.40 - FIX sync de areas/projetos/clientes. 3 bugs: (1) semearDemo() em db.js inseria dados direto sem enfileirar pro sync. (2) enviarPush nao filtrava aplicada=0. (3) __syncDispositivoId nunca setado. Migration one-shot em migrar() enfileira dados existentes do usuario logado.",
-    "resourcesURL":  "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.40/resources.neu",
-    "sha256":  "21DFC0220F8405E48BB7B10D679216741CAB742499CD6DB06A76BEDFD54B2CE3",
-    "size":  6321589
+  "applicationId": "app.mllopes.gestor",
+  "version": "0.2.47",
+  "notes": "v0.2.47 - FIX migration one-shot: 2 bugs fatais (canal nao registrado em PERM_ROTA, dbInstance.exec raw em vez do wrapper db) + 1 bug (semearDemo nao enfileirava). Migration one-shot exportada e chamada DEPOIS do login. 8 enfileiradas com sucesso (3 areas + 5 tarefas) via PUSH. Verificado: areas/projetos/clientes do desktop agora aparecem no WP. Ver AGENTS.md v9 + HISTORICO-VERSOES.md v0.2.47.",
+  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.47/resources.neu",
+  "sha256": "3BDD382AAABEE28F59F521256D8F051B6D8F6AD83ED3E1179CAC23AFAB29BDE2",
+  "size": 6326826
 }

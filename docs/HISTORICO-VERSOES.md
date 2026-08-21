@@ -219,3 +219,23 @@ Total WP agora: 4 tarefas, 2 vindas do PUSH Android, 2 do desktop.
 
 **Validado:** SHA `21DFC0220F8405E48BB7B10D679216741CAB742499CD6DB06A76BEDFD54B2CE3` (resources.neu), SHA `A237C71F197E5A25AF1B74297A838659EF9C9DD37BB6D39FAAB9A19D241C9AA4` (Setup-0.2.40.exe), commit `7bcc35a`, tag `v0.2.40` pushed, release criada.
 
+## v0.2.47 — 2026-08-21 — FIX migration one-shot: 2 bugs fatais + 1 canal nao registrado
+
+**Causa raiz:** A migration one-shot da v0.2.40 (commit `7bcc35a`) tinha 3 bugs fatais que o verifier ja tinha apontado no audit mas eu nao corrigi corretamente nas v0.2.41-46 (tentativas perdidas, revertidas):
+
+1. **Canal `db:enfileirarDadosLegados` NAO estava no `PERM_ROTA`** em `src/js/backend/permissoes.js`. O `servidor.processar()` chama `podeExecutar()` antes do `case`, e como o canal era desconhecido, a permissao retornava `false` ANTES mesmo de o case executar. O log nem era criado.
+2. **`enfileirarDadosLegados()` em `db.js` chamava `dbInstance.exec()` direto** — mas `dbInstance` e' o `Sql.Database` cru do sql.js, nao o wrapper. `dbInstance.exec()` retorna `Query Results[]`, nao `{ok, dados, ...}`. A checagem `r.ok` dava `undefined` => `!r.ok` => skip => enfileirava 0.
+3. **`enfileirarMudanca(dbInstance, ...)`** — `enfileirarMudanca` espera o wrapper `db` (que tem `_agendarGravacao` no INSERT). Com o cru, gravava mas nao persistia o sync_mudancas.
+
+**Correcao:**
+
+- Adicionado `'db:enfileirarDadosLegados': 'SYNC'` no `PERM_ROTA` (permissoes.js).
+- Reescrito `enfileirarDadosLegados()` em `db.js` pra usar `db.exec()` (wrapper) e `enfileirarMudanca(db, ...)` (passando o wrapper).
+- Adicionado o case `db:enfileirarDadosLegados` em `servidor.js`.
+- Reescrita a parte de migration em `migrar()` pra usar o wrapper `db` e checar `window.sessao.usuario_id` OU sessionStorage.
+- Adicionada chamada explicita em `app.js` DEPOIS do login (caminho "Lembrar de mim" + caminho "auto-demo").
+
+**Licao:** Quando a funcao recebe `db` como parametro, e' o wrapper exportado, NUNCA `dbInstance` (que e' o `Sql.Database` cru). Toda migration que for adicionar no futuro deve usar `db.exec()` e `enfileirarMudanca(db, ...)`. Idempotencia sempre por TABELA, nunca GLOBAL.
+
+**Validado por:** (a preencher com SHA apos build)
+

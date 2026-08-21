@@ -1,7 +1,7 @@
 // src/js/backend/servidor.js — despacha canal -> core/* (PADRAO §3.3, §3.4)
 // Permissao verificada aqui, antes da regra rodar.
 
-import { db } from './db.js';
+import { db, enfileirarDadosLegados } from './db.js';
 import { sessao, toast } from './ambiente.js';
 import { podeExecutar, permissoesAdmin } from './permissoes.js';
 
@@ -88,6 +88,9 @@ export const servidor = {
         case 'sync:conflitos':       return syncCore.listarConflitos(db, payload, s);
         case 'sync:resolver':        return syncCore.resolver(db, payload, s);
         case 'sync:status':          return syncCore.status(db, payload, s);
+
+        // db (migration one-shot, v0.2.47)
+        case 'db:enfileirarDadosLegados': return enfileirarDadosLegados(payload?.usuarioId);
 
         // ia (stub)
         case 'ia:status':            return iaCore.status(db, payload, s);

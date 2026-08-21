@@ -18,27 +18,48 @@ const NO_APP = typeof window.Neutralino !== 'undefined';
 // E escrevem em arquivo via Neutralino.filesystem pra ler do lado de fora
 function D(...args) {
   const ts = new Date().toISOString().slice(11, 19);
-  const line = `[${ts}] ` + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+  const line = `[${ts}] ` + args.map(a => {
+    try {
+      if (a instanceof Error) return a.message + (a.stack ? ' | ' + a.stack.substring(0, 300) : '');
+      if (typeof a === 'object') return JSON.stringify(a);
+      return String(a);
+    } catch (_) { return String(a); }
+  }).join(' ');
   console.log(line);
   try {
     const arr = JSON.parse(localStorage.getItem('__dbg') || '[]');
     arr.push(line);
-    if (arr.length > 100) arr.shift();
+    if (arr.length > 200) arr.shift();
     localStorage.setItem('__dbg', JSON.stringify(arr));
   } catch (_) {}
-  // Tambem escreve em arquivo (se Neutralino estiver disponivel).
-  if (typeof window.Neutralino !== 'undefined' && window.Neutralino?.filesystem) {
+  // FIX v0.2.47: usar appendFile do Neutralino (v6.3.0) com fallback writeFile.
+  // O writeFile sozinho sobrescreve, perdendo todos os logs anteriores.
+  // appendFile concatena. Se appendFile nao existir (versao antiga), usa
+  // o truque do echo via Neutralino.os.execCommand (que ja funciona pro db.log).
+  if (typeof window.Neutralino !== 'undefined') {
     try {
-      const logPath = window.__logPath; // resolvido no boot
-      if (logPath && logPath !== 'localstorage:__app_log') {
-        window.Neutralino.filesystem.readFile(logPath).then((conteudo) => {
-          window.Neutralino.filesystem.writeFile(logPath, conteudo + line + '\n');
-        }).catch(() => {
-          window.Neutralino.filesystem.writeFile(logPath, line + '\n');
-        });
+      const logPath = window.__logPath;
+      if (logPath && logPath !== 'localstorage:__app_log' && window.Neutralino?.filesystem) {
+        const escaped = line.replace(/'/g, "''");
+        if (window.Neutralino.filesystem.appendFile) {
+          window.Neutralino.filesystem.appendFile(logPath, line + '\n').catch(() => {});
+        } else if (window.Neutralino.os?.execCommand) {
+          window.Neutralino.os.execCommand(`echo ${escaped} >> "${logPath}"`, { stdIn: '', stdOut: '', stdErr: '' }).catch(() => {});
+        }
       }
     } catch (_) {}
   }
+  // FIX v0.2.47: tambem mostra na tela (overlay) pra debug visual
+  try {
+    let overlay = document.getElementById('__debug-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = '__debug-overlay';
+      overlay.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:200px;overflow:auto;background:rgba(0,0,0,0.85);color:#0f0;font:11px monospace;padding:4px;z-index:99999;white-space:pre';
+      document.body && document.body.appendChild(overlay);
+    }
+    overlay.textContent = (overlay.textContent || '').split('\n').slice(-20).concat([line]).join('\n');
+  } catch (_) {}
 }
 
 // ---------------------------------------------------------------------------
@@ -226,7 +247,7 @@ async function bootstrap() {
       if (cached) versao = cached;
     } catch (_) {}
   }
-  if (!versao) versao = '0.2.40';
+  if (!versao) versao = '0.2.47';
   try { localStorage.setItem('__app_version', versao); } catch (_) {}
   const versaoSpan = document.getElementById('versao-app');
   if (versaoSpan) versaoSpan.textContent = 'v' + versao;
@@ -323,6 +344,16 @@ async function bootstrap() {
   if (sessaoResult.ok && sessaoResult.dados?.autenticado) {
     Object.assign(sessao, sessaoResult.dados);
     D('[app] sessao autenticada, verificando ?rota=');
+    // FIX v0.2.47: depois do login, dispara a migration one-shot (vai popular
+    // sync_mudancas com areas/projetos/clientes/tarefas que existiam no banco
+    // mas nunca foram enfileiradas pelo semearDemo). O migrar() e' idempotente
+    // (checa se ja' enfileirou por tabela). Sem isso, o PUSH nao tem o que enviar.
+    try {
+      const r = await servidor.processar('db:enfileirarDadosLegados', { usuarioId: sessao.usuario_id });
+      D('[app] enfileirarDadosLegados (login):', JSON.stringify(r));
+    } catch (e) {
+      D('[app] ERRO enfileirarDadosLegados:', e.message);
+    }
     // FIX v0.2.10: permite ?rota=projetos pra deep link
     const params = new URLSearchParams(location.search);
     const rotaInicial = params.get('rota') || 'hoje';
@@ -359,6 +390,13 @@ async function bootstrap() {
     }
     if (autoDemoResult && autoDemoResult.ok) {
       D('[app] auto-demo OK, chamando irPara(hoje)');
+      // FIX v0.2.47: dispara migration one-shot tambem no caminho do auto-demo
+      try {
+        const r = await servidor.processar('db:enfileirarDadosLegados', { usuarioId: sessao.usuario_id });
+        D('[app] enfileirarDadosLegados (auto-demo):', JSON.stringify(r));
+      } catch (e) {
+        D('[app] ERRO enfileirarDadosLegados (auto-demo):', e.message);
+      }
       // FIX v0.2.10: permite ?rota=projetos pra deep link
       const params = new URLSearchParams(location.search);
       const rotaInicial = params.get('rota') || 'hoje';
@@ -420,6 +458,15 @@ export function irPara(nome, opts = {}) {
   if (!ROTAS[nome]) {
     console.error('[app] rota desconhecida:', nome);
     return;
+  }
+  // FIX v0.2.47: dispara migration one-shot na PRIMEIRA navegacao. Garante
+  // que o canal db:enfileirarDadosLegados rode independente do caminho
+  // (login, lembrar, auto-demo). Idempotente por tabela.
+  if (!window.__migrationRodou && sessao?.usuario_id) {
+    window.__migrationRodou = true;
+    servidor.processar('db:enfileirarDadosLegados', { usuarioId: sessao.usuario_id })
+      .then(r => D('[app] enfileirarDadosLegados (irPara):', JSON.stringify(r)))
+      .catch(e => D('[app] ERRO enfileirarDadosLegados (irPara):', e.message));
   }
   navegar(nome);
   const rota = ROTAS[nome];
@@ -489,7 +536,7 @@ function renderLogin() {
           ${salvo ? '<button id="btn-sair-gravado" class="login-sair">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
         </div>
 
-        <div class="login-rodape">v${window.__appVersion || '0.2.40'}</div>
+        <div class="login-rodape">v${window.__appVersion || '0.2.47'}</div>
       </div>
     </div>
   `;

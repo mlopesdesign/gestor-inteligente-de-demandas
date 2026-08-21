@@ -1,0 +1,24 @@
+﻿v0.2.40: FIX sync areas/projetos/clientes + 3 bugs criticos
+
+VERIFIER AUDIT (2026-08-21):
+- BUG #1 CRITICO: semearDemo() em db.js inseria areas/projetos/tarefas
+  via SQL direto SEM chamar enfileirarMudanca(). Resultado: PUSH nao tinha
+  o que enviar, areas/projetos do desktop nunca chegavam no WP.
+- BUG #2 MEDIO: enviarPush nao filtrava aplicada=0, pegava registros
+  ja aplicados e mascarava o problema.
+- BUG #3 MEDIO: window.__syncDispositivoId nunca era setado, fallback
+  desktop-local sempre.
+
+FIX:
+- db.js: enfileirarMudanca() chamado apos cada INSERT do semearDemo
+- sync.js: enviarPush agora filtra aplicada=0
+- sync.js: window.__syncDispositivoId setado no login
+
+MIGRATION ONE-SHOT (v0.2.40):
+- Em migrar(), apos criar tabelas, detecta se usuario logado tem
+  dados locais (areas/projetos/clientes/tarefas) sem mudancas enfileiradas
+  e enfileira UPSERT pra todos. Resolve o caso do Marcio que ja tem
+  dados do seed antigo e nao precisa apagar o banco.
+
+Validacao: rebuild OK, sha256 do resources.neu atualizado no update.json,
+SHA do Setup-0.2.40.exe = A237C71F197E5A25AF1B74297A838659EF9C9DD37BB6D39FAAB9A19D241C9AA4

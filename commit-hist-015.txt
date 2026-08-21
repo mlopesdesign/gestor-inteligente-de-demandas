@@ -1,0 +1,1 @@
+﻿docs: HISTORICO v0.1.5 Android (sync processa todas tabelas + isolamento por user)

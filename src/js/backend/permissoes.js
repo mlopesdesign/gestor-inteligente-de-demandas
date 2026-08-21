@@ -65,6 +65,9 @@ export const PERM_ROTA = {
   'sync:resolver':        'SYNC',
   'sync:status':          'SYNC',
 
+  // db (migration one-shot, v0.2.47)
+  'db:enfileirarDadosLegados': 'SYNC',
+
   // ia
   'ia:parse':             'IA',
   'ia:sugerir':           'IA',

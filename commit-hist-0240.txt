@@ -1,0 +1,1 @@
+﻿docs: HISTORICO v0.2.40 FIX sync areas/projetos (3 bugs + migration one-shot)

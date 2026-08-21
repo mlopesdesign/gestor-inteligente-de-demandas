@@ -302,61 +302,106 @@ async function migrar() {
       // coluna ja existe - ignora
     }
   }
-  // FIX v0.2.40: migration one-shot que enfileira dados existentes do usuario
-  // logado pra enviar no proximo PUSH. Idempotente: checa se ja enfileirou.
-  // Resolve o problema do Marcio: areas/projetos/tarefas/clientes criados
-  // ANTES do fix (via seed ou manualmente) nunca chegaram no WP porque
-  // foram gravados direto no banco sem chamar enfileirarMudanca().
-  if (window.__sessao?.usuario_id) {
-    const uid = window.__sessao.usuario_id;
-    const jah = dbInstance.exec(
-      "SELECT COUNT(*) AS n FROM sync_mudancas WHERE usuario_id = ? AND operacao = 'UPSERT' AND registro_id IN (SELECT id FROM areas WHERE usuario_id = ? UNION SELECT id FROM projetos WHERE usuario_id = ? UNION SELECT id FROM clientes WHERE usuario_id = ? UNION SELECT id FROM tarefas WHERE usuario_id = ?)",
-      [uid, uid, uid, uid, uid]
-    );
-    const temSync = jah.ok && (jah.dados[0]?.n ?? jah.dados[0]?.[0] ?? 0) > 0;
-    if (!temSync) {
-      console.log('[db.migrar] v0.2.40: enfileirando dados locais existentes do usuario', uid);
-      const agora = new Date().toISOString();
-      const tabelas = ['areas', 'projetos', 'clientes', 'tarefas'];
-      for (const tabela of tabelas) {
-        const r = dbInstance.exec(
-          `SELECT * FROM ${tabela} WHERE usuario_id = ? AND deleted_at IS NULL`,
-          [uid]
-        );
-        if (!r.ok || r.dados.length === 0) continue;
-        for (const row of r.dados) {
-          const isTuple = Array.isArray(row);
-          const registro = {};
-          // Mapear colunas — pra simplicidade, joga o row inteiro como payload
-          // O servidor ignora campos extras via Validator
-          if (isTuple) {
-            // formato tuple: nao temos header aqui, entao usar SELECT com nomes
-            // Re-SELECT abaixo pra simplicidade
-          }
-        }
-      }
-      // Re-faz com SELECT * pra ter colunas nomeadas
-      for (const tabela of tabelas) {
-        const r = dbInstance.exec(
-          `SELECT * FROM ${tabela} WHERE usuario_id = ? AND deleted_at IS NULL`,
-          [uid]
-        );
-        if (!r.ok || r.dados.length === 0) continue;
-        // Pegar colunas
-        const colsRes = dbInstance.exec(`PRAGMA table_info(${tabela})`);
-        if (!colsRes.ok) continue;
-        const colunas = colsRes.dados.map(c => c[1]);
-        for (const row of r.dados) {
-          const obj = {};
-          colunas.forEach((c, i) => { obj[c] = row[i]; });
-          enfileirarMudanca(dbInstance, { usuario_id: uid }, tabela, 'UPSERT', obj.id, obj.versao || 1, obj);
-        }
-      }
-    } else {
-      console.log('[db.migrar] v0.2.40: ja ha mudancas enfileiradas, pulando migration one-shot');
-    }
-  }
+  // FIX v0.2.47: a migration one-shot foi MOVIDA para a funcao
+  // exportada `enfileirarDadosLegados(usuarioId)` abaixo. E' chamada
+  // pelo app.js DEPOIS do login (e pelo botao "Lembrar de mim" e pelo
+  // auto-demo). Dentro do migrar() ainda tentamos rodar com o que
+  // tivermos em maos (sessionStorage), mas a sessao de verdade so e'
+  // hidratada depois de `sessao:atual`.
+  await enfileirarDadosLegados();
   schemaAplicado = true;
+}
+
+/**
+ * FIX v0.2.47: enfileira TODAS as areas/projetos/clientes/tarefas locais
+ * que ainda nao foram enfileiradas no PUSH. Idempotente por tabela.
+ *
+ * E' chamada:
+ *   - DEPOIS do login (em app.js), tanto no caminho "Lembrar de mim"
+ *     quanto no auto-demo.
+ *   - Aqui dentro de migrar() (com a sessao ainda nao hidratada, entao
+ *     normalmente cai no early-return).
+ *
+ * Bugs do v0.2.40 (que o verifier achou):
+ *  (a) `dbInstance.exec()` raw retornava `Query Results[]` em vez de
+ *      `{ok, dados}` — todas as checagens de r.ok davam undefined => skip.
+ *  (b) `enfileirarMudanca(dbInstance, ...)` passava o cru, mas a funcao
+ *      chama `db.exec()` que tem `_agendarGravacao`. Sem o wrapper, a
+ *      sync_mudancas nao era persistida no .db.
+ *  (c) Canal `db:enfileirarDadosLegados` nao estava no PERM_ROTA, entao
+ *      `servidor.processar()` retornava SEM_PERMISSAO antes mesmo de
+ *      chamar a funcao.
+ *
+ * v0.2.47: usa o WRAPPER `db` (com `{ok, dados}`) + enfileirarMudanca(db, ...)
+ * e recebe o usuarioId explicitamente. Servidor registra o canal em
+ * `permissoes.js` (`'db:enfileirarDadosLegados': 'SYNC'`).
+ */
+export async function enfileirarDadosLegados(usuarioId) {
+  if (!dbInstance) return { ok: false, erro: { codigo: 'DB_NAO_INICIALIZADO' } };
+  // Se nao recebeu usuarioId, tenta pegar de varios lugares
+  if (!usuarioId) {
+    try {
+      if (window.__sessao?.usuario_id) usuarioId = window.__sessao.usuario_id;
+      else if (window.sessao?.usuario_id) usuarioId = window.sessao.usuario_id;
+      else {
+        const raw = sessionStorage.getItem('gestor.sessao') || localStorage.getItem('gestor.sessao');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          usuarioId = parsed?.usuario_id || parsed?.dados?.usuario_id || null;
+        }
+      }
+    } catch (_) {}
+  }
+  if (!usuarioId) {
+    diag('[db.enfileirarDadosLegados] sem usuarioId, nada a fazer (rodara depois do login)');
+    return { ok: false, erro: { codigo: 'USUARIO_NAO_INFORMADO' } };
+  }
+  const tabelas = ['areas', 'projetos', 'clientes', 'tarefas'];
+  const log = (...a) => { try { console.log('[db.enfileirarDadosLegados]', ...a); diag('[db.enfileirarDadosLegados] ' + a.join(' ')); } catch (_) {} };
+  log('rodando para usuario', usuarioId);
+  let total = 0;
+  for (const tabela of tabelas) {
+    // idempotencia: ja tem mudanca enfileirada pra essa tabela?
+    const countR = db.exec(
+      `SELECT COUNT(*) AS n FROM sync_mudancas WHERE usuario_id = ? AND tabela = ?`,
+      [usuarioId, tabela]
+    );
+    const jaEnfileiradas = countR.ok && ((countR.dados[0]?.n ?? 0) > 0);
+    if (jaEnfileiradas) {
+      log(`tabela ${tabela} ja tem mudancas enfileiradas, pulando`);
+      continue;
+    }
+    // existe coluna deleted_at?
+    let temDeletedAt = false;
+    try {
+      const pragma = db.exec(`PRAGMA table_info(${tabela})`);
+      if (pragma.ok && Array.isArray(pragma.dados)) {
+        for (const c of pragma.dados) {
+          // c pode ser {cid, name, type, ...} (objeto) ou [cid, name, ...] (array)
+          const nome = c && (c.name || (Array.isArray(c) ? c[1] : null));
+          if (nome === 'deleted_at') { temDeletedAt = true; break; }
+        }
+      }
+    } catch (_) { temDeletedAt = false; }
+    const where = temDeletedAt
+      ? `SELECT * FROM ${tabela} WHERE usuario_id = ? AND deleted_at IS NULL`
+      : `SELECT * FROM ${tabela} WHERE usuario_id = ?`;
+    const r = db.exec(where, [usuarioId]);
+    if (!r.ok) { log(`SELECT ${tabela} falhou: ${r.erro}`); continue; }
+    if (r.dados.length === 0) { log(`tabela ${tabela} sem dados locais, pulando`); continue; }
+    let count = 0;
+    for (const row of r.dados) {
+      // row ja vem como OBJETO (getAsObject no wrapper)
+      const ret = enfileirarMudanca(db, { usuario_id: usuarioId }, tabela, 'UPSERT', row.id, row.versao || 1, row);
+      if (ret?.ok) count++; else log(`enfileirar ${tabela}/${row.id} falhou: ${JSON.stringify(ret)}`);
+    }
+    total += count;
+    log(`enfileiradas ${count} mudancas de ${tabela}`);
+  }
+  // forca gravacao pra sync_mudancas nao se perder no debounce
+  try { await db.salvarAgora(); } catch (e) { log('salvarAgora falhou: ' + e.message); }
+  log('fim totalEnfileiradas=' + total);
+  return { ok: true, dados: { enfileiradas: total } };
 }
 
 // API pública do db.
@@ -501,8 +546,11 @@ function semearDemo() {
   ];
   for (const a of areas) {
     dbInstance.exec("INSERT INTO areas(id, usuario_id, dono_id, nome, cor, criado_em, atualizado_em, versao) VALUES(?,?,?,?,?,?,?,1)", [a.id, uid, uid, a.nome, a.cor, agora, agora]);
-    // FIX v0.2.40: enfileirar mudanca pro sync enviar pro WP
-    enfileirarMudanca(dbInstance, { usuario_id: uid }, 'areas', 'UPSERT', a.id, 1, {
+    // FIX v0.2.40/47: enfileirar mudanca pro sync enviar pro WP.
+    // BUG historico: passava `dbInstance` (cru), mas enfileirarMudanca() chama
+    // db.exec() que precisa do WRAPPER `db` (tem _agendarGravacao no INSERT).
+    // Resultado: sync_mudancas nao persistia no .db e PUSH nao tinha o que enviar.
+    enfileirarMudanca(db, { usuario_id: uid }, 'areas', 'UPSERT', a.id, 1, {
       id: a.id, nome: a.nome, cor: a.cor, criado_em: agora, atualizado_em: agora, versao: 1
     });
   }
@@ -520,8 +568,9 @@ function semearDemo() {
        VALUES(?,?,?,?,?,?,?,?,?,?,?,1)`,
       [id, uid, uid, t.titulo, t.status, t.prioridade, t.nivel, t.area, t.venc, agora, agora]
     );
-    // FIX v0.2.40: enfileirar mudanca pro sync enviar pro WP
-    enfileirarMudanca(dbInstance, { usuario_id: uid }, 'tarefas', 'UPSERT', id, 1, {
+    // FIX v0.2.40/47: enfileirar mudanca pro sync enviar pro WP.
+    // (v0.2.40 passava dbInstance cru — mesmo bug que areas acima)
+    enfileirarMudanca(db, { usuario_id: uid }, 'tarefas', 'UPSERT', id, 1, {
       id, titulo: t.titulo, status: t.status, prioridade: t.prioridade,
       nivel_cobranca: t.nivel, area_id: t.area, vencimento_em: t.venc,
       criado_em: agora, atualizado_em: agora, versao: 1

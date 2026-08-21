@@ -42,6 +42,8 @@ def sha256(data):
 # Calcula offsets (sem padding, sem os 3 bytes bugados)
 header = {'files': {}}
 offset = 0
+# Os offsets no JSON sao RELATIVOS ao inicio dos ARQUIVOS concatenados
+# (que vem apos o header 16 bytes + json_size bytes). Ate la' sera' recalculado.
 for rel, full in FILES:
     with open(full, 'rb') as f:
         data = f.read()
