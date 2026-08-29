@@ -49,38 +49,77 @@ function D(...args) {
       }
     } catch (_) {}
   }
-  // FIX v0.2.47: tambem mostra na tela (overlay) pra debug visual
-  try {
-    let overlay = document.getElementById('__debug-overlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = '__debug-overlay';
-      overlay.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:200px;overflow:auto;background:rgba(0,0,0,0.85);color:#0f0;font:11px monospace;padding:4px;z-index:99999;white-space:pre';
-      document.body && document.body.appendChild(overlay);
-    }
-    overlay.textContent = (overlay.textContent || '').split('\n').slice(-20).concat([line]).join('\n');
-  } catch (_) {}
 }
 
 // ---------------------------------------------------------------------------
-// api() â€” porta Ãºnica entre tela e regra (PADRAO Â§3.3)
+// ---------------------------------------------------------------------------
+// Auto-Sync em segundo plano (PADRAO §4.2)
+// ---------------------------------------------------------------------------
+let _syncDebounceTimer = null;
+let _syncEmAndamento = false;
+
+export async function dispararAutoSyncSilencioso() {
+  if (_syncEmAndamento || !sessao.usuario_id) return;
+  _syncEmAndamento = true;
+  try {
+    const st = await servidor.processar('sync:obterStatus', {}, sessao);
+    if (st.ok && st.dados?.wp_conectado) {
+      const res = await servidor.processar('sync:executar', {}, sessao);
+      if (res.ok) {
+        const pullApp = res.dados?.pull?.aplicadas || 0;
+        const pushApp = res.dados?.push?.aplicadas || 0;
+        if (pullApp > 0 || pushApp > 0) {
+          D('[sync-auto] executado com sucesso: pull=' + pullApp + ', push=' + pushApp);
+          // Se o pull aplicou registros novos/removidos, atualiza a tela ativa
+          const rotaAtual = window.__rotaAtual;
+          if (pullApp > 0 && rotaAtual && ['hoje', 'tarefas', 'inbox', 'projetos', 'clientes', 'areas'].includes(rotaAtual)) {
+            irPara(rotaAtual);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Falhas de rede em background são silenciosas
+  } finally {
+    _syncEmAndamento = false;
+  }
+}
+
+export function agendarAutoSync(delayMs = 1200) {
+  if (_syncDebounceTimer) clearTimeout(_syncDebounceTimer);
+  _syncDebounceTimer = setTimeout(() => {
+    dispararAutoSyncSilencioso();
+  }, delayMs);
+}
+
+// ---------------------------------------------------------------------------
+// api() — porta única entre tela e regra (PADRAO §3.3)
 // ---------------------------------------------------------------------------
 export async function api(canal, payload = {}) {
   if (!sessao.token) {
-    // Pega a sessÃ£o atual (se o servidor tem)
+    // Pega a sessão atual (se o servidor tem)
     try {
       const s = await servidor.processar('sessao:atual', {});
       if (s.ok) Object.assign(sessao, s.dados);
     } catch (_) {}
   }
   try {
-    return await servidor.processar(canal, payload, sessao);
+    const r = await servidor.processar(canal, payload, sessao);
+    // Auto-sync imediato em qualquer mutação de dados
+    if (r?.ok && (canal.startsWith('tarefas:') || canal.startsWith('projetos:') || canal.startsWith('clientes:') || canal.startsWith('areas:'))) {
+      const mutacoes = ['criar', 'atualizar', 'excluir', 'concluir', 'cancelar', 'adiar', 'reabrir', 'arquivar', 'adicionarSubtarefa', 'toggleSubtarefa', 'excluirSubtarefa'];
+      if (mutacoes.some(m => canal.endsWith(':' + m) || canal.includes(m))) {
+        agendarAutoSync(800);
+      }
+    }
+    return r;
   } catch (e) {
     console.error('[api]', canal, e);
     toast({ tipo: 'erro', titulo: 'Erro', corpo: e.message || String(e) });
     return { ok: false, erro: e.message || String(e) };
   }
 }
+window.api = api;
 
 // ---------------------------------------------------------------------------
 // Bootstrap
@@ -247,7 +286,7 @@ async function bootstrap() {
       if (cached) versao = cached;
     } catch (_) {}
   }
-  if (!versao) versao = '0.2.47';
+  if (!versao) versao = '0.2.50';
   try { localStorage.setItem('__app_version', versao); } catch (_) {}
   const versaoSpan = document.getElementById('versao-app');
   if (versaoSpan) versaoSpan.textContent = 'v' + versao;
@@ -415,6 +454,14 @@ async function bootstrap() {
   // 4. Esconde a tela de loading
   document.getElementById('loading-screen')?.remove();
   D('[app] bootstrap OK, loading removido');
+
+  // 5. Inicia auto-sync em segundo plano a cada 15s
+  setInterval(() => {
+    dispararAutoSyncSilencioso();
+  }, 15000);
+  setTimeout(() => {
+    dispararAutoSyncSilencioso();
+  }, 2500);
 }
 
 function mostrarErroBootstrap(msg) {
@@ -449,9 +496,9 @@ const ROTAS = {
   tarefas:  { titulo: 'Tarefas',          render: () => import('./telas/tarefas.js').then(m => m.renderTarefas()) },
   projetos: { titulo: 'Projetos',         render: () => import('./telas/projetos.js').then(m => m.renderProjetos()) },
   clientes: { titulo: 'Clientes',         render: () => import('./telas/clientes.js').then(m => m.renderClientes()) },
-  areas:    { titulo: 'Ãreas',             render: () => import('./telas/areas.js').then(m => m.renderAreas()) },
+  areas:    { titulo: 'Áreas',            render: () => import('./telas/areas.js').then(m => m.renderAreas()) },
   busca:    { titulo: 'Buscar',            render: () => import('./telas/busca.js').then(m => m.renderBusca()) },
-  config:   { titulo: 'ConfiguraÃ§Ãµes',     render: () => import('./telas/configuracoes.js').then(m => m.renderConfig()) },
+  config:   { titulo: 'Configurações',     render: () => import('./telas/configuracoes.js').then(m => m.renderConfig()) },
 };
 
 export function irPara(nome, opts = {}) {
@@ -459,6 +506,7 @@ export function irPara(nome, opts = {}) {
     console.error('[app] rota desconhecida:', nome);
     return;
   }
+  window.__rotaAtual = nome;
   // FIX v0.2.47: dispara migration one-shot na PRIMEIRA navegacao. Garante
   // que o canal db:enfileirarDadosLegados rode independente do caminho
   // (login, lembrar, auto-demo). Idempotente por tabela.
@@ -502,7 +550,7 @@ function renderLogin() {
           <img src="/src/resources/images/logo-login.png" alt="mlopes dev" class="login-logo">
           <div class="login-brand-text">
             <div class="login-titulo">Gestor</div>
-            <div class="login-subtitulo">Inteligente de Demandas</div>
+            <div class="login-subtitulo">Inteligente</div>
           </div>
         </div>
 
@@ -536,7 +584,7 @@ function renderLogin() {
           ${salvo ? '<button id="btn-sair-gravado" class="login-sair">Sair da conta gravada (' + escapeHtml(salvo.email) + ')</button>' : ''}
         </div>
 
-        <div class="login-rodape">v${window.__appVersion || '0.2.47'}</div>
+        <div class="login-rodape">v${window.__appVersion || '0.2.50'}</div>
       </div>
     </div>
   `;

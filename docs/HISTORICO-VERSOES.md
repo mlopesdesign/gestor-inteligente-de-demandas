@@ -234,8 +234,9 @@ Total WP agora: 4 tarefas, 2 vindas do PUSH Android, 2 do desktop.
 - Adicionado o case `db:enfileirarDadosLegados` em `servidor.js`.
 - Reescrita a parte de migration em `migrar()` pra usar o wrapper `db` e checar `window.sessao.usuario_id` OU sessionStorage.
 - Adicionada chamada explicita em `app.js` DEPOIS do login (caminho "Lembrar de mim" + caminho "auto-demo").
+- `semearDemo()` corrigido pra chamar `enfileirarMudanca(db, ...)` (nao `dbInstance`).
 
-**Licao:** Quando a funcao recebe `db` como parametro, e' o wrapper exportado, NUNCA `dbInstance` (que e' o `Sql.Database` cru). Toda migration que for adicionar no futuro deve usar `db.exec()` e `enfileirarMudanca(db, ...)`. Idempotencia sempre por TABELA, nunca GLOBAL.
+**Licao:** Quando a funcao recebe `db` como parametro, e' o wrapper exportado, NUNCA `dbInstance` (que e' o `Sql.Database` cru). Toda migration que for adicionar no futuro deve usar `db.exec()` e `enfileirarMudanca(db, ...)`. Idempotencia sempre por TABELA, nunca GLOBAL. Antes de adicionar um canal novo em `servidor.js`, SEMPRE verificar se ja' esta' no `PERM_ROTA` em `permissoes.js` (senao cai no SEM_PERMISSAO).
 
-**Validado por:** (a preencher com SHA apos build)
+**Validado por:** SHA `3BDD382AAABEE28F59F521256D8F051B6D8F6AD83ED3E1179CAC23AFAB29BDE2` (resources.neu), SHA `3EA3A6B6F656250FD51AD778735C6FB99CBD83D7E9BCD6827E30B995E6DAC2AD` (Setup-0.2.47.exe), commit `8f17277`, tag `v0.2.47` pushed, release criada. Migration one-shot manual (`tools/migrate-ids-ulid.py`) reescreveu IDs antigos (01AREAT1, 01TASKxxx) como ULID Crockford Base32 26 chars e enfileirou 8 mudancas (3 areas + 5 tarefas). PUSH via `tools/push-via-python.py` enviou pro WP (status 200, aplicadas=8, conflitos=0). Validado via GET `/sync/pull` no WP: 13 mudancas (3 areas + 5 tarefas + 1 cliente + 4 tarefas de testes anteriores).
 

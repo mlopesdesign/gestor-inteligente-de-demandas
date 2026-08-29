@@ -1,6 +1,6 @@
 {
   "applicationId": "app.mllopes.gestor",
-  "version": "0.2.47",
+  "version": "0.2.50",
   "defaultMode": "window",
   "port": 8723,
   "url": "/src/index.html",
@@ -26,7 +26,7 @@
   "globalVariables": [],
   "modes": {
     "window": {
-      "title": "Gestor Inteligente de Demandas",
+      "title": "Gestor Inteligente",
       "width": 1200,
       "height": 760,
       "minWidth": 900,

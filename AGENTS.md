@@ -266,7 +266,7 @@ ADRs já registrados:
 
 Mantido em `docs/HISTORICO-VERSOES.md` no formato do padrão — causa raiz + correção + lição, não changelog de marketing.
 
-Última versão publicada: **v0.2.36** (2026-08-20) — FIX F3 sync bidirecional. Cursor `ultimo_pull_id` (que era do PULL) estava sendo usado como filtro do PUSH, ignorando mudanças locais. Corrigido com `ultimo_push_id` próprio + `enfileirarMudanca()` em todos os core (tarefas, projetos, clientes, areas) + 9 testes de regressão.
+Última versão publicada: **v0.2.39** (2026-08-20) — FIX login de sincronização mentia (2 dias quebrado). `writeState` em `src/js/backend/core/sync.js:65-75` codificava JSON em `Uint8Array` e `Neutralino.filesystem.writeFile` em v6.3.0 grava 0 bytes silencioso. Corrigido pra gravar string UTF-8 direta + `readBinaryFile`+`TextDecoder` no read. Veja histórico completo em `docs/HISTORICO-VERSOES.md`.
 
 ---
 
@@ -281,14 +281,14 @@ A partir de 17/08/2026, o Marcio quer **conversar com o Gestor (desktop)** a par
 >
 > Fases de sync (que mexem no Gestor) ficam **bloqueadas** até liberação.
 
-**LIBERADO em 20/08/2026** (pergunta explícita respondida "Sim, libera F3 + F4"). F3 (sync desktop) implementado em v0.2.36. F4 (validação end-to-end Android) em andamento.
+**LIBERADO em 20/08/2026** (pergunta explícita respondida "Sim, libera F3 + F4"). F3 (sync desktop) implementado entre v0.2.36 e v0.2.39 (9 fixes de sync, ver `docs/HISTORICO-VERSOES.md`). F4 (validação end-to-end Android) em validação — detalhes em `android-app/docs/F4-ANDROID-VALIDATION.md` e §9.5 abaixo.
 
 ### 9.2 Os 2 novos projetos
 
 | Projeto | Diretório | Stack | Agente responsável | Status |
 |---|---|---|---|---|
 | **Plugin WP da API** | `wp-api/` | PHP 8.x + WordPress 6.x + WP REST API + MySQL | `wp-architect` | ✅ Concluído v0.1.4 (20/08/2026) |
-| **App Android** | `android-app/` | Kotlin + Jetpack Compose + Material 3 + Room (offline) + Retrofit + Hilt | `coder` | ✅ Concluído v0.1.1 (20/08/2026) — falta validação end-to-end (F4) |
+| **App Android** | `android-app/` (real, minúsculo) | Kotlin + Jetpack Compose + Material 3 + Room (offline) + Retrofit + Hilt | `coder` | ✅ Concluído v0.1.8 (25/08/2026) — logo ML Lopes corrigida (lâmpada amarela `#FFD633` em fundo azul escuro `#0F1E2E`), SplashScreen API Android 12+, paleta de cores alinhada. Falta validação end-to-end ao vivo (F4). APKs de versões antigas arquivados em `android-app/_archive/apks/`. |
 
 ### 9.3 Domínio e URL
 
@@ -312,8 +312,8 @@ A partir de 17/08/2026, o Marcio quer **conversar com o Gestor (desktop)** a par
 |---|---|---|---|
 | **F1** | Plugin WP completo: schema MySQL, REST endpoints, auth, sync, PHPUnit | — | ✅ Concluído v0.1.4 |
 | **F2** | App Android: esqueleto Android Studio, telas Compose, Retrofit+Room, login, CRUD básico | Depende de F1 | ✅ Concluído v0.1.1 |
-| **F3** | Sync bidirecional no Gestor desktop (v0.2.23+) | Liberado em 20/08/2026 | ✅ Concluído v0.2.36 — `ultimo_push_id` (cursor próprio) + `enfileirarMudanca()` em todos os core. Release: https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/tag/v0.2.36 |
-| **F4** | Validação end-to-end (cria tarefa no Android → aparece no WP admin) | Depende de F3 | 🟡 Em validação — precisa de logcat do APK 0.1.1 + criar tarefa no Android e ver se chega no WP admin |
+| **F3** | Sync bidirecional no Gestor desktop (v0.2.23+) | Liberado em 20/08/2026 | ✅ Concluído v0.2.39 — `ultimo_push_id` (cursor próprio) + `enfileirarMudanca()` em todos os core + 9 testes de regressão + fix login sync (writeState grava string UTF-8 em vez de Uint8Array) + fix auto-update (substitui src/ junto com .neu) + fix meta-tag `app-version`. Releases: https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/tag/v0.2.39 |
+| **F4** | Validação end-to-end (cria tarefa no Android → aparece no WP admin) | Depende de F3 + reboot do PC | 🟡 Em validação — PUSH validado via curl (commit F4 PUSH Android→WP de 20/08/2026, ver `docs/HISTORICO-VERSOES.md`). Falta validação com APK real no emulador/celular. Bloqueio técnico: emulador x86_64 não sobe sem reboot pra ativar Windows Hypervisor Platform (aplicado `bcdedit`+`DISM`, falta reboot). Emulador arm64 não roda em host x86_64 (regressão QEMU2 >=37). Detalhes completos em `android-app/docs/F4-ANDROID-VALIDATION.md`. |
 | **F5** | Docs: `MANUAL-ANDROID.md`/`.pdf` + `GUIA-API.md`/`.pdf` | Depende de F4 | ⏸ Pendente |
 
 ### 9.6 Comandos rápidos dos 2 projetos

@@ -49,7 +49,8 @@ if (r.status !== 0) {
 
 // 5. Rebuilda o .neu manualmente (corrige o bug, gera em dist/resources.neu)
 console.log('[build] 4/5 rebuild .neu sem bug (build-neu.py)...');
-const r2 = spawnSync('python', [join(tools, 'build-neu.py'), root], { stdio: 'inherit' });
+const pyCmd = process.platform === 'win32' ? 'py' : 'python';
+const r2 = spawnSync(pyCmd, [`"${join(tools, 'build-neu.py')}"`, `"${root}"`], { stdio: 'inherit', shell: true });
 if (r2.status !== 0) {
   console.error('[build] build-neu.py falhou');
   process.exit(1);

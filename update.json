@@ -1,8 +1,8 @@
-{
-  "applicationId": "app.mllopes.gestor",
-  "version": "0.2.47",
-  "notes": "v0.2.47 - FIX migration one-shot: 2 bugs fatais (canal nao registrado em PERM_ROTA, dbInstance.exec raw em vez do wrapper db) + 1 bug (semearDemo nao enfileirava). Migration one-shot exportada e chamada DEPOIS do login. 8 enfileiradas com sucesso (3 areas + 5 tarefas) via PUSH. Verificado: areas/projetos/clientes do desktop agora aparecem no WP. Ver AGENTS.md v9 + HISTORICO-VERSOES.md v0.2.47.",
-  "resourcesURL": "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.47/resources.neu",
-  "sha256": "3BDD382AAABEE28F59F521256D8F051B6D8F6AD83ED3E1179CAC23AFAB29BDE2",
-  "size": 6326826
+﻿{
+    "applicationId":  "app.mllopes.gestor",
+    "version":  "0.2.50",
+    "notes":  "v0.2.50 - Correcoes criticas de sync, subtarefas e AppData hardcoded",
+    "resourcesURL":  "https://github.com/mlopesdesign/gestor-inteligente-de-demandas/releases/download/v0.2.50/resources.neu",
+    "sha256":  "FE9662A2F6B245A652F15A2FBC3CB0A3F44A1ABCF3E3A9615617470C0A6FE39B",
+    "size":  6330312
 }

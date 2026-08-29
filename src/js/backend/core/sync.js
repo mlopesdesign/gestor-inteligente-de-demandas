@@ -19,25 +19,25 @@ const STATE_FILENAME = 'sync_state.json';
 const TABELAS_SYNC = {
   tarefas: {
     colunaId: 'id',
-    colunasSync: ['id','titulo','descricao','status','prioridade','nivel_cobranca',
+    colunasSync: ['id','usuario_id','dono_id','titulo','descricao','status','prioridade','nivel_cobranca',
       'area_id','projeto_id','cliente_id','inicio_em','vencimento_em',
       'duracao_estimada_min','duracao_realizada_min','etiquetas_json',
-      'responsavel','origem','concluida_em','entregue_em','criada_em','atualizada_em','versao'],
+      'responsavel','origem','concluida_em','entregue_em','criado_em','atualizado_em','versao'],
   },
   clientes: {
     colunaId: 'id',
-    colunasSync: ['id','nome','documento','email','telefone','endereco_json',
-      'observacoes','arquivado','criado_em','atualizado_em','versao'],
+    colunasSync: ['id','usuario_id','dono_id','nome','organizacao','contatos_json',
+      'observacoes','status','criado_em','atualizado_em','versao'],
   },
   projetos: {
     colunaId: 'id',
-    colunasSync: ['id','nome','descricao','cliente_id','area_id','cor',
-      'status','inicio_em','fim_previsto_em','concluido_em','arquivado',
+    colunasSync: ['id','usuario_id','dono_id','titulo','descricao','cliente_id','area_id',
+      'status','prioridade','inicio_em','fim_em','progresso_calc','participantes_json',
       'criado_em','atualizado_em','versao'],
   },
   areas: {
     colunaId: 'id',
-    colunasSync: ['id','nome','cor','descricao','criada_em','atualizada_em','versao'],
+    colunasSync: ['id','usuario_id','dono_id','nome','cor','ordem','criado_em','atualizado_em','versao'],
   },
 };
 
@@ -55,13 +55,13 @@ async function readState() {
     const Neutralino = window.Neutralino;
     if (!Neutralino?.filesystem?.readBinaryFile && !Neutralino?.filesystem?.readFile) return emptyState();
     const p = statePath();
-    // readBinaryFile retorna Uint8Array; readFile retorna string. Caminho simetrico
-    // com writeState abaixo (que grava string). Usar readBinaryFile + TextDecoder e'
-    // mais robusto (sempre devolve bytes RAW, sem decodificacao UTF-8 implicita).
-    const data = Neutralino.filesystem.readBinaryFile
-      ? await Neutralino.filesystem.readBinaryFile(p)
-      : new TextEncoder().encode(await Neutralino.filesystem.readFile(p));
-    const txt = new TextDecoder().decode(data);
+    let raw;
+    if (Neutralino.filesystem.readBinaryFile) {
+      raw = await Neutralino.filesystem.readBinaryFile(p);
+    } else {
+      raw = await Neutralino.filesystem.readFile(p);
+    }
+    const txt = (typeof raw === 'string') ? raw : new TextDecoder().decode(raw);
     return { ...emptyState(), ...JSON.parse(txt) };
   } catch (_) {
     return emptyState();
@@ -366,7 +366,7 @@ async function receberPull(db, st, s) {
     [s.usuario_id, st.wp_dispositivo_id]
   );
   let since = 0;
-  if (c.ok && c.dados.length > 0) since = Number(c.dados[0][0]) || 0;
+  if (c.ok && c.dados.length > 0) since = Number(c.dados[0].ultimo_id) || 0;
 
   const params = new URLSearchParams({
     dispositivo_id: st.wp_dispositivo_id,
@@ -418,8 +418,40 @@ function aplicarMudanca(db, m, s) {
   const row = { ...(m.payload || m.data || {}) };
   row.id = m.registro_id || m.id || row.id;
   if (!row.id) return false;
-  // Garante usuario_id correto
+  // Garante usuario_id e dono_id corretos
   row.usuario_id = s.usuario_id;
+  row.dono_id = s.dono_id || s.usuario_id;
+
+  // Normalizacoes de compatibilidade entre WP / Android / Desktop
+  if (tabela === 'clientes') {
+    if (row.contatos && typeof row.contatos === 'object' && !row.contatos_json) {
+      row.contatos_json = JSON.stringify(row.contatos);
+    }
+    if (!row.contatos_json) {
+      const contatos = {};
+      if (row.email) contatos.email = row.email;
+      if (row.telefone) contatos.telefone = row.telefone;
+      row.contatos_json = JSON.stringify(contatos);
+    }
+    if (row.ativo !== undefined && !row.status) {
+      row.status = row.ativo ? 'ATIVO' : 'INATIVO';
+    }
+    if (!row.status) row.status = 'ATIVO';
+  } else if (tabela === 'projetos') {
+    if (row.nome && !row.titulo) row.titulo = row.nome;
+    if (!row.participantes_json) row.participantes_json = '[]';
+    if (row.progresso_calc === undefined) row.progresso_calc = 0;
+  } else if (tabela === 'tarefas') {
+    if (row.criada_em && !row.criado_em) row.criado_em = row.criada_em;
+    if (row.atualizada_em && !row.atualizado_em) row.atualizado_em = row.atualizada_em;
+    if (Array.isArray(row.etiquetas) && !row.etiquetas_json) row.etiquetas_json = JSON.stringify(row.etiquetas);
+  } else if (tabela === 'areas') {
+    if (row.criada_em && !row.criado_em) row.criado_em = row.criada_em;
+    if (row.criado_em && !row.criada_em) row.criada_em = row.criado_em;
+    if (row.atualizada_em && !row.atualizado_em) row.atualizado_em = row.atualizada_em;
+    if (row.atualizado_em && !row.atualizada_em) row.atualizada_em = row.atualizado_em;
+  }
+
   // Filtra colunas permitidas
   const cols = cfg.colunasSync.filter(c => row[c] !== undefined);
   if (cols.length === 0) return false;

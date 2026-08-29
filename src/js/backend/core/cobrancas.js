@@ -156,8 +156,8 @@ export function config(db, payload, sessao) {
     dados: {
       silenciar_fora_horario: silenciar !== 0,
       politicas: politicas,
-      horario_inicio: usr.ok && usr.dados.length > 0 ? Number(usr.dados[0].horario_trab_inicio.split(':')[0]) : 8,
-      horario_fim: usr.ok && usr.dados.length > 0 ? Number(usr.dados[0].horario_trab_fim.split(':')[0]) : 18,
+      horario_inicio: usr.ok && usr.dados.length > 0 ? Number((usr.dados[0].horario_trab_inicio || '08:00').split(':')[0]) : 8,
+      horario_fim: usr.ok && usr.dados.length > 0 ? Number((usr.dados[0].horario_trab_fim || '18:00').split(':')[0]) : 18,
     },
   };
 }

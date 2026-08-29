@@ -412,12 +412,9 @@ export const db = {
     diag('db.abrir() inicio [sem await]');
     console.log('DB: abrir() chamado');
 
-    // FIX v0.2.7: define __appData como mlope/AppData pra que tanto o sync
-    // quanto o async vejam o mesmo caminho. Antes o fallback era
-    // C:\Users\Public\AppData\Roaming que nao funciona (sem permissao).
-    window.__appData = 'C:\\Users\\mlope\\AppData\\Roaming';
-    console.log('DB: __appData =', window.__appData);
-
+    // __appData é resolvido via resolverAppdataAsync() em ambiente.js
+    // Não definir aqui pois sobrescreveria o valor correto já resolvido
+    // e quebraria o app em outras máquinas. (BUG 2 corrigido)
     dbPath = env.caminhoBanco();
     console.log('DB: dbPath =', dbPath);
     diag('dbPath=' + dbPath);

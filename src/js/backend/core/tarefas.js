@@ -42,7 +42,7 @@ export function listar(db, payload, sessao) {
   if (cliente_id) { sql += ' AND t.cliente_id = ?'; params.push(cliente_id); }
   if (vencidas) { sql += " AND t.vencimento_em IS NOT NULL AND t.vencimento_em < ? AND t.status NOT IN ('CONCLUIDA','CANCELADA','ARQUIVADA')"; params.push(new Date().toISOString()); }
   if (busca) { sql += ' AND (t.titulo LIKE ? OR t.descricao LIKE ?)'; params.push('%' + busca + '%', '%' + busca + '%'); }
-  sql += ` ORDER BY t.vencimento_em IS NULL, t.vencimento_em ASC, t.prioridade DESC, t.criado_em DESC LIMIT ${lim}`;
+  sql += ` ORDER BY t.vencimento_em IS NULL, t.vencimento_em ASC, CASE t.prioridade WHEN 'CRITICA' THEN 0 WHEN 'URGENTE' THEN 1 WHEN 'ALTA' THEN 2 WHEN 'NORMAL' THEN 3 WHEN 'BAIXA' THEN 4 ELSE 5 END, t.criado_em DESC LIMIT ${lim}`;
   const r = db.exec(sql, params);
   if (!r.ok) return r;
   return { ok: true, dados: r.dados };
@@ -61,7 +61,7 @@ export function obter(db, payload, sessao) {
   if (!r.ok) return r;
   if (r.dados.length === 0) return { ok: false, erro: { codigo: 'NAO_ENCONTRADO' } };
   // Subtarefas
-  const sub = db.exec(`SELECT id, titulo, concluida FROM subtarefas WHERE tarefa_id = ? ORDER BY ordem, criado_em`, [id]);
+  const sub = db.exec(`SELECT id, titulo, concluida_em FROM subtarefas WHERE tarefa_id = ? ORDER BY ordem, criado_em`, [id]);
   return { ok: true, dados: { ...r.dados[0], subtarefas: sub.ok ? sub.dados : [] } };
 }
 
@@ -180,7 +180,7 @@ export function adiar(db, payload, sessao) {
   // FIX v0.2.36: enfileira mudanca pro sync
   const versaoNova = (Number(payload.versao) || 0) + 1;
   enfileirarMudanca(db, sessao, 'tarefas', 'UPSERT', payload.id, versaoNova, { id: payload.id, status: 'ADIADA', vencimento_em: payload.vencimento_em, adiada_ate: payload.vencimento_em, adiada_motivo: payload.motivo || null, motivo_adiamento: payload.motivo || null, versao: versaoNova });
-  return { ok: true, dados: { id, status: 'ADIADA' } };
+  return { ok: true, dados: { id: payload.id, status: 'ADIADA' } };
 }
 
 export function reabrir(db, payload, sessao) {
@@ -200,8 +200,9 @@ export function adicionarSubtarefa(db, payload, sessao) {
   if (!tarefa_id || !titulo) return { ok: false, erro: { codigo: 'VALIDACAO', mensagem: 'tarefa_id e titulo obrigatorios' } };
   const id = UlidFactory.next();
   const r = db.exec(
-    `INSERT INTO subtarefas(id, tarefa_id, titulo, concluida, criado_em, versao) VALUES(?,?,?,0,?,1)`,
-    [id, tarefa_id, String(titulo).trim().slice(0,300), new Date().toISOString()]
+    `INSERT INTO subtarefas(id, tarefa_id, usuario_id, dono_id, titulo, ordem, concluida_em, criado_em, atualizado_em, versao)
+     VALUES(?,?,?,?,?,COALESCE((SELECT MAX(ordem)+1 FROM subtarefas WHERE tarefa_id=?),0),NULL,?,?,1)`,
+    [id, tarefa_id, sessao.usuario_id, sessao.usuario_id, String(titulo).trim().slice(0,300), tarefa_id, new Date().toISOString(), new Date().toISOString()]
   );
   if (!r.ok) return r;
   return { ok: true, dados: { id, titulo } };
@@ -211,7 +212,7 @@ export function toggleSubtarefa(db, payload, sessao) {
   if (!sessao.usuario_id) return { ok: false, erro: { codigo: 'NAO_AUTENTICADO' } };
   const { id, concluida } = payload;
   const r = db.exec(
-    `UPDATE subtarefas SET concluida=?, versao=versao+1 WHERE id=? AND tarefa_id IN (SELECT id FROM tarefas WHERE usuario_id=?)`,
+    `UPDATE subtarefas SET concluida_em=CASE WHEN ? THEN datetime('now') ELSE NULL END, atualizado_em=datetime('now'), versao=versao+1 WHERE id=? AND tarefa_id IN (SELECT id FROM tarefas WHERE usuario_id=?)`,
     [concluida ? 1 : 0, id, sessao.usuario_id]
   );
   if (!r.ok) return r;

@@ -1,5 +1,5 @@
 # GRAPHIFY — Mapa técnico do Gestor Inteligente de Demandas
-_Gerado por `node tools/graphify.mjs` em 2026-08-15T01:38:58.482Z_
+_Gerado por `node tools/graphify.mjs` em 2026-08-28T13:59:21.894Z_
 
 ## Arquitetura (PADRAO §3.1)
 
@@ -23,7 +23,7 @@ src/
 
 ### `app`
 
-Importa: `backend/db`, `backend/servidor`, `backend/ambiente`, `telas/hoge`
+Importa: `backend/db`, `backend/servidor`, `backend/ambiente`, `telas/hoje`
 
 ### `backend/ambiente`
 
@@ -41,11 +41,39 @@ _Sem dependências internas._
 
 _Sem dependências internas._
 
+### `backend/core/backup`
+
+_Sem dependências internas._
+
+### `backend/core/busca`
+
+_Sem dependências internas._
+
+### `backend/core/clientes`
+
+_Sem dependências internas._
+
 ### `backend/core/cobrancas`
 
 _Sem dependências internas._
 
+### `backend/core/config`
+
+_Sem dependências internas._
+
+### `backend/core/projetos`
+
+_Sem dependências internas._
+
+### `backend/core/recorrencias`
+
+_Sem dependências internas._
+
 ### `backend/core/stubs`
+
+_Sem dependências internas._
+
+### `backend/core/sync`
 
 _Sem dependências internas._
 
@@ -69,7 +97,23 @@ _Sem dependências internas._
 
 _Sem dependências internas._
 
-### `telas/hoge`
+### `telas/areas`
+
+_Sem dependências internas._
+
+### `telas/busca`
+
+_Sem dependências internas._
+
+### `telas/clientes`
+
+_Sem dependências internas._
+
+### `telas/configuracoes`
+
+_Sem dependências internas._
+
+### `telas/hoje`
 
 _Sem dependências internas._
 
@@ -77,7 +121,23 @@ _Sem dependências internas._
 
 _Sem dependências internas._
 
+### `telas/projetos`
+
+_Sem dependências internas._
+
 ### `telas/stubs`
+
+_Sem dependências internas._
+
+### `telas/tarefas`
+
+_Sem dependências internas._
+
+### `telas/_chrome`
+
+_Sem dependências internas._
+
+### `vendor/neutralino-raw`
 
 _Sem dependências internas._
 
@@ -98,11 +158,17 @@ _Sem dependências internas._
 - `auth:cadastro`
 - `auth:login`
 - `auth:logout`
+- `backup:criar`
+- `backup:excluir`
+- `backup:listar`
+- `backup:restaurar`
 - `busca:global`
+- `clientes:arquivar`
 - `clientes:atualizar`
 - `clientes:criar`
 - `clientes:excluir`
 - `clientes:listar`
+- `clientes:obter`
 - `cobranca:config`
 - `cobranca:pendentes`
 - `cobranca:tick`
@@ -113,24 +179,31 @@ _Sem dependências internas._
 - `ia:parse`
 - `ia:status`
 - `ia:sugerir`
-- `inbox:listar`
-- `inbox:processar`
+- `localstorage:__app_log`
+- `projetos:arquivar`
 - `projetos:atualizar`
+- `projetos:concluir`
 - `projetos:criar`
 - `projetos:excluir`
 - `projetos:listar`
+- `projetos:obter`
 - `recorrencias:tick`
 - `sessao:atual`
 - `sync:conflitos`
+- `sync:executar`
+- `sync:login`
+- `sync:logout`
 - `sync:pull`
 - `sync:push`
 - `sync:resolver`
 - `sync:status`
 - `tarefas:adiar`
+- `tarefas:arquivar`
 - `tarefas:atualizar`
 - `tarefas:cancelar`
 - `tarefas:concluir`
 - `tarefas:criar`
+- `tarefas:excluir`
 - `tarefas:listar`
 - `tarefas:obter`
 - `tarefas:reabrir`
@@ -144,11 +217,17 @@ _Sem dependências internas._
 - auth:cadastro → AUTH
 - auth:login → AUTH
 - auth:logout → AUTH
+- backup:criar → BACKUP
+- backup:excluir → BACKUP
+- backup:listar → BACKUP
+- backup:restaurar → BACKUP
 - busca:global → BUSCA
+- clientes:arquivar → CLIENTES
 - clientes:atualizar → CLIENTES
 - clientes:criar → CLIENTES
 - clientes:excluir → CLIENTES
 - clientes:listar → CLIENTES
+- clientes:obter → CLIENTES
 - cobranca:config → COBRANCA
 - cobranca:pendentes → COBRANCA
 - cobranca:tick → COBRANCA
@@ -159,24 +238,30 @@ _Sem dependências internas._
 - ia:parse → IA
 - ia:status → IA
 - ia:sugerir → IA
-- inbox:listar → INBOX
-- inbox:processar → INBOX
+- projetos:arquivar → PROJETOS
 - projetos:atualizar → PROJETOS
+- projetos:concluir → PROJETOS
 - projetos:criar → PROJETOS
 - projetos:excluir → PROJETOS
 - projetos:listar → PROJETOS
+- projetos:obter → PROJETOS
 - recorrencias:tick → COBRANCA
 - sessao:atual → AUTH
 - sync:conflitos → SYNC
+- sync:executar → SYNC
+- sync:login → SYNC
+- sync:logout → SYNC
 - sync:pull → SYNC
 - sync:push → SYNC
 - sync:resolver → SYNC
 - sync:status → SYNC
 - tarefas:adiar → TAREFAS
+- tarefas:arquivar → TAREFAS
 - tarefas:atualizar → TAREFAS
 - tarefas:cancelar → TAREFAS
 - tarefas:concluir → TAREFAS
 - tarefas:criar → TAREFAS
+- tarefas:excluir → TAREFAS
 - tarefas:listar → TAREFAS
 - tarefas:obter → TAREFAS
 - tarefas:reabrir → TAREFAS

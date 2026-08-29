@@ -135,13 +135,13 @@ async function gerarToken() {
 
 async function upsertDispositivo(db, usuarioId, nome, sistema, appVersao) {
   const r = db.exec(
-    'SELECT id FROM dispositivos WHERE usuario_id = ? AND sistema = ? AND app_versao = ? AND revogado_em IS NULL LIMIT 1',
-    [usuarioId, sistema, appVersao]
+    'SELECT id FROM dispositivos WHERE usuario_id = ? AND sistema = ? AND revogado_em IS NULL LIMIT 1',
+    [usuarioId, sistema]
   );
   const agora = new Date().toISOString();
   if (r.ok && r.dados.length > 0) {
     const id = r.dados[0].id;
-    db.exec('UPDATE dispositivos SET nome = ?, ultimo_acesso_em = ? WHERE id = ?', [nome, agora, id]);
+    db.exec('UPDATE dispositivos SET nome = ?, app_versao = ?, ultimo_acesso_em = ? WHERE id = ?', [nome, appVersao, agora, id]);
     return id;
   }
   const id = UlidFactory.next();
